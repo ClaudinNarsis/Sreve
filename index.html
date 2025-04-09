@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sreve</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
   <style>
     body {
       margin: 0;
@@ -34,7 +35,14 @@
     }
     .hero {
       padding: 4rem 2rem;
-      background: linear-gradient(to bottom, #f8f9fa, #fff);
+      background: linear-gradient(to bottom, rgba(248, 249, 250, 0.9), rgba(255, 255, 255, 0.9)),
+                  url('assets/hero-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
     }
     h1 {
       font-size: 3.5rem;
@@ -208,6 +216,15 @@
       color: #666;
       font-size: 0.9rem;
     }
+    .context-text {
+      display: block;
+      font-size: 1.1rem;
+      color: #666;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -220,13 +237,14 @@
 
   <section class="hero">
     <div class="container">
-      <h1>No More Rework After Client Calls</h1>
+      <span class="context-text">Creative Sync. In Real-Time.</span>
+      <h1>Impress Clients by Showing Them What They Want on the Very First Call</h1>
       <p>
         An AI co-pilot that joins your discovery calls, helps you ask the right questions,
         and instantly generates rough visual drafts to align expectations — saving you
         hours of miscommunication and painful rework.
       </p>
-      <a href="#" class="cta-button">Join the Waitlist</a>
+      <a href="#" class="cta-button">Get Early Access – Limited Spots</a>
     </div>
   </section>
 
@@ -257,7 +275,7 @@
     <div class="grid">
       <div class="card">
         <img src="assets/p3.jpeg" alt="Priya" class="testimonial-avatar">
-        <h2>"This would've saved me 10+ hours last month."</h2>
+        <h2>"Used to take 3 calls to align — now one is enough."</h2>
         <p>— Priya, Freelance Poster Designer</p>
       </div>
       <div class="card">
@@ -283,57 +301,41 @@
       <h3>How It Works</h3>
       <div class="how-grid">
         <div class="how-item">
-          <img src="assets/1.png" alt="Call Screenshot" />
-          <p>Joins your call quietly, listens, and takes notes.</p>
+          <img src="assets/1.png" alt="Real-time call assistant" />
+          <p>Real-time call assistant that listens and takes smart notes</p>
         </div>
         <div class="how-item">
-          <img src="assets/2.png" alt="Drafts Screenshot" />
-          <p>Instantly shows visual references based on the discussion.</p>
+          <img src="assets/2.png" alt="Auto-generated visual references" />
+          <p>Auto-generated visual references based on client discussion</p>
         </div>
         <div class="how-item">
-          <img src="assets/3.png" alt="Summary Screenshot" />
-          <p>Sends you a clean, AI-generated summary of client needs.</p>
+          <img src="assets/3.png" alt="Post-call summary dashboard" />
+          <p>Post-call summary dashboard with actionable insights</p>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="container" style="text-align: center; margin: 4rem auto;">
+    <a href="#" class="cta-button">Get Early Access – Limited Spots</a>
+  </div>
+
+  <div class="container" style="text-align: center; margin: 4rem auto; max-width: 600px;">
+    <p style="font-size: 1.2rem; color: #444; margin-bottom: 1.5rem;">
+      Built by ex-designers who lived through bad briefs. Want to talk?
+    </p>
+    <a href="#" style="color: #000; text-decoration: underline; font-weight: 500;">Book a 10-min chat →</a>
+  </div>
+
   <footer class="footer">
-    <div class="footer-content">
+    <div class="footer-content" style="text-align: center; grid-template-columns: 1fr;">
       <div class="footer-section">
-        <h4>Product</h4>
-        <ul>
-          <li><a href="#">Features</a></li>
-          <li><a href="#">How it Works</a></li>
-          <li><a href="#">Pricing</a></li>
+        <ul style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+          <li><a href="#">About</a></li>
           <li><a href="#">FAQ</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Company</h4>
-        <ul>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Blog</a></li>
-          <li><a href="#">Careers</a></li>
+          <li><a href="#">Privacy Policy</a></li>
           <li><a href="#">Contact</a></li>
         </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Resources</h4>
-        <ul>
-          <li><a href="#">Documentation</a></li>
-          <li><a href="#">Support</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-        </ul>
-      </div>
-      <div class="footer-section">
-        <h4>Connect</h4>
-        <p style="color: #999; margin-bottom: 1rem;">Follow us on social media</p>
-        <div class="social-links">
-          <a href="#" aria-label="Twitter">𝕏</a>
-          <a href="#" aria-label="LinkedIn">in</a>
-          <a href="#" aria-label="GitHub">⌥</a>
-        </div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -342,3 +344,4 @@
   </footer>
 </body>
 </html>
+
