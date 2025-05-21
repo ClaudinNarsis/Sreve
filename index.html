@@ -246,6 +246,7 @@
       border-bottom-color: #333;
     }
   </style>
+  
 </head>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17102136063"></script>
@@ -256,11 +257,31 @@
 
   gtag('config', 'AW-17102136063');
 </script>
+
 <body>
+  <script>
+    function gtagClick(event, url) {
+      event.preventDefault();
+      console.log("gtagClick triggered");
+
+      gtag('event', 'conversion', {
+        'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+        'value': 1.0,
+        'currency': 'INR',
+        'event_callback': function () {
+          window.location = url;
+        }
+      });
+
+      setTimeout(function () {
+        window.location = url;
+      }, 2000);
+    }
+    </script>
   <header class="header">
     <img src="assets/logo.png" alt="Sreve Logo" class="logo">
     <nav>
-      <a href="https://getwaitlist.com/waitlist/27199" class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;">Sign In</a>
+      <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'https://getwaitlist.com/waitlist/27199')">Sign In</a>
     </nav>
   </header>
 
@@ -271,7 +292,7 @@
       <p>
         Built for designers who waste hours decoding briefs — Sreve gives you instant direction, strategy, and clarity from any kind of input.
       </p>
-      <a href="https://getwaitlist.com/waitlist/27199" class="cta-button">Get Early Access – Limited Spots</a>
+      <a class="cta-button" onclick="gtagClick(event, 'https://getwaitlist.com/waitlist/27199')">Get Early Access – Limited Spots</a>
     </div>
   </section>
   <section class="how-it-works">
@@ -297,7 +318,7 @@
         </div>
       </div>
       <div class="container" style="text-align: center; margin: 4rem auto;">
-        <a href="https://getwaitlist.com/waitlist/27199" class="cta-button">Start for free – Limited Spots</a>
+        <a  class="cta-button" onclick="gtagClick(event, 'https://getwaitlist.com/waitlist/27199')">Start for free – Limited Spots</a>
       </div>
     </div>
     
@@ -372,7 +393,7 @@
   
 
   <div class="container" style="text-align: center; margin: 4rem auto;">
-    <a href="https://getwaitlist.com/waitlist/27199" class="cta-button">Get Early Access – Limited Spots</a>
+    <a class="cta-button" onclick="gtagClick(event, 'https://getwaitlist.com/waitlist/27199')">Get Early Access – Limited Spots</a>
   </div>
 
   <div class="container" style="text-align: center; margin: 4rem auto; max-width: 600px;">
