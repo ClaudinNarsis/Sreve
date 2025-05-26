@@ -378,16 +378,16 @@
   <script>
     function gtagClick(event, url) {
       event.preventDefault();
-      console.log("gtagClick triggered");
+    //   console.log("gtagClick triggered");
 
-      gtag('event', 'conversion', {
-        'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
-        'value': 1.0,
-        'currency': 'INR',
-        'event_callback': function () {
-          window.location = url;
-        }
-      });
+    //   gtag('event', 'conversion', {
+    //     'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+    //     'value': 1.0,
+    //     'currency': 'INR',
+    //     'event_callback': function () {
+    //       window.location = url;
+    //     }
+    //   });
 
       setTimeout(function () {
         window.location = url;
@@ -457,6 +457,15 @@
     }
 
     try {
+        console.log("gtagClick triggered");
+        gtag('event', 'conversion', {
+          'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+          'value': 1.0,
+          'currency': 'INR',
+          'event_callback': function () {
+            console.log("Conversion recorded.");
+          }
+        });
       const encodedEmail = encodeURIComponent(email);
       const encodedName = encodeURIComponent(name);
       const calendlyUrl = `https://calendly.com/claudinnarsis/sreve-onboarding?hide_gdpr_banner=1&email=${encodedEmail}&name=${encodedName}`;
