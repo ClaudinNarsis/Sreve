@@ -349,16 +349,16 @@
   <script>
     function gtagClick(event, url) {
       event.preventDefault();
-      console.log("gtagClick triggered");
+      // console.log("gtagClick triggered");
 
-      gtag('event', 'conversion', {
-        'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
-        'value': 1.0,
-        'currency': 'INR',
-        'event_callback': function () {
-          window.location = url;
-        }
-      });
+      // gtag('event', 'conversion', {
+      //   'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+      //   'value': 1.0,
+      //   'currency': 'INR',
+      //   'event_callback': function () {
+      //     window.location = url;
+      //   }
+      // });
 
       setTimeout(function () {
         window.location = url;

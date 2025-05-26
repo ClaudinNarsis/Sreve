@@ -291,6 +291,18 @@
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
       }
+      .email-form-container input[type="text"],
+      .email-form-container input[type="email"],
+      .email-form-container button {
+        padding: 1rem;
+        font-size: 1rem;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
+      }
     }
   .fab-demo {
     position: fixed;
@@ -311,6 +323,44 @@
   .fab-demo:hover {
     background-color: #333;
   }
+  .email-form-container {
+    max-width: 600px;
+    margin: 4rem auto 0;
+    text-align: center;
+  }
+  .email-form-container form {
+    margin-top: 1rem;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .email-form-container input[type="text"],
+  .email-form-container input[type="email"],
+  .email-form-container button {
+    padding: 1rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+  }
+  .error-message {
+    color: red;
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+  .loading-spinner {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .calendly-wrapper {
+    display: none;
+    margin-top: 4rem;
+  }
   </style>
   
 </head>
@@ -328,16 +378,16 @@
   <script>
     function gtagClick(event, url) {
       event.preventDefault();
-      console.log("gtagClick triggered");
+    //   console.log("gtagClick triggered");
 
-      gtag('event', 'conversion', {
-        'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
-        'value': 1.0,
-        'currency': 'INR',
-        'event_callback': function () {
-          window.location = url;
-        }
-      });
+    //   gtag('event', 'conversion', {
+    //     'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+    //     'value': 1.0,
+    //     'currency': 'INR',
+    //     'event_callback': function () {
+    //       window.location = url;
+    //     }
+    //   });
 
       setTimeout(function () {
         window.location = url;
@@ -352,10 +402,21 @@
     </nav>
   </header>
 
-  <!-- Calendly inline widget begin -->
-<div class="calendly-inline-widget" data-url="https://calendly.com/claudinnarsis/sreve-onboarding?hide_gdpr_banner=1" style="min-width:320px;height:1200px;"></div>
-<script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
-<!-- Calendly inline widget end -->
+  <!-- Email form before Calendly widget -->
+  <div class="container email-form-container">
+    <h2>Start by entering your email</h2>
+    <form id="email-form">
+      <input type="text" id="name-input" placeholder="Your name" required>
+      <input type="email" id="email-input" placeholder="you@example.com" required>
+      <button type="submit" class="cta-button">Submit</button>
+      <div id="email-error" class="error-message"></div>
+      <div id="email-loading" class="loading-spinner" style="display: none;"></div>
+    </form>
+  </div>
+  <!-- Calendly inline widget (hidden initially) -->
+  <div id="calendly-container" class="calendly-wrapper">
+    <div id="calendly-inline-widget" class="calendly-inline-widget" style="height: 1200px;"></div>
+  </div>
   
   <footer class="footer">
     <div class="footer-content" style="text-align: center; grid-template-columns: 1fr;">
@@ -372,7 +433,61 @@
       <p>&copy; 2024 Sreve. All rights reserved.</p>
     </div>
   </footer>
+</footer>
   <!-- <a class="fab-demo" onclick="scrollToVideoAndPlay()">🎥 Watch Demo Video</a> -->
+<script>
+  document.getElementById("email-form").addEventListener("submit", handleEmailSubmit);
+
+  function handleEmailSubmit(event) {
+    event.preventDefault();
+    const nameInput = document.getElementById("name-input");
+    const emailInput = document.getElementById("email-input");
+    const name = nameInput.value;
+    const email = emailInput.value;
+    const errorDiv = document.getElementById("email-error");
+    const loading = document.getElementById("email-loading");
+
+    errorDiv.textContent = "";
+    loading.style.display = "block";
+
+    if (!email || !email.includes("@") || !name) {
+      errorDiv.textContent = "Please enter a valid name and email address.";
+      loading.style.display = "none";
+      return;
+    }
+
+    try {
+        console.log("gtagClick triggered");
+        gtag('event', 'conversion', {
+          'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+          'value': 1.0,
+          'currency': 'INR',
+          'event_callback': function () {
+            console.log("Conversion recorded.");
+          }
+        });
+      const encodedEmail = encodeURIComponent(email);
+      const encodedName = encodeURIComponent(name);
+      const calendlyUrl = `https://calendly.com/claudinnarsis/sreve-onboarding?hide_gdpr_banner=1&email=${encodedEmail}&name=${encodedName}`;
+
+      const calendlyDiv = document.getElementById("calendly-inline-widget");
+      calendlyDiv.setAttribute("data-url", calendlyUrl);
+
+      const script = document.createElement("script");
+      script.src = "https://assets.calendly.com/assets/external/widget.js";
+      script.async = true;
+      script.onload = () => {
+        document.getElementById("calendly-container").style.display = "block";
+        document.querySelector(".email-form-container").style.display = "none";
+        document.querySelector("footer").style.display = "none";
+      };
+      document.body.appendChild(script);
+    } catch (e) {
+      errorDiv.textContent = "An unexpected error occurred. Please try again.";
+    } finally {
+      loading.style.display = "none";
+    }
+  }
+</script>
 </body>
 </html>
-
