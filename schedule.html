@@ -303,6 +303,9 @@
         margin-bottom: 1rem;
         box-sizing: border-box;
       }
+      .email-form-container label {
+        font-size: 0.9rem;
+      }
     }
   .fab-demo {
     position: fixed;
@@ -327,6 +330,15 @@
     max-width: 600px;
     margin: 4rem auto 0;
     text-align: center;
+  }
+  .email-form-container label {
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    width: 100%;
+    max-width: 400px;
+    color: #333;
+    font-size: 0.95rem;
   }
   .email-form-container form {
     margin-top: 1rem;
@@ -398,17 +410,21 @@
     <a href="index.html">
     <img src="assets/logo.png" alt="Sreve Logo" class="logo"></a>
     <nav>
-      <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+      
     </nav>
   </header>
 
   <!-- Email form before Calendly widget -->
   <div class="container email-form-container">
-    <h2>Start by entering your email</h2>
+    <h2>Start by entering your name and email</h2>
     <form id="email-form">
-      <input type="text" id="name-input" placeholder="Your name" required>
+      <label for="name-input">Your Name</label>
+      <input type="text" id="name-input" placeholder="John Doe" required>
+
+      <label for="email-input">Your Email</label>
       <input type="email" id="email-input" placeholder="you@example.com" required>
-      <button type="submit" class="cta-button">Submit</button>
+
+      <button type="submit" class="cta-button">Choose a time</button>
       <div id="email-error" class="error-message"></div>
       <div id="email-loading" class="loading-spinner" style="display: none;"></div>
     </form>
