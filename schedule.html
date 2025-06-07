@@ -154,10 +154,6 @@
       padding: 6rem 2rem;
       background: linear-gradient(to bottom, #fff, #f8f9fa);
     }
-    .features h3{
-      font-size: 2.5rem;
-      text-align: center;
-    }
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -250,13 +246,6 @@
       color: #333;
       border-bottom-color: #333;
     }
-    .features ul{
-      list-style: none;
-    padding: 0;
-    font-size: 1.2rem;
-    color: #444;
-    
-    }
     @media (max-width: 600px) {
       p{
         font-size: 1rem;
@@ -283,11 +272,6 @@
         font-size: 1.8rem;
         margin-bottom: 1.4rem;
       }
-      .features h3{
-        font-size: 1.8rem;
-        margin-bottom: 1.4rem;
-        text-align: center;
-      }
       .how-it-works video{
         width: 98%;
       }
@@ -307,10 +291,20 @@
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
       }
-      .features ul{
+      .email-form-container input[type="text"],
+      .email-form-container input[type="email"],
+      .email-form-container button {
+        padding: 1rem;
         font-size: 1rem;
-        
-    text-align: left;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        margin-bottom: 1rem;
+        box-sizing: border-box;
+      }
+      .email-form-container label {
+        font-size: 0.9rem;
       }
     }
   .fab-demo {
@@ -332,21 +326,69 @@
   .fab-demo:hover {
     background-color: #333;
   }
-    .button-loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #000;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 0.8s linear infinite;
-      margin-left: 0.5rem;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+  .email-form-container {
+    max-width: 600px;
+    margin: 4rem auto 0;
+    text-align: center;
+  }
+  .email-form-container label {
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    width: 100%;
+    max-width: 400px;
+    color: #333;
+    font-size: 0.95rem;
+  }
+  .email-form-container form {
+    margin-top: 1rem;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .email-form-container input[type="text"],
+  .email-form-container input[type="email"],
+  .email-form-container button {
+    padding: 1rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+  }
+  .error-message {
+    color: red;
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+  }
+  .loading-spinner {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .calendly-wrapper {
+    display: none;
+    margin-top: 4rem;
+  }
+  .button-loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #000;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 0.8s linear infinite;
+    margin-left: 1rem;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
   </style>
   
 </head>
@@ -364,22 +406,16 @@
   <script>
     function gtagClick(event, url) {
       event.preventDefault();
-      const button = event.currentTarget;
-      if (!button.querySelector('.button-loader')) {
-        const loader = document.createElement('span');
-        loader.className = 'button-loader';
-        button.appendChild(loader);
-      }
-      // console.log("gtagClick triggered");
+    //   console.log("gtagClick triggered");
 
-      // gtag('event', 'conversion', {
-      //   'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
-      //   'value': 1.0,
-      //   'currency': 'INR',
-      //   'event_callback': function () {
-      //     window.location = url;
-      //   }
-      // });
+    //   gtag('event', 'conversion', {
+    //     'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+    //     'value': 1.0,
+    //     'currency': 'INR',
+    //     'event_callback': function () {
+    //       window.location = url;
+    //     }
+    //   });
 
       setTimeout(function () {
         window.location = url;
@@ -387,133 +423,33 @@
     }
     </script>
   <header class="header">
-    <a href="index.html">
+    <a href="#">
     <img src="assets/logo.png" alt="Sreve Logo" class="logo"></a>
     <nav>
-      <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+      
     </nav>
   </header>
 
-  <section class="hero">
-    <div class="container">
-      <span class="context-text">Still getting vague client briefs?</span>
-      <h1>We’ll help your client articulate what they want — you focus on design.</h1>
-      <p>Book a 15-min call to see how we handle client onboarding and deliver a creative direction doc in 24 hours.</p>
-      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
-    </div>
-  </section>
-  <section class="how-it-works">
-  <div class="how-it-works">
-    <div class="container">
-      <h3>How It Works</h3>
-      <div class="how-grid">
-        <div class="how-item">
-          <h4>Step 1</h4>
-          <p><strong>Send your client a Sreve intake link</strong></p>
-        </div>
-        <div class="how-item">
-          <h4>Step 2</h4>
-          <p><strong>We guide them through structured Q&amp;A</strong></p>
-        </div>
-        <div class="how-item">
-          <h4>Step 3</h4>
-          <p><strong>You get a clear direction doc with insights, tone, goals &amp; visuals</strong></p>
-        </div>
-        <!-- <div class="how-item">
-          <img src="assets/4.png" alt="Post-call summary dashboard" />
-          <p>You get a clean, ready-to-edit Notion doc with insights, inspiration, and references to build from—your way.</p>
-        </div> -->
-      </div>
-      <div class="container" style="text-align: center; margin: 4rem auto;">
-        <a  class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
-      </div>
-      
-        
-      
-    </div>
+  <!-- Email form before Calendly widget -->
+  <div class="container email-form-container">
+    <h2>Start by entering your name and email</h2>
+    <form id="email-form">
+      <label for="name-input">Your Name</label>
+      <input type="text" id="name-input" placeholder="John Doe" required>
+
+      <label for="email-input">Your Email</label>
+      <input type="email" id="email-input" placeholder="you@example.com" required>
+
+      <button type="submit" class="cta-button" id="submit-button">
+        Choose a time <span id="button-loader" class="button-loader" style="display:none;"></span>
+      </button>
+      <div id="email-error" class="error-message"></div>
+      <div id="email-loading" class="loading-spinner" style="display: none;"></div>
+    </form>
   </div>
-</section>
-<section class="features">
-  <h3>What You Get</h3>
-        <ul>
-          <li>1. A co-branded client intake</li><br>
-          <li>2. A strategy doc in 24 hours</li><br>
-          <li>3. No more decoding vague notes</li><br>
-        </ul>
-</section>
-<!-- <section class="features" id="demo-video-section">
-  <div class="how-it-works">
-    
-      <h3>Demo video</h3>
-      
-      <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1086719406?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="SREVE Demo"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
-      
-      <p style="margin-top: 25px;">
-        <a class="theme-link" href="https://www.notion.so/Demo-1e89f548f3f880b094c7fd8aea1d0ae9?pvs=4" target="_blank"> 🔗 Check out the document shown in the video here</a>
-      </p>
-    </div>
-  
-</section> -->
-  
-  <!-- <section class="features">
-    
-      <h3>Why Creatives Love Sreve</h3>
-      <div class="features-grid">
-        <div class="feature-item">
-          <img src="assets/time_icon.png" alt="Save Time" class="feature-icon">
-          <h2>No More Guesswork</h2>
-          <p>We help decode vague client briefs into actionable direction—fast.</p>
-        </div>
-        <div class="feature-item">
-          <img src="assets/better_communication.png" alt="Better Communication" class="feature-icon">
-          <h2>Focus on Design, Not Docs</h2>
-          <p>Spend less time digging through references and more time creating.</p>
-        </div>
-        <div class="feature-item">
-          <img src="assets/better_quality.png" alt="Better Quality" class="feature-icon">
-          <h2>Like a Creative Sidekick</h2>
-          <p>Smart questions, curated insights, and always tuned into your vibe.</p>
-        </div>
-      </div>
-    
-  </section> -->
-
-  <div class="container">
-    <div class="grid">
-      <div class="card">
-        <img src="assets/p3.jpeg" alt="Priya" class="testimonial-avatar">
-        <h2>"Honestly? This saved me hours of back-and-forth. I used to dread the kickoff phase—now I’m excited again."</h2>
-        <p>— Priya, Freelance Poster Designer</p>
-      </div>
-      <div class="card">
-        <img src="assets/p4.jpg" alt="Jordan" class="testimonial-avatar">
-        <h2>"Felt like working with a super-organized assistant who actually gets design. Big fan."</h2>
-        <p>— Jordan, Motion Graphics Artist</p>
-      </div>
-      <div class="card">
-        <img src="assets/p1.jpg" alt="Arjun" class="testimonial-avatar">
-        <h2>"It helped me ask the right questions, which made my client trust me more. Total win."</h2>
-        <p>— Arjun, Agency Founder</p>
-      </div>
-      <div class="card">
-        <img src="assets/p2.jpeg" alt="Lisa" class="testimonial-avatar">
-        <h2>"I didn’t think AI could help in my process—but this felt more like collaboration than automation."</h2>
-        <p>— Lisa, Brand Identity Designer</p>
-      </div>
-    </div>
-  </div>
-
-  
-
-  <div class="container" style="text-align: center; margin: 4rem auto;">
-    <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
-  </div>
-
-  <div class="container" style="text-align: center; margin: 4rem auto; max-width: 600px;">
-    <p style="font-size: 1.2rem; color: #444; margin-bottom: 1.5rem;">
-      Built by ex-designers who lived through bad briefs. Want to talk?
-    </p>
-    <a href="https://calendly.com/claudinnarsis/30min" style="color: #000; text-decoration: underline; font-weight: 500;">Book a quick chat with the team →</a>
+  <!-- Calendly inline widget (hidden initially) -->
+  <div id="calendly-container" class="calendly-wrapper">
+    <div id="calendly-inline-widget" class="calendly-inline-widget" style="height: 1200px;"></div>
   </div>
   
   <footer class="footer">
@@ -531,28 +467,66 @@
       <p>&copy; 2024 Sreve. All rights reserved.</p>
     </div>
   </footer>
+</footer>
   <!-- <a class="fab-demo" onclick="scrollToVideoAndPlay()">🎥 Watch Demo Video</a> -->
-</body>
-
-  
-<script src="https://player.vimeo.com/api/player.js"></script>
 <script>
-  function scrollToVideoAndPlay() {
-    const videoSection = document.getElementById("demo-video-section");
-    const iframe = videoSection.querySelector("iframe");
+  document.getElementById("email-form").addEventListener("submit", handleEmailSubmit);
 
-    if (videoSection && iframe) {
-      videoSection.scrollIntoView({ behavior: "smooth" });
+  function handleEmailSubmit(event) {
+    event.preventDefault();
+    const loaderSpan = document.getElementById("button-loader");
+    const nameInput = document.getElementById("name-input");
+    const emailInput = document.getElementById("email-input");
+    const name = nameInput.value;
+    const email = emailInput.value;
+    const errorDiv = document.getElementById("email-error");
+    const loading = document.getElementById("email-loading");
 
-      // Wait a bit for the scroll to complete, then play
-      setTimeout(() => {
-        const player = new Vimeo.Player(iframe);
-        player.play().catch(error => {
-          console.error('Error playing video:', error);
+    errorDiv.textContent = "";
+    loading.style.display = "block";
+    loaderSpan.style.display = "inline-block";
+
+    if (!email || !email.includes("@") || !name) {
+      errorDiv.textContent = "Please enter a valid name and email address.";
+      loading.style.display = "none";
+      loaderSpan.style.display = "none";
+      return;
+    }
+
+    try {
+        console.log("gtagClick triggered");
+        gtag('event', 'conversion', {
+          'send_to': 'AW-17102136063/19DjCLzorssaEP_F99o_',
+          'value': 1.0,
+          'currency': 'INR',
+          'event_callback': function () {
+            console.log("Conversion recorded.");
+          }
         });
-      }, 500); // delay may be tweaked based on scroll duration
+      const encodedEmail = encodeURIComponent(email);
+      const encodedName = encodeURIComponent(name);
+      const calendlyUrl = `https://calendly.com/claudinnarsis/sreve-onboarding?hide_gdpr_banner=1&email=${encodedEmail}&name=${encodedName}`;
+
+      const calendlyDiv = document.getElementById("calendly-inline-widget");
+      calendlyDiv.setAttribute("data-url", calendlyUrl);
+
+      const script = document.createElement("script");
+      script.src = "https://assets.calendly.com/assets/external/widget.js";
+      script.async = true;
+      script.onload = () => {
+        document.getElementById("calendly-container").style.display = "block";
+        document.querySelector(".email-form-container").style.display = "none";
+        document.querySelector("footer").style.display = "none";
+      };
+      document.body.appendChild(script);
+    } catch (e) {
+      errorDiv.textContent = "An unexpected error occurred. Please try again.";
+      loaderSpan.style.display = "none";
+    } finally {
+      loading.style.display = "none";
+      loaderSpan.style.display = "none";
     }
   }
 </script>
+</body>
 </html>
-
