@@ -21,6 +21,9 @@
       padding: 0;
       text-align: center;
     }
+    .hero .container, .hero .container h1, .hero .container p, .hero .container a, .hero .container strong {
+      color: white;
+    }
     .container {
       max-width: 1200px;
       margin: auto;
@@ -42,14 +45,35 @@
     }
     .hero {
       padding: 4rem 2rem;
-      background: linear-gradient(to bottom, rgba(248, 249, 250, 0.9), rgba(255, 255, 255, 0.9)),
-                  url('assets/hero-bg.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
       min-height: 600px;
       display: flex;
       align-items: center;
+      background-color: #f3f4f6;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      backdrop-filter: blur(3px);
+      z-index: 0.5;
+    }
+    .hero .container {
+      position: relative;
+      z-index: 1;
     }
     
     h1 {
@@ -67,7 +91,7 @@
       line-height: 1.6;
     }
     .cta-button {
-      background-color: #000;
+      background-color: #ff6600;
       color: white;
       padding: 1.25rem 2.5rem;
       border-radius: 12px;
@@ -79,7 +103,7 @@
     }
     .cta-button:hover {
       transform: translateY(-2px);
-      background-color: #333;
+      background-color: #e65c00;
     }
     .grid {
       display: grid;
@@ -274,7 +298,10 @@
         padding: 1rem;
       }
       .hero h1 {
-        font-size: 2rem;
+        font-size: 1.5rem;
+      }
+      .hero p{
+        font-size: 0.6rem;
       }
       .how-it-works{
         padding: 1.2rem 0rem;
@@ -395,52 +422,99 @@
   </header>
 
   <section class="hero">
+    <video autoplay muted loop playsinline>
+      <source src="assets/hero-bg.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-overlay"></div>
     <div class="container">
-      <span class="context-text">Still getting vague client briefs?</span>
-      <h1>We’ll help your client articulate what they want — you focus on design.</h1>
-      <p>Book a 15-min call to see how we handle client onboarding and deliver a creative direction doc in 24 hours.</p>
-      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
+      <h1>You Design. We Handle the Chaos.</h1>
+      <p><strong>Close better projects with less back-and-forth.</strong></p>
+      <!-- <img src="assets/hero-mockup.png" alt="Creative Brief & Calendar Mockup" style="max-width: 600px; width: 100%; margin-top: 2rem; border-radius: 12px;"> -->
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Your Free Demo Today!</a>
+      <div style="margin-top: 1rem;">
+        <a href="#demo-video-section" class="theme-link">Join 100+ freelance designers who skip chaotic briefs</a>
+      </div>
     </div>
   </section>
-  <section class="how-it-works">
-  <div class="how-it-works">
+
+  <!-- Benefits Section: Why Creatives Love Sreve -->
+  <section class="features" style="padding-top: 2rem;">
     <div class="container">
-      <h3>How It Works</h3>
-      <div class="how-grid">
-        <div class="how-item">
-          <h4>Step 1</h4>
-          <p><strong>Send your client a Sreve intake link</strong></p>
+      <h3 style="text-align: center;">Why Creatives Love Sreve</h3>
+      <div class="features-grid">
+        <div class="feature-item">
+          <img src="assets/s2-1.jpg" alt="Checklist Icon" class="feature-icon" />
+          <p>✓ Less back-and-forth with clients</p>
         </div>
-        <div class="how-item">
-          <h4>Step 2</h4>
-          <p><strong>We guide them through structured Q&amp;A</strong></p>
+        <div class="feature-item">
+          <img src="assets/s2-2.jpg" alt="Calendar Icon" class="feature-icon" />
+          <p>✓ Close projects faster and with confidence</p>
         </div>
-        <div class="how-item">
-          <h4>Step 3</h4>
-          <p><strong>You get a clear direction doc with insights, tone, goals &amp; visuals</strong></p>
+        <div class="feature-item">
+          <img src="assets/s2-3.jpg" alt="Happy Designer Icon" class="feature-icon" />
+          <p>✓ Land higher-paying projects with clearer scope</p>
         </div>
-        <!-- <div class="how-item">
-          <img src="assets/4.png" alt="Post-call summary dashboard" />
-          <p>You get a clean, ready-to-edit Notion doc with insights, inspiration, and references to build from—your way.</p>
-        </div> -->
       </div>
-      <div class="container" style="text-align: center; margin: 4rem auto;">
-        <a  class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
-      </div>
-      
-        
-      
     </div>
-  </div>
-</section>
-<section class="features">
-  <h3>What You Get</h3>
-        <ul>
-          <li>1. A co-branded client intake</li><br>
-          <li>2. A strategy doc in 24 hours</li><br>
-          <li>3. No more decoding vague notes</li><br>
-        </ul>
-</section>
+  </section>
+
+  <section class="features">
+    <h3>👋 What We Do</h3>
+    <p style="max-width: 700px; margin: 0 auto; font-size: 1.2rem;">
+      Freelancers lose hours (or days) trying to decode vague client messages, negotiate pricing, and align on direction — <em>before</em> any creative work begins.
+      <br><br>
+      <strong>We handle that for you.</strong><br>
+      You focus on design. We handle the chaos before it.
+    </p>
+  </section>
+
+  <section class="features">
+    <h3>✅ What You Get</h3>
+    <div class="features-grid">
+      <div class="feature-item">
+        <h2>🔹 A Clear Creative Brief</h2>
+        <p>Send us your client’s raw message, transcript, or voice note — we turn it into a clean brief with goals, tone, audience, and must-haves.</p>
+      </div>
+      <div class="feature-item">
+        <h2>🔹 Visual Style Options</h2>
+        <p>We curate 2–3 creative directions with moodboards, logo references, and color/typography suggestions. Perfect to pitch or get buy-in before you start.</p>
+      </div>
+      <div class="feature-item">
+        <h2>🔹 Pricing + Proposal Support</h2>
+        <p>Not sure what to quote? We help you frame a smart, confident price and send a proposal your client won’t ghost.</p>
+      </div>
+      <div class="feature-item">
+        <h2>🔹 Optional: We Handle the Client Call</h2>
+        <p>If you’d rather not negotiate — we’ll take the call, clarify the needs, and hand back a fully-aligned project for you to deliver.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <h3>💼 Who This Is For</h3>
+    <ul class="features-grid">
+      <li>Freelance designers, 3D artists, illustrators, or small studios</li>
+      <li>Anyone who’s tired of vague briefs, chaotic clients, or undercharging</li>
+      <li>Creators who want to look more professional without doing more admin</li>
+    </ul>
+  </section>
+  <section class="features">
+    <h3>📦 Packages</h3>
+    <div class="features-grid">
+      <div class="feature-item">
+        <h2>Lite Brief</h2>
+        <p>Just the essentials: AI-powered brief + 1 visual direction<br><br>🕒 24h turnaround — ₹1000</p>
+      </div>
+      <div class="feature-item">
+        <h2>Full Alignment Kit</h2>
+        <p>Brief + 3 directions + proposal help + moodboard PDF<br><br>🕒 2–3 days — ₹2000</p>
+      </div>
+      <div class="feature-item">
+        <h2>BD Partner Add-on</h2>
+        <p>We join the client call, handle back-and-forth, and close the deal.<br><br>💰 You pay only if project closes — 10% of fee.</p>
+      </div>
+    </div>
+  </section>
 <!-- <section class="features" id="demo-video-section">
   <div class="how-it-works">
     
@@ -479,6 +553,9 @@
   </section> -->
 
   <div class="container">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <p style="font-size: 1.1rem; font-weight: 500;">✅ Trusted by 500+ creatives — saving 10+ hours per project</p>
+    </div>
     <div class="grid">
       <div class="card">
         <img src="assets/p3.jpeg" alt="Priya" class="testimonial-avatar">
@@ -505,9 +582,13 @@
 
   
 
-  <div class="container" style="text-align: center; margin: 4rem auto;">
-    <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Discovery Call</a>
-  </div>
+  <section class="features">
+    <h3>Want to see if this fits your workflow?</h3>
+    <div style="text-align:center; margin-top: 2rem;">
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Your Free Client Clarity Guide</a>
+      <p style="margin-top: 1rem; font-size: 1rem; color: #888;">⚡ Limited spots available this month</p>
+    </div>
+  </section>
 
   <div class="container" style="text-align: center; margin: 4rem auto; max-width: 600px;">
     <p style="font-size: 1.2rem; color: #444; margin-bottom: 1.5rem;">
