@@ -13,6 +13,108 @@
     })(window, document, "clarity", "script", "rjguvuzjgr");
   </script> 
   <style>
+    .grid.steps {
+      margin-top: 3rem;
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+    }
+
+    .card.step {
+      flex: 1;
+      text-align: center;
+    }
+
+    .icon-circle {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .step-quote {
+      margin-top: 2rem;
+      font-style: italic;
+      color: #666;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .step-preview {
+      margin-top: 3rem;
+      align-items: center;
+    }
+
+    .step-preview-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .step-preview-description {
+      font-size: 1rem;
+      color: #555;
+      max-width: 500px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .step-preview-video {
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      margin: 1rem auto;
+      display: block;
+    }
+    /* Custom classes for removed inline styles */
+    .features-love {
+      padding-top: 2rem;
+    }
+    .section-title {
+      text-align: center;
+    }
+    .what-we-do {
+      
+      
+      
+      
+      background: none !important;
+      font-size: 1.25rem;
+      line-height: 1.8;
+      text-align: center;
+      color: #333;
+    }
+    .trust-badge {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .trust-text {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .final-cta {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .cta-note {
+      margin-top: 1rem;
+      font-size: 1rem;
+      color: #888;
+    }
+    .contact-box {
+      text-align: center;
+      margin: 4rem auto;
+      max-width: 600px;
+    }
+    .contact-text {
+      font-size: 1.2rem;
+      color: #444;
+      margin-bottom: 1.5rem;
+    }
+    .footer-nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
     body {
       margin: 0;
       font-family: sans-serif;
@@ -24,6 +126,9 @@
     .hero .container, .hero .container h1, .hero .container p, .hero .container a, .hero .container strong {
       color: white;
     }
+    .feature-item p {
+  color: white;
+}
     .container {
       max-width: 1200px;
       margin: auto;
@@ -142,6 +247,27 @@
       margin-bottom: 3rem;
       color: #111;
     }
+    .what-you-get p{
+      color: #444;
+      margin: 0;
+      font-size: 1.1rem;
+    }
+    .what-you-get h2{
+      color: #111;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .packages h2{
+      color: #111;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    .packages p{
+      color: #444;
+      
+      font-size: 1.1rem;
+    }
+    
     .how-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -190,8 +316,54 @@
       margin: 3rem auto;
     }
     .feature-item {
-      text-align: center;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      border-radius: 16px;
+      overflow: hidden;
+      color: white;
+      font-weight: bold;
       padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 180px;
+    }
+    section.packages.features {
+      padding: 2rem;
+    }
+    body > section.packages.features > div.features-grid > div.feature-item {
+      display: grid;
+      padding: 0;
+    }
+    body > section.packages.features > div.features-grid  {
+      margin: 0;
+    }
+    body > section.packages.features > div.final-cta > a {
+      margin: 0;
+    }
+    body > section.packages.features h3 {
+      margin-bottom: 0;
+    }
+    body > section.packages.features > div.final-cta {
+      margin-top: 0;
+    }
+    .feature-item .feature-blur-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(0.5px);
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+    }
+    .feature-item p {
+      position: relative;
+      z-index: 1;
+      font-size: 1.2rem;
+      margin: 0;
     }
     .feature-icon {
       width: 64px;
@@ -438,37 +610,54 @@
   </section>
 
   <!-- Benefits Section: Why Creatives Love Sreve -->
-  <section class="features" style="padding-top: 2rem;">
+  <section class="features features-love">
     <div class="container">
-      <h3 style="text-align: center;">Why Creatives Love Sreve</h3>
+      <h3 class="section-title">Why Creatives Love Sreve</h3>
       <div class="features-grid">
-        <div class="feature-item">
-          <img src="assets/s2-1.jpg" alt="Checklist Icon" class="feature-icon" />
+        <div class="feature-item" style="background-image: url('assets/s2-1.jpg');">
+          <div class="feature-blur-overlay"></div>
           <p>✓ Less back-and-forth with clients</p>
         </div>
-        <div class="feature-item">
-          <img src="assets/s2-2.jpg" alt="Calendar Icon" class="feature-icon" />
+        <div class="feature-item" style="background-image: url('assets/s2-2.jpg');">
+          <div class="feature-blur-overlay"></div>
           <p>✓ Close projects faster and with confidence</p>
         </div>
-        <div class="feature-item">
-          <img src="assets/s2-3.jpg" alt="Happy Designer Icon" class="feature-icon" />
+        <div class="feature-item" style="background-image: url('assets/s2-3.jpg');">
+          <div class="feature-blur-overlay"></div>
           <p>✓ Land higher-paying projects with clearer scope</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="features">
-    <h3>👋 What We Do</h3>
-    <p style="max-width: 700px; margin: 0 auto; font-size: 1.2rem;">
-      Freelancers lose hours (or days) trying to decode vague client messages, negotiate pricing, and align on direction — <em>before</em> any creative work begins.
-      <br><br>
-      <strong>We handle that for you.</strong><br>
-      You focus on design. We handle the chaos before it.
-    </p>
+  <section class="what-we-do features">
+    <h3 class="section-title">📞 What We Do</h3>
+    <div class="what-we-do-content">
+      <p><strong>Struggling to align with clients?</strong></p>
+      <p>We onboard one chaotic project at a time — via a quick call with a freelance BD powered by Sreve AI.</p>
+      <p>Think of it like hiring a strategic partner, just for that messy kickoff phase. You bring the client message. We turn it into a sharp, actionable brief — in hours, not days.</p>
+    </div>
+    <div class="grid steps">
+      <div class="card step">
+        <h2>Step 1: Book a 20-min Call</h2>
+        <p>We onboard your client chaos, decode your inputs, and align on goals. All done with a real Sreve rep (not just a bot).</p>
+      </div>
+      <div class="card step">
+        <h2>Step 2: Sreve AI Goes to Work</h2>
+        <p>Your BD partner uses Sreve AI to turn raw input into a clear creative brief, direction ideas, and pricing suggestions.</p>
+      </div>
+      <div class="card step">
+        <h2>Step 3: You Start with Clarity</h2>
+        <p>Walk away with a proposal-ready doc and clear next steps — ready to start design without the usual friction.</p>
+      </div>
+    </div>
+    <div class="final-cta" style="">
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">🎯 Book Your Project Alignment Call</a>
+      <p class="cta-note">No retainer. Just clarity for one project. Try it free.</p>
+    </div>
   </section>
 
-  <section class="features">
+  <!-- <section class="what-you-get features">
     <h3>✅ What You Get</h3>
     <div class="features-grid">
       <div class="feature-item">
@@ -488,31 +677,27 @@
         <p>If you’d rather not negotiate — we’ll take the call, clarify the needs, and hand back a fully-aligned project for you to deliver.</p>
       </div>
     </div>
-  </section>
+  </section> -->
 
-  <section class="features">
+  <!-- <section class="who-this-is-for features">
     <h3>💼 Who This Is For</h3>
     <ul class="features-grid">
       <li>Freelance designers, 3D artists, illustrators, or small studios</li>
       <li>Anyone who’s tired of vague briefs, chaotic clients, or undercharging</li>
       <li>Creators who want to look more professional without doing more admin</li>
     </ul>
-  </section>
-  <section class="features">
-    <h3>📦 Packages</h3>
+  </section> -->
+  <section class="packages features">
+    <h3>Starts at $10</h3>
     <div class="features-grid">
       <div class="feature-item">
-        <h2>Lite Brief</h2>
-        <p>Just the essentials: AI-powered brief + 1 visual direction<br><br>🕒 24h turnaround — ₹1000</p>
+        
+        <p>Includes a clear creative brief, 3 visual directions, and pricing guidance.</p>
       </div>
-      <div class="feature-item">
-        <h2>Full Alignment Kit</h2>
-        <p>Brief + 3 directions + proposal help + moodboard PDF<br><br>🕒 2–3 days — ₹2000</p>
-      </div>
-      <div class="feature-item">
-        <h2>BD Partner Add-on</h2>
-        <p>We join the client call, handle back-and-forth, and close the deal.<br><br>💰 You pay only if project closes — 10% of fee.</p>
-      </div>
+    </div>
+    <div class="final-cta">
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">🎯 Book a Free Demo Call</a>
+      <p class="cta-note">No risk. See how Sreve works before you pay.</p>
     </div>
   </section>
 <!-- <section class="features" id="demo-video-section">
@@ -553,9 +738,7 @@
   </section> -->
 
   <div class="container">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <p style="font-size: 1.1rem; font-weight: 500;">✅ Trusted by 500+ creatives — saving 10+ hours per project</p>
-    </div>
+    
     <div class="grid">
       <div class="card">
         <img src="assets/p3.jpeg" alt="Priya" class="testimonial-avatar">
@@ -578,20 +761,23 @@
         <p>— Lisa, Brand Identity Designer</p>
       </div>
     </div>
+    <div class="trust-badge">
+      <p class="trust-text">✅ Trusted by 500+ creatives — saving 10+ hours per project</p>
+    </div>
   </div>
 
   
 
   <section class="features">
     <h3>Want to see if this fits your workflow?</h3>
-    <div style="text-align:center; margin-top: 2rem;">
+    <div class="final-cta">
       <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Your Free Client Clarity Guide</a>
-      <p style="margin-top: 1rem; font-size: 1rem; color: #888;">⚡ Limited spots available this month</p>
+      <p class="cta-note">⚡ Limited spots available this month</p>
     </div>
   </section>
 
-  <div class="container" style="text-align: center; margin: 4rem auto; max-width: 600px;">
-    <p style="font-size: 1.2rem; color: #444; margin-bottom: 1.5rem;">
+  <div class="container contact-box">
+    <p class="contact-text">
       Built by ex-designers who lived through bad briefs. Want to talk?
     </p>
     <a href="https://calendly.com/claudinnarsis/30min" style="color: #000; text-decoration: underline; font-weight: 500;">Book a quick chat with the team →</a>
@@ -600,7 +786,7 @@
   <footer class="footer">
     <div class="footer-content" style="text-align: center; grid-template-columns: 1fr;">
       <div class="footer-section">
-        <ul style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+        <ul class="footer-nav">
           <li><a href="#">About</a></li>
           <li><a href="#">FAQ</a></li>
           <li><a href="#">Privacy Policy</a></li>
