@@ -266,7 +266,6 @@ p {
   background-color: #111;
   color: #fff;
   padding: 4rem 2rem 2rem;
-  margin-top: 4rem;
 }
 
 .footer-content {
@@ -404,7 +403,7 @@ p {
   font-size: 1.25rem;
   color: #555;
   max-width: 800px;
-  margin: 0 auto 2rem;
+  margin: 0 auto;
 }
 
 .example-grid {
@@ -459,6 +458,25 @@ p {
   max-width: 1000px;
   margin-top: 4rem;
   border-radius: 16px;
+}
+.packages h2{
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.testimonial-section h2{
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.final-cta-section {
+  padding: 6rem 2rem;
+  background-color: #f4eae4;
+}
+.final-cta-section h3{
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.final-cta-section p{
+  margin-top: 1rem;
 }
 
 @media (max-width: 1270px) {
@@ -528,11 +546,7 @@ p {
     font-size: 1.8rem;
     margin-bottom: 1.4rem;
   }
-  .features h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1.4rem;
-    text-align: center;
-  }
+
   .how-it-works video {
     width: 98%;
   }
