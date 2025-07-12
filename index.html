@@ -12,540 +12,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "rjguvuzjgr");
   </script> 
-  <style>
-    .grid.steps {
-      margin-top: 3rem;
-      gap: 2rem;
-      justify-content: center;
-    }
-
-    .card.step {
-      flex: 1;
-      text-align: center;
-    }
-
-    .icon-circle {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    .step-quote {
-      margin-top: 2rem;
-      font-style: italic;
-      color: #666;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    .step-preview {
-      margin-top: 3rem;
-      align-items: center;
-    }
-
-    .step-preview-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .step-preview-description {
-      font-size: 1rem;
-      color: #555;
-      max-width: 500px;
-      margin: auto;
-      text-align: center;
-    }
-
-    .step-preview-video {
-      border-radius: 12px;
-      width: 100%;
-      max-width: 480px;
-      margin: 1rem auto;
-      display: block;
-    }
-    /* Custom classes for removed inline styles */
-    .features-love {
-      padding-top: 2rem;
-    }
-    .section-title {
-      text-align: center;
-    }
-    .what-we-do {
-      
-      
-      
-      
-      background: none !important;
-      font-size: 1.25rem;
-      line-height: 1.8;
-      text-align: center;
-      color: #333;
-    }
-    .trust-badge {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .trust-text {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .final-cta {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .cta-note {
-      margin-top: 1rem;
-      font-size: 1rem;
-      color: #888;
-    }
-    .contact-box {
-      text-align: center;
-      margin: 4rem auto;
-      max-width: 600px;
-    }
-    .contact-text {
-      font-size: 1.2rem;
-      color: #444;
-      margin-bottom: 1.5rem;
-    }
-    .footer-nav {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #fff;
-      color: #333;
-      padding: 0;
-      text-align: center;
-    }
-    .hero .container, .hero .container h1, .hero .container p, .hero .container a, .hero .container strong {
-      color: white;
-    }
-    .feature-item p {
-  color: white;
-}
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2rem;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.5rem 2rem;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      height: 40px;
-    }
-    .hero {
-      padding: 4rem 2rem;
-      min-height: 600px;
-      display: flex;
-      align-items: center;
-      background-color: #f3f4f6;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-    }
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      backdrop-filter: blur(3px);
-      z-index: 0.5;
-    }
-    .hero .container {
-      position: relative;
-      z-index: 1;
-    }
-    
-    h1 {
-      font-size: 3.5rem;
-      font-weight: bold;
-      color: #111;
-      margin-bottom: 1.5rem;
-      line-height: 1.2;
-    }
-    p {
-      font-size: 1.25rem;
-      color: #555;
-      max-width: 800px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-    .cta-button {
-      background-color: #ff6600;
-      color: white;
-      padding: 1.25rem 2.5rem;
-      border-radius: 12px;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 2rem;
-      font-size: 1.1rem;
-      transition: transform 0.2s, background-color 0.2s;
-    }
-    .cta-button:hover {
-      transform: translateY(-2px);
-      background-color: #e65c00;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin: 4rem auto;
-      max-width: 1200px;
-    }
-    .card {
-      background: #fff;
-      border: 1px solid #eee;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-    }
-    .card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #222;
-    }
-    .card p {
-      font-size: 1rem;
-      color: #666;
-      margin: 0;
-    }
-    .how-it-works {
-      padding: 6rem 0rem;
-      background-color: #f8f9fa;
-    }
-    .how-it-works h3 {
-      font-size: 2.5rem;
-      margin-bottom: 3rem;
-      color: #111;
-    }
-    .what-you-get p{
-      color: #444;
-      margin: 0;
-      font-size: 1.1rem;
-    }
-    .what-you-get h2{
-      color: #111;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .packages h2{
-      color: #111;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .packages p{
-      color: #444;
-      
-      font-size: 1.1rem;
-    }
-    
-    .how-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 3rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .how-item {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .how-item img {
-      width: 100%;
-      max-height: none;
-      height: auto;
-      object-fit: contain;
-      border-radius: 12px;
-      margin-bottom: 1.5rem;
-    }
-    .how-item p {
-      font-size: 1.1rem;
-      color: #444;
-      margin: 0;
-    }
-    .testimonial-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      margin-bottom: 1rem;
-    }
-    .features {
-      padding: 6rem 2rem;
-      background: linear-gradient(to bottom, #fff, #f8f9fa);
-    }
-    .features h3{
-      font-size: 2.5rem;
-      text-align: center;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      /* max-width: 1200px; */
-      margin: 3rem auto;
-    }
-    .feature-item {
-      position: relative;
-      background-size: cover;
-      background-position: center;
-      border-radius: 16px;
-      overflow: hidden;
-      color: white;
-      font-weight: bold;
-      padding: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      min-height: 180px;
-    }
-    section.packages.features {
-      padding: 2rem;
-    }
-    body > section.packages.features > div.features-grid > div.feature-item {
-      display: grid;
-      padding: 0;
-    }
-    body > section.packages.features > div.features-grid  {
-      margin: 0;
-    }
-    body > section.packages.features > div.final-cta > a {
-      margin: 0;
-    }
-    body > section.packages.features h3 {
-      margin-bottom: 0;
-    }
-    body > section.packages.features > div.final-cta {
-      margin-top: 0;
-    }
-    .feature-item .feature-blur-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      backdrop-filter: blur(0.5px);
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 0;
-    }
-    .feature-item p {
-      position: relative;
-      z-index: 1;
-      font-size: 1.2rem;
-      margin: 0;
-    }
-    .feature-icon {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 1.5rem;
-    }
-    .footer {
-      background-color: #111;
-      color: #fff;
-      padding: 4rem 2rem 2rem;
-      margin-top: 4rem;
-    }
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 3rem;
-      text-align: left;
-    }
-    .footer-section h4 {
-      color: #fff;
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-    .footer-section ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .footer-section ul li {
-      margin-bottom: 0.75rem;
-    }
-    .footer-section ul li a {
-      color: #999;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .footer-section ul li a:hover {
-      color: #fff;
-    }
-    .social-links {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .social-links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-    .footer-bottom {
-      max-width: 1200px;
-      margin: 3rem auto 0;
-      padding-top: 2rem;
-      border-top: 1px solid #333;
-      text-align: center;
-      color: #666;
-      font-size: 0.9rem;
-    }
-    .context-text {
-      display: block;
-      font-size: 1.1rem;
-      color: #666;
-      margin-bottom: 1rem;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-    .theme-link {
-      color: #666;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-      border-bottom: 0px solid #000;
-      padding-bottom: 2px;
-      margin-top: 20px;
-    }
-    .theme-link:hover {
-      color: #333;
-      border-bottom-color: #333;
-    }
-    .features ul{
-      list-style: none;
-    padding: 0;
-    font-size: 1.2rem;
-    color: #444;
-    
-    }
-    @media (max-width: 600px) {
-      p{
-        font-size: 1rem;
-      }
-      h1{
-        font-size: 2rem;
-      }
-      h2{
-        font-size: 1.5rem;
-      }
-      h3{
-        font-size: 1.2rem;
-      }
-      .container{
-        padding: 1rem;
-      }
-      .hero h1 {
-        font-size: 1.5rem;
-      }
-      .hero p{
-        font-size: 0.6rem;
-      }
-      .how-it-works{
-        padding: 1.2rem 0rem;
-      }
-      .how-it-works h3{
-        font-size: 1.8rem;
-        margin-bottom: 1.4rem;
-      }
-      .features h3{
-        font-size: 1.8rem;
-        margin-bottom: 1.4rem;
-        text-align: center;
-      }
-      .how-it-works video{
-        width: 98%;
-      }
-      .hero p {
-        font-size: 1rem;
-      }
-      .header .logo {
-        height: 30px;
-      }
-      .header .cta-button {
-        font-size: 0.8rem;
-        padding: 0.75rem 1.25rem;
-      }
-      .fab-demo {
-        bottom: 1rem;
-        right: 1rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-      }
-      .features ul{
-        font-size: 1rem;
-        
-    text-align: left;
-      }
-    }
-  .fab-demo {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    background-color: #000;
-    color: #fff;
-    padding: 0.75rem 1.25rem;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-    text-decoration: none;
-    z-index: 999;
-    transition: background-color 0.3s ease;
-  }
-  .fab-demo:hover {
-    background-color: #333;
-  }
-    .button-loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #000;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 0.8s linear infinite;
-      margin-left: 0.5rem;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/style.css">
   
 </head>
 <!-- Google tag (gtag.js) -->
@@ -586,24 +53,41 @@
     </script>
   <header class="header">
     <a href="index.html">
-    <img src="assets/logo.png" alt="Sreve Logo" class="logo"></a>
-    <nav>
-      <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+      <img src="assets/logo.png" alt="Sreve Logo" class="logo">
+    </a>
+    <nav class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#demo-video-section">Example</a>
+      <a href="#pricing">Pricing</a>
     </nav>
+    <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+    <button class="mobile-menu-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
   </header>
 
   <section class="hero">
-    <video autoplay muted loop playsinline>
-      <source src="assets/hero-bg.mp4" type="video/mp4" />
-    </video>
-    <div class="hero-overlay"></div>
     <div class="container">
-      <h1>You Design. We Handle the Chaos.</h1>
-      <p><strong>Close better projects with less back-and-forth.</strong></p>
+      <h1>Generate ads in seconds</h1>
+      <p>the Save 10x of your time with AI generated ads. Made with accurate insights to scale your campaign</p>
       <!-- <img src="assets/hero-mockup.png" alt="Creative Brief & Calendar Mockup" style="max-width: 600px; width: 100%; margin-top: 2rem; border-radius: 12px;"> -->
       <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Your Free Demo Today!</a>
       <div style="margin-top: 1rem;">
-        <a href="#demo-video-section" class="theme-link">Join 100+ freelance designers who skip chaotic briefs</a>
+        <a href="#demo-video-section" class="theme-link">Join 100+ brands who boosted returns with us</a>
+      </div>
+      <div class="carousel-container">
+        <div class="carousel-track">
+          <div class="card"><img src="assets/carousel/Instagram post - 1.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 2.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 3.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 4.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 5.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 6.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 7.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 8.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 9.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 10.png" alt=""></div>
+        </div>
       </div>
     </div>
   </section>
@@ -798,6 +282,24 @@
     </div>
   </footer>
   <!-- <a class="fab-demo" onclick="scrollToVideoAndPlay()">🎥 Watch Demo Video</a> -->
+  <script>
+    document.querySelector('.mobile-menu-button').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+
+    const track = document.querySelector('.carousel-track');
+    
+    // Set an initial offset to start the carousel in the middle.
+    const initialOffset = 1200; // pixels
+    
+    track.style.transform = `translateX(-${initialOffset}px)`;
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const scrollAmount = scrollY / 5; // Adjust for speed
+      track.style.transform = `translateX(-${initialOffset + scrollAmount}px)`;
+    });
+  </script>
 </body>
 
   
