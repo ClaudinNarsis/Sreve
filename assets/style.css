@@ -333,6 +333,116 @@ p {
   flex-wrap: wrap;
 }
 
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 4rem;
+}
+
+.pricing-card {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.pricing-card.popular {
+  border-color: #8a38f5;
+  box-shadow: 0 8px 24px rgba(138, 56, 245, 0.25);
+}
+
+.pricing-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.pricing-card .price {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0;
+  text-decoration: line-through;
+  color: #999;
+}
+
+.pricing-card .price-discounted {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: #8a38f5;
+}
+
+.pricing-card .price-per-month {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem;
+}
+
+.pricing-card ul li {
+  margin-bottom: 0.75rem;
+}
+
+.example-section {
+  padding: 6rem 2rem;
+  background: radial-gradient(circle, #8a38f558, #ffffff37,#ffffff00);
+}
+
+.example-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.example-section p {
+  font-size: 1.25rem;
+  color: #555;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+}
+
+.example-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 4rem;
+  flex-wrap: wrap;
+}
+
+.example-image {
+  align-self: center;
+  max-width: 500px;
+}
+
+.example-image img {
+  width: 100%;
+  border-radius: 16px;
+}
+
+.arrow-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow-icon {
+  width: 80px;
+  height: 80px;
+  transform: rotate(90deg);
+}
+
+@media (max-width: 1270px) {
+  .arrow-icon {
+    transform: rotate(180deg);
+  }
+}
+
 
 
 /* Responsive styles */
