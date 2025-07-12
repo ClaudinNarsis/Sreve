@@ -12,540 +12,7 @@
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "rjguvuzjgr");
   </script> 
-  <style>
-    .grid.steps {
-      margin-top: 3rem;
-      gap: 2rem;
-      justify-content: center;
-    }
-
-    .card.step {
-      flex: 1;
-      text-align: center;
-    }
-
-    .icon-circle {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    .step-quote {
-      margin-top: 2rem;
-      font-style: italic;
-      color: #666;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    .step-preview {
-      margin-top: 3rem;
-      align-items: center;
-    }
-
-    .step-preview-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .step-preview-description {
-      font-size: 1rem;
-      color: #555;
-      max-width: 500px;
-      margin: auto;
-      text-align: center;
-    }
-
-    .step-preview-video {
-      border-radius: 12px;
-      width: 100%;
-      max-width: 480px;
-      margin: 1rem auto;
-      display: block;
-    }
-    /* Custom classes for removed inline styles */
-    .features-love {
-      padding-top: 2rem;
-    }
-    .section-title {
-      text-align: center;
-    }
-    .what-we-do {
-      
-      
-      
-      
-      background: none !important;
-      font-size: 1.25rem;
-      line-height: 1.8;
-      text-align: center;
-      color: #333;
-    }
-    .trust-badge {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .trust-text {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .final-cta {
-      text-align: center;
-      margin-top: 2rem;
-    }
-    .cta-note {
-      margin-top: 1rem;
-      font-size: 1rem;
-      color: #888;
-    }
-    .contact-box {
-      text-align: center;
-      margin: 4rem auto;
-      max-width: 600px;
-    }
-    .contact-text {
-      font-size: 1.2rem;
-      color: #444;
-      margin-bottom: 1.5rem;
-    }
-    .footer-nav {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #fff;
-      color: #333;
-      padding: 0;
-      text-align: center;
-    }
-    .hero .container, .hero .container h1, .hero .container p, .hero .container a, .hero .container strong {
-      color: white;
-    }
-    .feature-item p {
-  color: white;
-}
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2rem;
-    }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.5rem 2rem;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      height: 40px;
-    }
-    .hero {
-      padding: 4rem 2rem;
-      min-height: 600px;
-      display: flex;
-      align-items: center;
-      background-color: #f3f4f6;
-      position: relative;
-      overflow: hidden;
-    }
-    .hero video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-    }
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.6);
-      backdrop-filter: blur(3px);
-      z-index: 0.5;
-    }
-    .hero .container {
-      position: relative;
-      z-index: 1;
-    }
-    
-    h1 {
-      font-size: 3.5rem;
-      font-weight: bold;
-      color: #111;
-      margin-bottom: 1.5rem;
-      line-height: 1.2;
-    }
-    p {
-      font-size: 1.25rem;
-      color: #555;
-      max-width: 800px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-    .cta-button {
-      background-color: #ff6600;
-      color: white;
-      padding: 1.25rem 2.5rem;
-      border-radius: 12px;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 2rem;
-      font-size: 1.1rem;
-      transition: transform 0.2s, background-color 0.2s;
-    }
-    .cta-button:hover {
-      transform: translateY(-2px);
-      background-color: #e65c00;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin: 4rem auto;
-      max-width: 1200px;
-    }
-    .card {
-      background: #fff;
-      border: 1px solid #eee;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-    }
-    .card h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #222;
-    }
-    .card p {
-      font-size: 1rem;
-      color: #666;
-      margin: 0;
-    }
-    .how-it-works {
-      padding: 6rem 0rem;
-      background-color: #f8f9fa;
-    }
-    .how-it-works h3 {
-      font-size: 2.5rem;
-      margin-bottom: 3rem;
-      color: #111;
-    }
-    .what-you-get p{
-      color: #444;
-      margin: 0;
-      font-size: 1.1rem;
-    }
-    .what-you-get h2{
-      color: #111;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .packages h2{
-      color: #111;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-    }
-    .packages p{
-      color: #444;
-      
-      font-size: 1.1rem;
-    }
-    
-    .how-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 3rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .how-item {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .how-item img {
-      width: 100%;
-      max-height: none;
-      height: auto;
-      object-fit: contain;
-      border-radius: 12px;
-      margin-bottom: 1.5rem;
-    }
-    .how-item p {
-      font-size: 1.1rem;
-      color: #444;
-      margin: 0;
-    }
-    .testimonial-avatar {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      margin-bottom: 1rem;
-    }
-    .features {
-      padding: 6rem 2rem;
-      background: linear-gradient(to bottom, #fff, #f8f9fa);
-    }
-    .features h3{
-      font-size: 2.5rem;
-      text-align: center;
-    }
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      /* max-width: 1200px; */
-      margin: 3rem auto;
-    }
-    .feature-item {
-      position: relative;
-      background-size: cover;
-      background-position: center;
-      border-radius: 16px;
-      overflow: hidden;
-      color: white;
-      font-weight: bold;
-      padding: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      min-height: 180px;
-    }
-    section.packages.features {
-      padding: 2rem;
-    }
-    body > section.packages.features > div.features-grid > div.feature-item {
-      display: grid;
-      padding: 0;
-    }
-    body > section.packages.features > div.features-grid  {
-      margin: 0;
-    }
-    body > section.packages.features > div.final-cta > a {
-      margin: 0;
-    }
-    body > section.packages.features h3 {
-      margin-bottom: 0;
-    }
-    body > section.packages.features > div.final-cta {
-      margin-top: 0;
-    }
-    .feature-item .feature-blur-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      backdrop-filter: blur(0.5px);
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 0;
-    }
-    .feature-item p {
-      position: relative;
-      z-index: 1;
-      font-size: 1.2rem;
-      margin: 0;
-    }
-    .feature-icon {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 1.5rem;
-    }
-    .footer {
-      background-color: #111;
-      color: #fff;
-      padding: 4rem 2rem 2rem;
-      margin-top: 4rem;
-    }
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 3rem;
-      text-align: left;
-    }
-    .footer-section h4 {
-      color: #fff;
-      font-size: 1.2rem;
-      margin-bottom: 1.5rem;
-    }
-    .footer-section ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .footer-section ul li {
-      margin-bottom: 0.75rem;
-    }
-    .footer-section ul li a {
-      color: #999;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .footer-section ul li a:hover {
-      color: #fff;
-    }
-    .social-links {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    .social-links a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-    .footer-bottom {
-      max-width: 1200px;
-      margin: 3rem auto 0;
-      padding-top: 2rem;
-      border-top: 1px solid #333;
-      text-align: center;
-      color: #666;
-      font-size: 0.9rem;
-    }
-    .context-text {
-      display: block;
-      font-size: 1.1rem;
-      color: #666;
-      margin-bottom: 1rem;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-    .theme-link {
-      color: #666;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-      border-bottom: 0px solid #000;
-      padding-bottom: 2px;
-      margin-top: 20px;
-    }
-    .theme-link:hover {
-      color: #333;
-      border-bottom-color: #333;
-    }
-    .features ul{
-      list-style: none;
-    padding: 0;
-    font-size: 1.2rem;
-    color: #444;
-    
-    }
-    @media (max-width: 600px) {
-      p{
-        font-size: 1rem;
-      }
-      h1{
-        font-size: 2rem;
-      }
-      h2{
-        font-size: 1.5rem;
-      }
-      h3{
-        font-size: 1.2rem;
-      }
-      .container{
-        padding: 1rem;
-      }
-      .hero h1 {
-        font-size: 1.5rem;
-      }
-      .hero p{
-        font-size: 0.6rem;
-      }
-      .how-it-works{
-        padding: 1.2rem 0rem;
-      }
-      .how-it-works h3{
-        font-size: 1.8rem;
-        margin-bottom: 1.4rem;
-      }
-      .features h3{
-        font-size: 1.8rem;
-        margin-bottom: 1.4rem;
-        text-align: center;
-      }
-      .how-it-works video{
-        width: 98%;
-      }
-      .hero p {
-        font-size: 1rem;
-      }
-      .header .logo {
-        height: 30px;
-      }
-      .header .cta-button {
-        font-size: 0.8rem;
-        padding: 0.75rem 1.25rem;
-      }
-      .fab-demo {
-        bottom: 1rem;
-        right: 1rem;
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-      }
-      .features ul{
-        font-size: 1rem;
-        
-    text-align: left;
-      }
-    }
-  .fab-demo {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    background-color: #000;
-    color: #fff;
-    padding: 0.75rem 1.25rem;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: bold;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-    text-decoration: none;
-    z-index: 999;
-    transition: background-color 0.3s ease;
-  }
-  .fab-demo:hover {
-    background-color: #333;
-  }
-    .button-loader {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #000;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 0.8s linear infinite;
-      margin-left: 0.5rem;
-      display: inline-block;
-      vertical-align: middle;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/style.css">
   
 </head>
 <!-- Google tag (gtag.js) -->
@@ -586,117 +53,145 @@
     </script>
   <header class="header">
     <a href="index.html">
-    <img src="assets/logo.png" alt="Sreve Logo" class="logo"></a>
-    <nav>
-      <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+      <img src="assets/logo.png" alt="Sreve Logo" class="logo">
+    </a>
+    <nav class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#demo-video-section">Example</a>
+      <a href="#pricing">Pricing</a>
     </nav>
+    <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Book now</a>
+    <button class="mobile-menu-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
   </header>
 
   <section class="hero">
-    <video autoplay muted loop playsinline>
-      <source src="assets/hero-bg.mp4" type="video/mp4" />
-    </video>
-    <div class="hero-overlay"></div>
     <div class="container">
-      <h1>You Design. We Handle the Chaos.</h1>
-      <p><strong>Close better projects with less back-and-forth.</strong></p>
+      <h1>Launch High-Converting Ads in Seconds</h1>
+      <p>Save 10+ hours per project with AI-generated ads crafted using live product insights.</p>
       <!-- <img src="assets/hero-mockup.png" alt="Creative Brief & Calendar Mockup" style="max-width: 600px; width: 100%; margin-top: 2rem; border-radius: 12px;"> -->
       <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Your Free Demo Today!</a>
       <div style="margin-top: 1rem;">
-        <a href="#demo-video-section" class="theme-link">Join 100+ freelance designers who skip chaotic briefs</a>
+        <a href="#demo-video-section" class="theme-link">Trusted by 500+ brands and agencies</a>
+      </div>
+      <div class="carousel-container">
+        <div class="carousel-track">
+          <div class="card"><img src="assets/carousel/Instagram post - 1.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 2.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 3.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 4.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 5.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 6.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 7.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 8.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 9.png" alt=""></div>
+          <div class="card"><img src="assets/carousel/Instagram post - 10.png" alt=""></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Benefits Section: Why Creatives Love Sreve -->
-  <section class="features features-love">
+  <section class="how-it-works" id="how-it-works">
     <div class="container">
-      <h3 class="section-title">Why Creatives Love Sreve</h3>
-      <div class="features-grid">
-        <div class="feature-item" style="background-image: url('assets/s2-1.jpg');">
-          <div class="feature-blur-overlay"></div>
-          <p>✓ Less back-and-forth with clients</p>
+      <h2>Select > Launch >Track</h2>
+      <p>Launch high-performing ads in 3 simple steps.</p>
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Started</a>
+      <div class="how-it-works-grid">
+        <div class="how-it-works-card">
+          
+          <h3>Enter product link</h3>
+          <p>Our AI will analyse your webpage to understand your products.</p>
+          <img src="assets/how-to/How to 1.png" alt="Step 1">
         </div>
-        <div class="feature-item" style="background-image: url('assets/s2-2.jpg');">
-          <div class="feature-blur-overlay"></div>
-          <p>✓ Close projects faster and with confidence</p>
+        <div class="how-it-works-card">
+          <h3>Choose ads</h3>
+          <p>Browse the section of AI generated ads to Edit or to launch</p>
+          <img src="assets/how-to/How to 2.png" alt="Step 2">
+          
         </div>
-        <div class="feature-item" style="background-image: url('assets/s2-3.jpg');">
-          <div class="feature-blur-overlay"></div>
-          <p>✓ Land higher-paying projects with clearer scope</p>
+        <div class="how-it-works-card">
+          <h3>Run campaigns</h3>
+          <p>Start and track your meta ad campaigns. Let AI learn what works for you</p>
+          <img src="assets/how-to/How to 3.png" alt="Step 3">
+          
         </div>
       </div>
     </div>
   </section>
 
-  <section class="what-we-do features">
-    <h3 class="section-title">📞 What We Do</h3>
-    <div class="what-we-do-content">
-      <p><strong>Struggling to align with clients?</strong></p>
-      <p>With Sreve, you get clear, structured briefs before your first meeting—saving time and streamlining your workflow.</p>
-      <!-- <p>Think of it like hiring a strategic partner, just for that messy kickoff phase. You bring the client message. We turn it into a sharp, actionable brief — in hours, not days.</p> -->
-    </div>
-    <div class="grid steps">
-      <div class="card step">
-        <h2>Step 1: Share Your Sreve Link</h2>
-        <p>Send it to clients in seconds.</p>
-      </div>
-      <div class="card step">
-        <h2>Step 2: Sreve AI Auto-Generate a Brief </h2>
-        <p>They answer key questions, and Sreve crafts a professional brief instantly. They can edit, add, or delete details to refine their needs.</p>
-      </div>
-      <div class="card step">
-        <h2>Step 3: You Receive a Ready-to-Use Brief</h2>
-        <p>Walk away with a proposal-ready doc and clear next steps — ready to start design without the usual friction.</p>
-      </div>
-    </div>
-    <div class="final-cta" style="">
-      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">🎯 Book Your Project Alignment Call</a>
-      <p class="cta-note">No retainer. Just clarity for one project. Try it free.</p>
-    </div>
-  </section>
-
-  <!-- <section class="what-you-get features">
-    <h3>✅ What You Get</h3>
-    <div class="features-grid">
-      <div class="feature-item">
-        <h2>🔹 A Clear Creative Brief</h2>
-        <p>Send us your client’s raw message, transcript, or voice note — we turn it into a clean brief with goals, tone, audience, and must-haves.</p>
-      </div>
-      <div class="feature-item">
-        <h2>🔹 Visual Style Options</h2>
-        <p>We curate 2–3 creative directions with moodboards, logo references, and color/typography suggestions. Perfect to pitch or get buy-in before you start.</p>
-      </div>
-      <div class="feature-item">
-        <h2>🔹 Pricing + Proposal Support</h2>
-        <p>Not sure what to quote? We help you frame a smart, confident price and send a proposal your client won’t ghost.</p>
-      </div>
-      <div class="feature-item">
-        <h2>🔹 Optional: We Handle the Client Call</h2>
-        <p>If you’d rather not negotiate — we’ll take the call, clarify the needs, and hand back a fully-aligned project for you to deliver.</p>
-      </div>
-    </div>
-  </section> -->
-
-  <!-- <section class="who-this-is-for features">
-    <h3>💼 Who This Is For</h3>
-    <ul class="features-grid">
-      <li>Freelance designers, 3D artists, illustrators, or small studios</li>
-      <li>Anyone who’s tired of vague briefs, chaotic clients, or undercharging</li>
-      <li>Creators who want to look more professional without doing more admin</li>
-    </ul>
-  </section> -->
-  <section class="packages features">
-    <h3>Starts at $10</h3>
-    <div class="features-grid">
-      <div class="feature-item">
+  <section id="demo-video-section" class="example-section">
+    <div class="container">
+      <h2>See It in Action</h2>
+      <p>Convert your website into thumb-stopping ads. Made with real-time data</p>
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Watch the Demo</a>
+      <div class="example-grid">
         
-        <p>Includes a clear creative brief, 3 visual directions, and pricing guidance.</p>
+        <div class="example-image">
+          <img src="assets/example/Frame 11.png" alt="Example 2">
+        </div>
+        <div class="arrow-container">
+          <img src="assets/example/upward-arrow (1).png" alt="Arrow" class="arrow-icon">
+        </div>
+        <div class="example-image">
+          <img src="assets/example/Frame 9.png" alt="Example 1">
+        </div>
       </div>
     </div>
-    <div class="final-cta">
-      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">🎯 Book a Free Demo Call</a>
-      <p class="cta-note">No risk. See how Sreve works before you pay.</p>
+  </section>
+
+  <section class="smart-ads-section">
+    <div class="container">
+      <h2>Ads That Sell, Built From Your Product Insights</h2>
+      <p>Maximize your ROAS with AI-generated creatives that resonate with your audience.</p>
+      <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Learn More</a>
+      <img src="assets/smart_image.png" alt="Smart Ads" class="smart-ad-image">
+    </div>
+  </section>
+
+  <section id="pricing" class="packages features">
+    <div class="container">
+      <h2>Choose Your Plan</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Basic</h3>
+          <p class="price">$69</p>
+          <p class="price-discounted">$49</p>
+          <p class="price-per-month">/month</p>
+          <ul>
+            <li>Unlimited products</li>
+            <li>Generate up to 20 Ads</li>
+            <li>1 Meta account connection</li>
+          </ul>
+          <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Started</a>
+        </div>
+        <div class="pricing-card popular">
+          <h3>Pro</h3>
+          <p class="price">$199</p>
+          <p class="price-discounted">$149</p>
+          <p class="price-per-month">/month</p>
+          <ul>
+            <li>Everything on Basic</li>
+            <li>Increased limit upto 200 ads</li>
+            <li>3 meta account connections</li>
+            <li>Key Insight from compitior accounts</li>
+          </ul>
+          <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Started</a>
+        </div>
+        <div class="pricing-card">
+          <h3>Enterprise</h3>
+          
+          <p class="price-discounted">Lets talk!</p>
+          <p class="price-per-month"></p>
+          <ul>
+            <li>Full Potenetial of Sreve</li>
+            <li>Custom Plan</li>
+            <li>Adjusted to your needs</li>
+            <li>Beta access to video ads</li>
+          </ul>
+          <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Get Started</a>
+        </div>
+      </div>
     </div>
   </section>
 <!-- <section class="features" id="demo-video-section">
@@ -713,36 +208,14 @@
   
 </section> -->
   
-  <!-- <section class="features">
-    
-      <h3>Why Creatives Love Sreve</h3>
-      <div class="features-grid">
-        <div class="feature-item">
-          <img src="assets/time_icon.png" alt="Save Time" class="feature-icon">
-          <h2>No More Guesswork</h2>
-          <p>We help decode vague client briefs into actionable direction—fast.</p>
-        </div>
-        <div class="feature-item">
-          <img src="assets/better_communication.png" alt="Better Communication" class="feature-icon">
-          <h2>Focus on Design, Not Docs</h2>
-          <p>Spend less time digging through references and more time creating.</p>
-        </div>
-        <div class="feature-item">
-          <img src="assets/better_quality.png" alt="Better Quality" class="feature-icon">
-          <h2>Like a Creative Sidekick</h2>
-          <p>Smart questions, curated insights, and always tuned into your vibe.</p>
-        </div>
-      </div>
-    
-  </section> -->
 
-  <div class="container">
-    
+  <section class="container testimonial-section">
+    <h2>Hear it from our Clients</h2>
     <div class="grid">
       <div class="card">
         <img src="assets/p3.jpeg" alt="Priya" class="testimonial-avatar">
-        <h2>"Honestly? This saved me hours of back-and-forth. I used to dread the kickoff phase—now I’m excited again."</h2>
-        <p>— Priya, Freelance Poster Designer</p>
+        <h2>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It’s now a core part of our workflow."</h2>
+        <p>— Priya, Performance Marketer, Beauty Startup</p>
       </div>
       <!-- <div class="card">
         <img src="assets/p4.jpg" alt="Jordan" class="testimonial-avatar">
@@ -751,39 +224,40 @@
       </div> -->
       <div class="card">
         <img src="assets/p1.jpg" alt="Arjun" class="testimonial-avatar">
-        <h2>"It helped me ask the right questions, which made my client trust me more. Total win."</h2>
-        <p>— Arjun, Agency Founder</p>
+        <h2>"I’ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</h2>
+        <p>— Arjun, Growth Lead, DTC Apparel Brand</p>
       </div>
       <div class="card">
         <img src="assets/p2.jpeg" alt="Lisa" class="testimonial-avatar">
-        <h2>"I didn’t think AI could help in my process—but this felt more like collaboration than automation."</h2>
-        <p>— Lisa, Brand Identity Designer</p>
+        <h2>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</h2>
+        <p>— Lisa, Founder</p>
       </div>
     </div>
     <div class="trust-badge">
-      <p class="trust-text">✅ Trusted by 500+ creatives — saving 10+ hours per project</p>
+      <p class="trust-text">✅ Trusted by 500+ creatives</p>
     </div>
-  </div>
+  </section>
 
   
 
-  <section class="features">
+  <section class="final-cta-section">
     <h3>Want to see if this fits your workflow?</h3>
     <div class="final-cta">
       <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Book a Free Demo Call</a>
       <p class="cta-note">⚡ Limited spots available this month</p>
+      <div class="container contact-box">
+        <p class="contact-text">
+          Have questions? Book a quick call with our team.
+        </p>
+        <a href="https://calendly.com/claudinnarsis/30min" style="color: #000; text-decoration: underline; font-weight: 500;">Book a quick chat with the team →</a>
+      </div>
     </div>
   </section>
 
-  <div class="container contact-box">
-    <p class="contact-text">
-      Built by ex-designers who lived through bad briefs. Want to talk?
-    </p>
-    <a href="https://calendly.com/claudinnarsis/30min" style="color: #000; text-decoration: underline; font-weight: 500;">Book a quick chat with the team →</a>
-  </div>
+  
   
   <footer class="footer">
-    <div class="footer-content" style="text-align: center; grid-template-columns: 1fr;">
+    <div class="footer-content">
       <div class="footer-section">
         <ul class="footer-nav">
           <li><a href="#">About</a></li>
@@ -798,6 +272,24 @@
     </div>
   </footer>
   <!-- <a class="fab-demo" onclick="scrollToVideoAndPlay()">🎥 Watch Demo Video</a> -->
+  <script>
+    document.querySelector('.mobile-menu-button').addEventListener('click', function() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+
+    const track = document.querySelector('.carousel-track');
+    
+    // Set an initial offset to start the carousel in the middle.
+    const initialOffset = 1200; // pixels
+    
+    track.style.transform = `translateX(-${initialOffset}px)`;
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const scrollAmount = scrollY / 5; // Adjust for speed
+      track.style.transform = `translateX(-${initialOffset + scrollAmount}px)`;
+    });
+  </script>
 </body>
 
   
@@ -821,4 +313,3 @@
   }
 </script>
 </html>
-
