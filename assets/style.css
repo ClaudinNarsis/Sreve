@@ -636,3 +636,25 @@ p {
     text-align: left;
   }
 }
+
+.watch-video-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff6600;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 9998;
+  transition: transform 0.2s;
+}
+
+.watch-video-fab:hover {
+  transform: scale(1.05);
+}
