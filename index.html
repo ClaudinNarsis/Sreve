@@ -50,6 +50,40 @@
         window.location = url;
       }, 2000);
     }
+    window.addEventListener('load', function() {
+  const videoPopup = document.createElement('div');
+  videoPopup.style.position = 'fixed';
+  videoPopup.style.top = '0';
+  videoPopup.style.left = '0';
+  videoPopup.style.width = '100%';
+  videoPopup.style.height = '100%';
+  // videoPopup.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+  videoPopup.style.display = 'flex';
+  videoPopup.style.justifyContent = 'end';
+  videoPopup.style.alignItems = 'end';
+  videoPopup.style.zIndex = '9999';
+  videoPopup.style.pointerEvents = 'none';
+
+  const video = document.createElement('video');
+  video.src = 'assets/draft3.mp4';
+  video.controls = true;
+  video.autoplay = true;
+  video.style.maxWidth = '30%';
+  video.style.maxHeight = '30%';
+  video.style.borderRadius = '12px';
+  video.style.boxShadow = '0 0 30px rgba(0,0,0,0.6)';
+  video.style.margin = '0 20px 20px 0';
+  video.style.pointerEvents = 'auto';
+
+  videoPopup.appendChild(video);
+  document.body.appendChild(videoPopup);
+
+  videoPopup.addEventListener('click', function(e) {
+    if (e.target === videoPopup) {
+      document.body.removeChild(videoPopup);
+    }
+  });
+});
     </script>
   <header class="header">
     <a href="index.html">
