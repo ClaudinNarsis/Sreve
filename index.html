@@ -104,6 +104,17 @@ window.addEventListener('load', function() {
       document.body.removeChild(videoContainer);
     }
   });
+
+  // Media query for mobile screens
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    video.style.maxWidth = "80vw";
+    videoContainer.style.bottom = "10px";
+    videoContainer.style.right = "10px";
+    closeBtn.style.top = "-5px";
+    closeBtn.style.right = "-5px";
+    closeBtn.style.width = "24px";
+    closeBtn.style.height = "24px";
+  }
 });
     </script>
   <header class="header">
