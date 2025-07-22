@@ -158,7 +158,7 @@ window.addEventListener('load', function() {
     </div>
   </section>
 
-  <section class="how-it-works" id="how-it-works">
+  <section class="how-it-works section-hidden" id="how-it-works">
     <div class="container">
       <h2>Drop Your Link. Pick Your Persona. Launch.</h2>
       <p>Launch persona-driven ads in 3 simple steps.</p>
@@ -355,6 +355,36 @@ window.addEventListener('load', function() {
       const scrollAmount = scrollY / 5; // Adjust for speed
       track.style.transform = `translateX(-${initialOffset + scrollAmount}px)`;
     });
+
+    const howItWorksSection = document.getElementById('how-it-works');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          howItWorksSection.classList.remove('section-hidden');
+          howItWorksSection.classList.add('is-visible');
+        } else {
+          howItWorksSection.classList.add('section-hidden');
+          howItWorksSection.classList.remove('is-visible');
+        }
+      });
+    });
+
+    observer.observe(howItWorksSection);
+
+    const exampleSection = document.getElementById('demo-video-section');
+
+    const exampleObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          exampleSection.classList.add('in-view');
+        } else {
+          exampleSection.classList.remove('in-view');
+        }
+      });
+    });
+
+    exampleObserver.observe(exampleSection);
   </script>
 </body>
 

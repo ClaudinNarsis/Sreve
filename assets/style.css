@@ -211,6 +211,17 @@ p {
 .how-it-works {
   background-color: #f4eae4;
   padding: 6rem 2rem;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.section-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.how-it-works.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .how-it-works h2 {
@@ -240,6 +251,26 @@ p {
   border-radius: 1.5rem;
   max-width: 320px;
   padding: 1.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.how-it-works.is-visible .how-it-works-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.how-it-works.is-visible .how-it-works-card:nth-child(1) {
+  transition-delay: 0.2s;
+}
+
+.how-it-works.is-visible .how-it-works-card:nth-child(2) {
+  transition-delay: 0.4s;
+}
+
+.how-it-works.is-visible .how-it-works-card:nth-child(3) {
+  transition-delay: 0.6s;
 }
 
 .how-it-works-card img {
@@ -458,6 +489,40 @@ p {
   max-width: 1000px;
   margin-top: 4rem;
   border-radius: 16px;
+}
+
+.example-grid .example-image,
+.example-grid .arrow-container {
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.example-section .example-grid .example-image:nth-child(1) {
+  transform: translateX(-100px) scale(0.9);
+}
+
+.example-section .example-grid .example-image:nth-child(3) {
+  transform: translateX(100px) scale(0.9);
+}
+
+.example-section .example-grid .arrow-container {
+  transform: scale(0);
+}
+
+.example-section.in-view .example-grid .example-image:nth-child(1) {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.example-section.in-view .example-grid .example-image:nth-child(3) {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.example-section.in-view .example-grid .arrow-container {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 0.2s;
 }
 .packages h2{
   font-size: 2.5rem;
