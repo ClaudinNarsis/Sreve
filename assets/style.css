@@ -69,20 +69,10 @@ body {
   background-color: #020202;
   position: relative;
   overflow: hidden;
-}
-
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('pattern.png');
-  background-repeat: repeat;
-  background-size: auto;
-  opacity: 0.1;
-  z-index: 0;
+      background-image: url('bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 .hero video {
@@ -105,10 +95,14 @@ body {
 .hero h1, .hero p, .hero a, .hero strong {
   color: white;
 }
+.hero p{
+  margin: 2rem auto;
+  font-size: 1.1rem;
+}
 
 h1 {
-  font-size: 3.5rem;
-  font-weight: bold;
+  font-size: 3rem;
+  font-weight: 400;
   color: #fff;
   margin-bottom: 1.5rem;
   line-height: 1.2;
@@ -139,6 +133,23 @@ p {
   background-color: #e65c00;
 }
 
+.secondary-cta {
+  background-color: transparent;
+  color: #ff6600 !important;
+  border: 1px solid #ff6600;
+}
+
+.secondary-cta:hover {
+  background-color: #ff6600;
+  color: white !important;
+}
+
+.no-credit-card {
+  font-size: 0.9rem;
+  color: #ccc;
+  margin-top: 0.5rem;
+}
+
 .hero-cta-form {
   display: flex;
   margin-top: 2rem;
@@ -164,11 +175,12 @@ p {
 }
 
 .features-section {
-  padding: 6rem 2rem;
+  padding: 3rem 1rem;
+  background-image:linear-gradient(0deg, transparent, black);
 }
 
 .feature {
-  padding: 5rem 0rem;
+  padding-bottom: 4rem;
   margin-bottom: 4rem;
   display: block;
 }
@@ -207,6 +219,9 @@ p {
   border-radius: 16px;
   display: block;
 }
+.testimonial-section{
+  background-image:linear-gradient(0deg, #121212, transparent);
+}
 
 .testimonial-section .grid {
   display: grid;
@@ -230,9 +245,10 @@ p {
 }
 
 .testimonial-section .card h2 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 400;
   margin-bottom: 1rem;
-  color: #fff;
+  color: #e7e7e7;
 }
 
 .testimonial-section .card p {
@@ -415,13 +431,13 @@ p {
   border: 1px solid #555;
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 0 16px rgba(0,0,0,0.05);
   text-align: center;
 }
 
 .pricing-card.popular {
-  border-color: #848484;
-  box-shadow: 0 8px 16px rgba(156, 77, 255, 0.25);
+  border-color: #222222;
+  box-shadow: 0 0 12px rgba(156, 77, 255, 0.25);
 }
 
 .pricing-card h3 {
@@ -574,7 +590,7 @@ p {
 }
 .final-cta-section {
   padding: 6rem 2rem;
-  background-color: #222;
+  background-color: #121212;
 }
 .final-cta-section h3{
   font-size: 2.5rem;
@@ -703,9 +719,10 @@ p {
   display: flex;
   align-items: center;
   border: 1px solid #555;
+  box-shadow: 0 0px 6px #9c4dff;
   border-radius: 12px;
   padding: 0.5rem;
-  background-color: #333;
+  background-color: #1d1d1d;
   margin: 2rem auto 0;
   gap: 0.5rem;
   width: 80%;
@@ -744,7 +761,7 @@ p {
   top: 0;
   bottom: 0;
   width: 30px;
-  background: linear-gradient(to right, rgba(51, 51, 51, 0), #333 50%);
+  background: linear-gradient(to right, rgba(51, 51, 51, 0), #1d1d1d 50%);
   pointer-events: none;
 }
 

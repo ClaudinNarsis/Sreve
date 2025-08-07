@@ -68,9 +68,11 @@
 
   <section class="hero">
     <div class="container">
-      <h1>Boring AI writes meh copy. Sreve writes scroll-stoppers.</h1>
-      <p>A creativity tool for marketers and founders. <br>
-        Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
+      <p style="margin-bottom: 0;">A creativity tool for marketers and founders. </p>
+      
+      <h1>Boring AI writes meh copy. <strong>Sreve</strong> writes<br>scroll-stoppers.</h1>
+      <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
+       
         <button class="signup-button" onclick="gtagClick(event, 'schedule.html')">Sign Up</button>
       <div class="prompt-box">
         <div class="prompt-input-container">
@@ -91,6 +93,8 @@
       
     </div>
   </section>
+
+  
 
   <section class="features-section">
     <div class="feature">
@@ -176,28 +180,27 @@
       <div class="pricing-grid">
         <div class="pricing-card">
           <h3>Lite</h3>
-          <p class="price">$9</p>
+          <!-- <p class="price">$9</p> -->
           <p class="price-discounted">Free</p>
-          <!-- <p class="price-per-month">/month</p> -->
+          <p class="price-per-month">always</p>
           <ul>
-            <li>Unlimited products</li>
             <li>Generate up to 20 Ideas/month</li>
             <li>1 Brand Guide</li>
           </ul>
-          <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Pick a Time to Chat</a>
+          <a class="cta-button secondary-cta" onclick="gtagClick(event, 'schedule.html')">Try now for free</a>
+          <p class="no-credit-card">Start free. No credit card required</p>
         </div>
         <div class="pricing-card popular">
-          <h3>Pro</h3>
-          <p class="price">$49</p>
+          <h3>Pro (Coming Soon)</h3>
+          <!-- <p class="price">$49</p> -->
           <p class="price-discounted">$19</p>
           <p class="price-per-month">/month</p>
           <ul>
-            <li>Everything on Lite</li>
             <li>Increased limit upto 200 Ideas/month</li>
             <li>5 Brand Guides</li>
-            <li>Key Insight from competitor accounts</li>
           </ul>
-          <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Pick a Time to Chat</a>
+          <a class="cta-button secondary-cta" onclick="gtagClick(event, 'schedule.html')">Try now for free</a>
+          <p class="no-credit-card">Start free. No credit card required</p>
         </div>
         
       </div>
@@ -250,7 +253,7 @@
   
 
   <section class="final-cta-section">
-    <h3>Ready to simplify creative targeting?</h3>
+    <h3>Get creative ideas for your brand — free while we're in beta</h3>
     <div class="final-cta">
       <a class="cta-button" onclick="gtagClick(event, 'schedule.html')">Let’s Connect</a>
       <p class="cta-note">⚡ Limited spots available this month</p>
@@ -258,7 +261,21 @@
         <p class="contact-text">
           Have questions? Book a quick call with our team.
         </p>
-        <a href="https://calendly.com/claudinnarsis/30min" style="color: #000; text-decoration: underline; font-weight: 500;">Book a quick chat with the team →</a>
+
+
+  <div id="meeting-scheduler" style="width: 100%; height: 600px; margin-top: 2rem;">
+    <script>
+      window.addEventListener('load', () => {
+        document.body.appendChild(
+          Object.assign(document.createElement('script'), {
+            src: 'https://sales.superagi.com/meetingSchedulerWidget.js',
+            onload: () => window.initScheduler('https://meetings.superagi.com/Claudin-Narsis/30min', 'meeting-scheduler')
+          })
+        )
+      });
+    </script>
+  </div>
+
       </div>
     </div>
   </section>
@@ -338,6 +355,16 @@
       chip.addEventListener('click', () => {
         promptInput.innerText = chip.innerText;
       });
+    });
+
+    const heroSection = document.querySelector('.hero');
+
+    heroSection.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth) * 20 - 10; // -10 to 10
+      const y = (e.clientY / window.innerHeight) * 20 - 10; // -10 to 10
+
+      heroSection.style.backgroundPosition = `${50 + x}% ${50 + y}%`;
+      console.log(`x: ${x}, y: ${y}, backgroundPosition: ${heroSection.style.backgroundPosition}`);
     });
   </script>
 </body>
