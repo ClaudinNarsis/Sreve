@@ -139,6 +139,30 @@ p {
   background-color: #e65c00;
 }
 
+.hero-cta-form {
+  display: flex;
+  margin-top: 2rem;
+  justify-content: center;
+}
+
+.hero-cta-form input {
+  padding: 1.25rem;
+  border-radius: 12px 0 0 12px;
+  border: 1px solid #ccc;
+  font-size: 1.1rem;
+  width: 300px;
+}
+
+.hero-cta-form button {
+  border-radius: 0 12px 12px 0;
+  border: 1px solid #ff6600;
+  cursor: pointer;
+}
+
+.hero-cta-form .cta-button {
+  margin-top: 0;
+}
+
 .carousel-container {
   margin-top: 4rem;
   overflow: visible;
