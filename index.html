@@ -50,86 +50,7 @@
         window.location = url;
       }, 2000);
     }
-window.addEventListener('load', function() {
-  // Create a single container for the video
-  const videoContainer = document.createElement('div');
-  videoContainer.style.position = 'fixed';
-  videoContainer.style.bottom = '20px';
-  videoContainer.style.right = '20px';
-  videoContainer.style.zIndex = '9999';
-  videoContainer.style.pointerEvents = 'auto';
-
-  // Create the video element
-  const video = document.createElement('video');
-  video.src = 'assets/draft3.mp4';
-  video.controls = true;
-  video.autoplay = true;
-  video.style.maxWidth = '30vw'; // Use viewport width for better scaling
-  video.style.maxHeight = '30vh'; // Use viewport height
-  video.style.borderRadius = '12px';
-  video.style.boxShadow = '0 0 30px rgba(0,0,0,0.6)';
-  video.style.display = 'block'; // Ensure video is a block element
-
-  // Create the close button
-  const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '&times;';
-  closeBtn.setAttribute('aria-label', 'Close');
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '-10px'; // Position outside the video frame
-  closeBtn.style.right = '-10px'; // Position outside the video frame
-  closeBtn.style.background = 'rgba(0,0,0,0.8)';
-  closeBtn.style.color = 'white';
-  closeBtn.style.border = '2px solid white';
-  closeBtn.style.borderRadius = '50%';
-  closeBtn.style.width = '32px';
-  closeBtn.style.height = '32px';
-  closeBtn.style.fontSize = '20px';
-  closeBtn.style.lineHeight = '1';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.display = 'flex';
-  closeBtn.style.alignItems = 'center';
-  closeBtn.style.justifyContent = 'center';
-  closeBtn.style.zIndex = '10000';
-
-  // Append video and button to the container
-  videoContainer.appendChild(video);
-  videoContainer.appendChild(closeBtn);
-  
-  // Add the container to the body
-  document.body.appendChild(videoContainer);
-
-  // Event listener to close the video
-  closeBtn.addEventListener('click', function() {
-    if (videoContainer.parentNode) {
-      document.body.removeChild(videoContainer);
-
-      // Create and show the floating button
-      const watchVideoFab = document.createElement('a');
-      watchVideoFab.href = '#';
-      watchVideoFab.className = 'watch-video-fab';
-      watchVideoFab.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> <span>Watch Video</span>';
-      document.body.appendChild(watchVideoFab);
-
-      watchVideoFab.addEventListener('click', function(e) {
-        e.preventDefault();
-        document.body.appendChild(videoContainer);
-        document.body.removeChild(watchVideoFab);
-      });
-    }
-  });
-
-  // Media query for mobile screens
-  if (window.matchMedia("(max-width: 768px)").matches) {
-    video.style.maxWidth = "80vw";
-    videoContainer.style.bottom = "10px";
-    videoContainer.style.right = "10px";
-    closeBtn.style.top = "-5px";
-    closeBtn.style.right = "-5px";
-    closeBtn.style.width = "24px";
-    closeBtn.style.height = "24px";
-  }
-});
-    </script>
+  </script>
   <header class="header">
     <a href="index.html">
       <img src="assets/logo.png" alt="Sreve Logo" class="logo">
@@ -139,7 +60,7 @@ window.addEventListener('load', function() {
       <a href="#demo-video-section">Example</a>
       <a href="#pricing">Pricing</a>
     </nav>
-    <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Let’s Chat</a>
+    <a class="cta-button" style="margin: 0; padding: 0.75rem 1.5rem;" onclick="gtagClick(event, 'schedule.html')">Sign Up</a>
     <button class="mobile-menu-button">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
     </button>
@@ -147,30 +68,27 @@ window.addEventListener('load', function() {
 
   <section class="hero">
     <div class="container">
-      <h1>Creative Targeting Made Simple</h1>
-      <p>Turn your website into scroll-stopping ads built around your buyer's story, in seconds.</p>
-      <!-- <img src="assets/hero-mockup.png" alt="Creative Brief & Calendar Mockup" style="max-width: 600px; width: 100%; margin-top: 2rem; border-radius: 12px;"> -->
-      <div class="hero-cta-form">
-        <input type="text" placeholder="Enter your website link">
-        <button class="cta-button" onclick="gtagClick(event, 'schedule.html')">Go</button>
+      <h1>Boring AI writes meh copy. Sreve writes scroll-stoppers.</h1>
+      <p>A creativity tool for marketers and founders. <br>
+        Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
+        <button class="signup-button" onclick="gtagClick(event, 'schedule.html')">Sign Up</button>
+      <div class="prompt-box">
+        <div class="prompt-input-container">
+          <div class="prompt-input" contenteditable="true" data-placeholder="What do you want to create?"></div>
+          <div class="chips-wrapper">
+            <div class="prompt-chips">
+              <button class="chip">Create an ad script for a cookie brand</button>
+              <button class="chip">Generate a UGC script for a new skincare line</button>
+              <button class="chip">Write a hook for a fitness app</button>
+            </div>
+          </div>
+        </div>
+        <button class="generate-button">Generate</button>
       </div>
       <div style="margin-top: 1rem;">
         <a href="#demo-video-section" class="theme-link">Trusted by 500+ brands and agencies</a>
       </div>
-      <div class="carousel-container">
-        <div class="carousel-track">
-          <div class="card"><img src="assets/carousel/Instagram post - 40.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 28.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 29.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 27.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 33.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 31.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 39.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 34.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 35.png" alt=""></div>
-          <div class="card"><img src="assets/carousel/Instagram post - 36.png" alt=""></div>
-        </div>
-      </div>
+      
     </div>
   </section>
 
@@ -364,13 +282,15 @@ window.addEventListener('load', function() {
     // Set an initial offset to start the carousel in the middle.
     const initialOffset = 1200; // pixels
     
-    track.style.transform = `translateX(-${initialOffset}px)`;
+    if (track) {
+      track.style.transform = `translateX(-${initialOffset}px)`;
 
-    window.addEventListener('scroll', () => {
-      const scrollY = window.scrollY;
-      const scrollAmount = scrollY / 5; // Adjust for speed
-      track.style.transform = `translateX(-${initialOffset + scrollAmount}px)`;
-    });
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const scrollAmount = scrollY / 5; // Adjust for speed
+        track.style.transform = `translateX(-${initialOffset + scrollAmount}px)`;
+      });
+    }
 
     const howItWorksSection = document.getElementById('how-it-works');
 
@@ -401,27 +321,16 @@ window.addEventListener('load', function() {
     });
 
     exampleObserver.observe(exampleSection);
+
+    const chips = document.querySelectorAll('.chip');
+    const promptInput = document.querySelector('.prompt-input');
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        promptInput.innerText = chip.innerText;
+      });
+    });
   </script>
 </body>
 
-  
-<script src="https://player.vimeo.com/api/player.js"></script>
-<script>
-  function scrollToVideoAndPlay() {
-    const videoSection = document.getElementById("demo-video-section");
-    const iframe = videoSection.querySelector("iframe");
-
-    if (videoSection && iframe) {
-      videoSection.scrollIntoView({ behavior: "smooth" });
-
-      // Wait a bit for the scroll to complete, then play
-      setTimeout(() => {
-        const player = new Vimeo.Player(iframe);
-        player.play().catch(error => {
-          console.error('Error playing video:', error);
-        });
-      }, 500); // delay may be tweaked based on scroll duration
-    }
-  }
-</script>
 </html>
