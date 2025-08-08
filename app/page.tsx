@@ -1,6 +1,7 @@
 "use client";
 import Link from 'next/link';
 import React, { useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 export default function HomePage() {
   useEffect(() => {
@@ -121,7 +122,19 @@ export default function HomePage() {
           <a href="#demo-video-section">Example</a>
           <a href="#pricing">Pricing</a>
         </nav>
-        <Link href="/schedule" className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }} onClick={(e) => gtagClick(e, '/schedule')}>Sign Up</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/app">
+              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+        </div>
         <button className="mobile-menu-button" aria-label="Open menu">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
@@ -132,7 +145,11 @@ export default function HomePage() {
           <p style={{ marginBottom: 0 }}>A creativity tool for marketers and founders. </p>
           <h1> Boring AI writes meh copy. <strong>Sreve</strong> writes<br />scroll-stoppers.</h1>
           <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
-          <button className="signup-button" onClick={(e) => gtagClick(e as any, '/schedule')}>Sign Up</button>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="signup-button">Sign In</button>
+            </SignInButton>
+          </SignedOut>
           <div className="prompt-box">
             <div className="prompt-input-container">
               <div className="prompt-input" contentEditable data-placeholder="What do you want to create?"></div>

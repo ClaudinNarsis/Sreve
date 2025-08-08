@@ -42,18 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', 'AW-17102136063');
           `}</Script>
         </head>
-        <body>
-          <header className="header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
-          {children}
-        </body>
+        <body>{children}</body>
       </html>
     </ClerkProvider>
   );
