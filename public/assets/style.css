@@ -441,13 +441,12 @@ p {
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: 3rem;
   margin-top: 4rem;
 }
 
 .pricing-card {
-  background: #444;
-  border: 1px solid #555;
+  background: #070707;
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 0 16px rgba(0,0,0,0.05);
@@ -456,11 +455,11 @@ p {
 
 .pricing-card.popular {
   border-color: #222222;
-  box-shadow: 0 0 12px rgba(156, 77, 255, 0.25);
+  box-shadow: 0 0 12px rgba(157, 77, 255, 0.321);
 }
 
 .pricing-card h3 {
-  font-size: 1.5rem;
+  font-weight: 400;
   margin-bottom: 1rem;
 }
 

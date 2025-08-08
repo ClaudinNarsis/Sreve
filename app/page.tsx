@@ -116,12 +116,31 @@ export default function HomePage() {
   const gtagClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, url: string) => {
     e.preventDefault();
     const button = e.currentTarget as HTMLElement;
-    if (!button.querySelector('.button-loader')) {
-      const loader = document.createElement('span');
-      loader.className = 'button-loader';
-      button.appendChild(loader);
+
+    if (url.startsWith('#')) {
+      const targetId = url.substring(1);
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      if (url === '#hero') {
+        const promptBox = document.querySelector<HTMLElement>('.prompt-box');
+        if (promptBox) {
+          promptBox.classList.add('highlight');
+          setTimeout(() => {
+            promptBox.classList.remove('highlight');
+          }, 1000); // Remove highlight after 2 seconds
+        }
+      }
+    } else {
+      if (!button.querySelector('.button-loader')) {
+        const loader = document.createElement('span');
+        loader.className = 'button-loader';
+        button.appendChild(loader);
+      }
+      setTimeout(() => { window.location.href = url; }, 20);
     }
-    setTimeout(() => { window.location.href = url; }, 2000);
   };
 
   return (
@@ -154,7 +173,7 @@ export default function HomePage() {
         </button>
       </header>
 
-      <section className="hero">
+      <section className="hero" id="hero">
         <div className="container">
           <p style={{ marginBottom: 0 }}>A creativity tool for marketers and founders. </p>
           <h1> Boring AI writes meh copy. <strong>Sreve</strong> writes<br />scroll-stoppers.</h1>
@@ -187,27 +206,27 @@ export default function HomePage() {
         <div className="feature">
           <h2>Unhinged (In a Good Way)</h2>
           <p>“No intern would dare write this.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '/schedule')}>Learn More</button>
+          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/1-1.png" alt="Feature 1" />
         </div>
         <div className="feature">
           <h2>Thinks Like a Strategist</h2>
           <p>“This feels like something my strategist would say.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '/schedule')}>Learn More</button>
+          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/1-2.png" alt="Feature 2" />
         </div>
         <div className="feature">
           <h2>Built for creative teams</h2>
           <p>“Before Sreve, Everything needs rewriting or “seasoning” to work”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '/schedule')}>Learn More</button>
+          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/1-3.png" alt="Feature 3" />
         </div>
       </section>
 
-      <section id="pricing" className="packages features">
+      <section id="pricing" className="pricing-section packages features">
         <div className="container">
           <h2>Choose Your Plan</h2>
           <div className="pricing-grid">
@@ -219,7 +238,7 @@ export default function HomePage() {
                 <li>Generate up to 20 Ideas/month</li>
                 <li>1 Brand Guide</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '/schedule')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
             <div className="pricing-card popular">
@@ -230,7 +249,7 @@ export default function HomePage() {
                 <li>Increased limit upto 200 Ideas/month</li>
                 <li>5 Brand Guides</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '/schedule')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
           </div>
