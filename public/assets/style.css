@@ -7,6 +7,9 @@ body {
   padding: 0;
   text-align: center;
 }
+section{
+  padding: 1rem 0rem;
+}
 
 .container {
   max-width: 1200px;
@@ -220,7 +223,7 @@ p {
   display: block;
 }
 .testimonial-section{
-  background-image:linear-gradient(0deg, #121212, transparent);
+  background-image:linear-gradient(0deg, #131315, transparent);
 }
 
 .testimonial-section .grid {
@@ -590,7 +593,7 @@ p {
 }
 .final-cta-section {
   padding: 6rem 2rem;
-  background-color: #121212;
+  background-color: #131315;
 }
 .final-cta-section h3{
   font-size: 2.5rem;

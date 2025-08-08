@@ -1,0 +1,6 @@
+/* Global resets and tokens */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+/* Bring over site styles */
+/* stylesheet is linked in <head> from layout.tsx to avoid @import delays */
