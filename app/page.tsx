@@ -99,6 +99,20 @@ export default function HomePage() {
     return () => heroSection.removeEventListener('mousemove', onMouseMove);
   }, []);
 
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('.header');
+    if (!header) return;
+    const onScroll = () => {
+      if (window.scrollY > 0) {
+        header.classList.add('sticky');
+      } else {
+        header.classList.remove('sticky');
+      }
+    };
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const gtagClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, url: string) => {
     e.preventDefault();
     const button = e.currentTarget as HTMLElement;
@@ -118,9 +132,9 @@ export default function HomePage() {
           <img src="/assets/logo.png" alt="Sreve Logo" className="logo" />
         </Link>
         <nav className="nav-links" aria-label="Primary">
-          <a href="#how-it-works">How it works</a>
-          <a href="#demo-video-section">Example</a>
+          <a href="#features">Product</a>
           <a href="#pricing">Pricing</a>
+          <a href="#contact-us">Contact Us</a>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <SignedOut>
@@ -130,7 +144,7 @@ export default function HomePage() {
           </SignedOut>
           <SignedIn>
             <Link href="/app">
-              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
+              <button className="cta-button go-to-app-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
             </Link>
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
@@ -169,7 +183,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="features-section">
+      <section className="features-section" id="features">
         <div className="feature">
           <h2>Unhinged (In a Good Way)</h2>
           <p>“No intern would dare write this.”</p>
@@ -250,10 +264,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="final-cta-section">
+      <section className="final-cta-section" id="contact-us">
         <h3>Get creative ideas for your brand — free while we're in beta</h3>
         <div className="final-cta">
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '/schedule')}>Let’s Connect</button>
           <p className="cta-note">⚡ Limited spots available this month</p>
           <div className="container contact-box">
             <p className="contact-text">Have questions? Book a quick call with our team.</p>

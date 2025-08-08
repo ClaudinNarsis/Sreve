@@ -4,3 +4,14 @@ html, body { height: 100%; }
 
 /* Bring over site styles */
 /* stylesheet is linked in <head> from layout.tsx to avoid @import delays */
+
+.header.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

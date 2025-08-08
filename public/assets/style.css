@@ -29,6 +29,10 @@ section{
   top: 0;
   z-index: 100;
 }
+.header.sticky{
+  background-color: #1111117d;
+  
+}
 
 .logo {
   height: 40px;
@@ -129,11 +133,23 @@ p {
   margin-top: 2rem;
   font-size: 1.1rem;
   transition: transform 0.2s, background-color 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .cta-button:hover {
-  transform: translateY(-2px);
   background-color: #e65c00;
+  cursor: pointer;
+}
+
+.go-to-app-button{
+  background-color: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.go-to-app-button:hover{
+  background-color: transparent;
+  border: 1px solid white;
 }
 
 .secondary-cta {
@@ -804,7 +820,7 @@ p {
   border: none;
   color: #fff;
   font-size: 1.1rem;
-  padding: 0.75rem;
+  padding: 1.7rem 0.75rem;
   outline: none;
   min-height: 2rem;
   resize: none;
