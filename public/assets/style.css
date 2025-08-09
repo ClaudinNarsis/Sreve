@@ -61,6 +61,7 @@ section{
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
+  color: #e7e7e7;
 }
 
 .mobile-menu-button svg {
@@ -628,15 +629,74 @@ p {
 
 /* Responsive styles */
 @media (max-width: 768px) {
+  .hero{
+    padding:2rem 1rem;
+  }
+  .signup-button{
+    font-size: 0.8rem !important;
+  }
+  .prompt-box{
+    width: 90% !important;
+
+  }
+  .generate-button{
+    font-size: 0.6rem !important;
+  }
+  .prompt-input{
+    font-size: 0.8rem !important;
+  }
+  .chip{
+    font-size: 0.5rem !important;
+  }
+  .feature{
+    margin-bottom: 1rem !important;
+  }
+  .feature h2{
+    font-size: 1.2rem !important;
+  }
+  .feature p{
+    font-size: 1rem !important;
+  }
+  .feature .cta-button{
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.8rem !important;
+  }
+  .packages h2{
+    font-size: 1.3rem !important;
+  }
+  .features-section{
+    padding: 1.5rem 1rem !important;
+  }
+  .pricing-card .price-discounted {
+    font-size: 1.5rem !important;
+  }
+  .testimonial-section h2{
+    font-size: 1.3rem !important;
+  }
+  .testimonial-section .grid{
+    margin: 0.5rem 1rem;
+  }
+  .final-cta-section h3{
+    font-size: 1.5rem !important;
+  }
+  .cta-button{
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1.25rem !important;
+  }
   .nav-links {
     display: none;
     flex-direction: column;
     position: absolute;
+    gap: 0.3rem;
     top: 80px;
     left: 0;
     width: 100%;
     background-color: #111;
     box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+  }
+  .nav-links a{
+    padding: 1rem;
+    text-align: right;
   }
 
   .nav-links.active {
@@ -658,16 +718,16 @@ p {
 
 @media (max-width: 600px) {
   p {
-    font-size: 1rem;
+    font-size: 0.8rem;
   }
   h1 {
     font-size: 2rem;
   }
   h2 {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
   h3 {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   .container {
     padding: 1rem;
@@ -706,7 +766,7 @@ p {
     font-size: 0.9rem;
   }
   .features ul {
-    font-size: 1rem;
+    font-size: 0.8rem;
     text-align: left;
   }
 }

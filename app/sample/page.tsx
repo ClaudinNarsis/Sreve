@@ -5,6 +5,7 @@ import Link from 'next/link';
 import "./sample.css";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { SignInButton } from '@clerk/nextjs';
 
 function SampleContent() {
   const searchParams = useSearchParams();
@@ -29,17 +30,17 @@ function SampleContent() {
           </div>
 
           <div className="answer-container">
+            
             <div className="answer-content">
-
               <div className="formatted-answer"><ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown></div>
+              
             </div>
-          </div>
-
-          <div className="cta-section">
-            <p>Like what you see? Sign up to create unlimited content for your brand!</p>
-            <Link href="/">
-              <button className="cta-button">Get Started</button>
-            </Link>
+            <div className="cta-section">
+              <p>Like what you see? Sign up to create unlimited content for your brand!</p>
+              <SignInButton mode="modal" forceRedirectUrl="/onboarding">
+                <button className="cta-button">Get Started</button>
+              </SignInButton>
+            </div>
           </div>
         </div>
       </main>

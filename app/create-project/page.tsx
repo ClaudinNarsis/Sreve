@@ -338,8 +338,12 @@ export default function CreateProject() {
           </SignedIn>
         </div>
       </header>
-      
+      <div className="overall">
+      <div className="create-project">
+        <h3>Create your project</h3>
+      </div>
       <div className="question-section">
+      
         <aside className="question-sidebar">
           
           <ul>
@@ -397,6 +401,7 @@ export default function CreateProject() {
             )}
           </div>
         </main>
+      </div>
       </div>
     </>
   );

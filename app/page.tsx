@@ -290,19 +290,19 @@ export default function HomePage() {
           <div className="card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/p3.jpeg" alt="Priya" className="testimonial-avatar" />
-            <h2>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It’s now a core part of our workflow."</h2>
+            <h3>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It’s now a core part of our workflow."</h3>
             <p>— Priya, Performance Marketer, Beauty Startup</p>
           </div>
           <div className="card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/p1.jpg" alt="Arjun" className="testimonial-avatar" />
-            <h2>"I’ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</h2>
+            <h3>"I’ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</h3>
             <p>— Arjun, Growth Lead, DTC Apparel Brand</p>
           </div>
           <div className="card">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/p2.jpeg" alt="Lisa" className="testimonial-avatar" />
-            <h2>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</h2>
+            <h3>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</h3>
             <p>— Lisa, Founder</p>
           </div>
         </div>

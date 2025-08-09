@@ -6,10 +6,18 @@
   padding: 2rem;
   background-color: #222;
   box-shadow: 0px 0px 4px 1px #f2853244;
-  margin: 5rem;
+  
   border-radius: 0.75rem;
 }
-
+.create-project h3{
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 1.5rem 1rem;
+  color: #b1b1b1;
+}
+.overall{
+  margin: 4.5rem;
+}
 .question-sidebar {
   width: 280px;
   padding: 1rem;
