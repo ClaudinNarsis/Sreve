@@ -2,10 +2,12 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export function useAutoCreateUser() {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [hasAttemptedCreation, setHasAttemptedCreation] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -49,10 +51,19 @@ export function useAutoCreateUser() {
           console.log('🔄 Auto-create response:', data);
 
           if (createResponse.ok) {
-            toast.success('🎉 Welcome! Your account has been set up.', {
-              duration: 4000,
-            });
             console.log('✅ User auto-created successfully:', data.user);
+            console.log('🔄 Redirecting new user to onboarding...');
+            
+            // Show success toast briefly before redirect
+            toast.success('🎉 Welcome! Setting up your account...', {
+              duration: 2000,
+            });
+            
+            // Redirect to onboarding for first-time users
+            setTimeout(() => {
+              router.push('/onboarding');
+            }, 1000);
+            
           } else if (createResponse.status === 409) {
             console.log('ℹ️ User already exists (race condition)');
           } else {
@@ -71,7 +82,7 @@ export function useAutoCreateUser() {
     };
 
     createUserIfNotExists();
-  }, [user, isLoaded, hasAttemptedCreation, isCreating]);
+  }, [user, isLoaded, hasAttemptedCreation, isCreating, router]);
 
   return { isCreating };
 }
