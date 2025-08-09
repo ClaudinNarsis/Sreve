@@ -1,9 +1,37 @@
 "use client";
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const router = useRouter();
+  const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
+
+  useEffect(() => {
+    fetch('/sample-responses.json')
+      .then(response => response.json())
+      .then(data => setSampleResponses(data))
+      .catch(error => console.error('Error loading sample responses:', error));
+  }, []);
+
+  const handleGenerateClick = () => {
+    const promptInput = document.querySelector<HTMLElement>('.prompt-input');
+    const inputText = promptInput?.innerText?.trim() || '';
+    
+    if (inputText) {
+      const matchingResponse = sampleResponses.responses.find(
+        response => response.prompt.toLowerCase() === inputText.toLowerCase()
+      );
+      
+      if (matchingResponse) {
+        router.push(`/sample?prompt=${encodeURIComponent(matchingResponse.prompt)}&answer=${encodeURIComponent(matchingResponse.answer)}`);
+      } else {
+        const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
+        signInButton?.click();
+      }
+    }
+  };
   useEffect(() => {
     const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
     const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
@@ -194,7 +222,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <button className="generate-button">Generate</button>
+            <button className="generate-button" onClick={handleGenerateClick}>Generate</button>
           </div>
           <div style={{ marginTop: '1rem' }}>
             <a href="#demo-video-section" className="theme-link">Trusted by 500+ brands and agencies</a>

@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-const isPublicRoute = createRouteMatcher(['/', '/sign-in', '/onboarding(.*)', '/api/health']);
+const isPublicRoute = createRouteMatcher(['/', '/sign-in', '/onboarding(.*)', '/api/health', '/sample-responses.json', '/sample']);
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (!isPublicRoute(req)) {
@@ -13,10 +13,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   if (req.nextUrl.pathname === '/') {
     const authObj = await auth();
-    
+
     if (authObj.userId) {
       const onboardingComplete = req.cookies.get('onboarding_complete');
-      
+
       if (onboardingComplete) {
         return NextResponse.redirect(new URL('/app', req.url));
       } else {
