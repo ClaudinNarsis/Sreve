@@ -1,0 +1,100 @@
+{
+  "questions": [
+    {
+      "step": 1,
+      "sidebarTitle": "Brand Name",
+      "question": "What is the name of your Brand?",
+      "placeholder": "Enter Brand name...",
+      "answerType": "text",
+      "required": true,
+      "validation": {
+        "minLength": 2,
+        "maxLength": 50,
+        "pattern": "^[a-zA-Z0-9\\s\\-_]+$"
+      }
+    },
+    {
+      "step": 2,
+      "sidebarTitle": "Website/Landing Page",
+      "question": "Enter your website or landing page URL",
+      "placeholder": "https://example.com",
+      "answerType": "url",
+      "required": false,
+      "validation": {
+        "pattern": "^https?:\\/\\/.+\\..+"
+      }
+    },
+    {
+      "step": 3,
+      "sidebarTitle": "Description",
+      "question": "Tell us about your project. What does it do?",
+      "placeholder": "Describe your project, its purpose, and key features...",
+      "answerType": "textarea",
+      "required": false,
+      "validation": {
+        "minLength": 10,
+        "maxLength": 500
+      }
+    },
+    {
+      "step": 4,
+      "sidebarTitle": "Brand Voice",
+      "question": "How would you describe your brand's voice and tone?",
+      "answerType": "select",
+      "required": false,
+      "options": [
+        {
+          "value": "professional",
+          "label": "Professional & Formal"
+        },
+        {
+          "value": "casual",
+          "label": "Casual & Friendly"
+        },
+        {
+          "value": "playful",
+          "label": "Playful & Fun"
+        },
+        {
+          "value": "authoritative",
+          "label": "Authoritative & Expert"
+        },
+        {
+          "value": "inspirational",
+          "label": "Inspirational & Motivational"
+        },
+        {
+          "value": "conversational",
+          "label": "Conversational & Relatable"
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "sidebarTitle": "Brand Assets",
+      "question": "Upload your brand assets or Brief (logo, style guide, etc.)",
+      "answerType": "file",
+      "required": false,
+      "acceptedTypes": [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".pdf",
+        ".svg"
+      ],
+      "maxFiles": 5,
+      "maxSize": "10MB"
+    },
+    {
+      "step": 6,
+      "sidebarTitle": "Additional Info",
+      "question": "Is there anything else you'd like us to know about your project?",
+      "placeholder": "Any additional context, special requirements, or notes...",
+      "answerType": "textarea",
+      "required": false,
+      "validation": {
+        "maxLength": 500
+      }
+    }
+  ]
+}
