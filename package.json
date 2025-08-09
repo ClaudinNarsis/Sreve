@@ -8,11 +8,16 @@
     "start": "next start"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.864.0",
+    "@aws-sdk/lib-dynamodb": "^3.864.0",
     "@clerk/nextjs": "^6.29.0",
     "@clerk/themes": "^2.4.5",
+    "@types/js-cookie": "^3.0.6",
+    "js-cookie": "^3.0.5",
     "next": "^15.2.3",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
     "@types/node": "24.2.0",

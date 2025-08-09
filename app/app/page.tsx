@@ -1,9 +1,13 @@
 "use client";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import UserCreationTest from "../components/UserCreationTest";
+import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import "./app.css";
 
 export default function App() {
+  const { isCreating } = useAutoCreateUser();
+
   return (
     <>
       <header className="header">
@@ -132,6 +136,19 @@ export default function App() {
                   <p className="user-message">
                     We appreciate your understanding.
                   </p>
+                  {isCreating && (
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#2a2a2a', 
+                      borderRadius: '6px', 
+                      margin: '10px 0',
+                      fontSize: '14px',
+                      color: '#888'
+                    }}>
+                      🔄 Setting up your account...
+                    </div>
+                  )}
+                  <UserCreationTest />
                 </SignedIn>
                 <SignedOut>
                   <div className="signin-section">

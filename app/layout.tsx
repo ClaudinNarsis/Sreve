@@ -1,15 +1,10 @@
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
+import { Toaster } from 'react-hot-toast';
+
 export const metadata = {
   title: 'Sreve - Creative Targeting Made Simple',
-  description: 'Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.',
+  description: 'Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand\'s voice.',
   icons: {
     icon: '/assets/favicon.png'
   }
@@ -42,7 +37,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('config', 'AW-17102136063');
           `}</Script>
         </head>
-        <body>{children}</body>
+        <body>
+          {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
+        </body>
       </html>
     </ClerkProvider>
   );
