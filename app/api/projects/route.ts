@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 console.log('🔧 Projects API endpoint loaded');
@@ -193,10 +193,67 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ project: result.Item });
 
     } else {
-      // Get all projects for user (if we add GSI later)
+      // Get all projects for user
       console.log('🔍 Fetching all projects for user:', userId);
-      // For now, return empty array - would need GSI to query by userId
-      return NextResponse.json({ projects: [] });
+      
+      try {
+        // For now, we'll scan the table and filter by userId
+        // In production, you should use a GSI for better performance
+        const scanCommand = new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: 'userId-createdAt-index', // This GSI would need to be created
+          KeyConditionExpression: 'userId = :userId',
+          ExpressionAttributeValues: {
+            ':userId': userId
+          },
+          ScanIndexForward: false, // Latest first
+        });
+
+        const result = await docClient.send(scanCommand);
+        console.log('📋 Projects found:', result.Items?.length || 0);
+
+        return NextResponse.json({ 
+          projects: result.Items || [],
+          success: true 
+        });
+        
+      } catch (error) {
+        console.error('❌ Error querying projects by userId:', error);
+        
+        // Fallback: scan entire table (not recommended for production)
+        console.log('⚠️ Falling back to table scan...');
+        
+        try {
+          const scanCommand = new ScanCommand({
+            TableName: TABLE_NAME,
+            FilterExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+              ':userId': userId
+            }
+          });
+
+          const scanResult = await docClient.send(scanCommand);
+          console.log('📋 Projects found via scan:', scanResult.Items?.length || 0);
+          
+          // Sort by createdAt descending (latest first)
+          const sortedProjects = (scanResult.Items || []).sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+
+          return NextResponse.json({ 
+            projects: sortedProjects,
+            success: true 
+          });
+          
+        } catch (scanError) {
+          console.error('❌ Error scanning projects:', scanError);
+          return NextResponse.json({ 
+            error: 'Failed to fetch projects',
+            projects: [],
+            success: false 
+          }, { status: 500 });
+        }
+      }
     }
 
   } catch (error) {

@@ -1,8 +1,9 @@
 "use client";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import UserCreationTest from "../components/UserCreationTest";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
+import ProjectExplorer from "../components/ProjectExplorer";
+import "../components/ProjectExplorer.css";
 import "./app.css";
 
 export default function App() {
@@ -38,87 +39,24 @@ export default function App() {
       </header>
       <div className="app-layout">
         <aside className="file-sidebar" id="sidebar">
-          <div className="sidebar-header">
-            <h3>Explorer</h3>
-            <button className="collapse-btn" onClick={() => {
-              const sidebar = document.getElementById('sidebar');
-              const layout = document.querySelector('.app-layout');
-              sidebar?.classList.toggle('collapsed');
-              layout?.classList.toggle('sidebar-collapsed');
-            }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9,18 15,12 9,6"></polyline>
-              </svg>
-            </button>
-          </div>
-          <div className="file-tree">
-            <div className="folder-item" onClick={(e) => {
-              e.currentTarget.classList.toggle('expanded');
-            }}>
-              <div className="folder-header">
-                <svg className="folder-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9,6 9,6 15,12 9,18"></polyline>
-                </svg>
-                <svg className="folder-icon-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span className="folder-name">src</span>
-              </div>
-              <div className="folder-content">
-                <div className="file-item">
-                  <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-                  </svg>
-                  <span className="file-name">index.tsx</span>
-                </div>
-                <div className="file-item">
-                  <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-                  </svg>
-                  <span className="file-name">app.css</span>
-                </div>
-              </div>
+          <button className="collapse-btn" onClick={() => {
+            const sidebar = document.getElementById('sidebar');
+            const layout = document.querySelector('.app-layout');
+            sidebar?.classList.toggle('collapsed');
+            layout?.classList.toggle('sidebar-collapsed');
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9,18 15,12 9,6"></polyline>
+            </svg>
+          </button>
+          <SignedIn>
+            <ProjectExplorer />
+          </SignedIn>
+          <SignedOut>
+            <div style={{ padding: '1rem', color: '#ccc', textAlign: 'center' }}>
+              <p>Sign in to view your projects</p>
             </div>
-            <div className="folder-item" onClick={(e) => {
-              e.currentTarget.classList.toggle('expanded');
-            }}>
-              <div className="folder-header">
-                <svg className="folder-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9,6 9,6 15,12 9,18"></polyline>
-                </svg>
-                <svg className="folder-icon-closed" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span className="folder-name">components</span>
-              </div>
-              <div className="folder-content">
-                <div className="file-item">
-                  <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-                  </svg>
-                  <span className="file-name">Header.tsx</span>
-                </div>
-                <div className="file-item">
-                  <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-                  </svg>
-                  <span className="file-name">Sidebar.tsx</span>
-                </div>
-              </div>
-            </div>
-            <div className="file-item">
-              <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-              </svg>
-              <span className="file-name">package.json</span>
-            </div>
-            <div className="file-item">
-              <svg className="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"></path>
-              </svg>
-              <span className="file-name">README.md</span>
-            </div>
-          </div>
+          </SignedOut>
         </aside>
         <main className="main-content">
           <section className="beta-full-section">
@@ -148,7 +86,6 @@ export default function App() {
                       🔄 Setting up your account...
                     </div>
                   )}
-                  <UserCreationTest />
                 </SignedIn>
                 <SignedOut>
                   <div className="signin-section">
