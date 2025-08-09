@@ -2,6 +2,8 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import "./create-project.css";
 
 interface QuestionOption {
@@ -32,10 +34,12 @@ interface QuestionsData {
 }
 
 export default function CreateProject() {
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -77,9 +81,129 @@ export default function CreateProject() {
     }
   };
 
-  const handleSubmit = () => {
-    console.log('Project data:', answers);
-    // TODO: Submit to API
+  const validateRequiredFields = () => {
+    console.log('🔍 Validating all required fields...');
+    const missingRequired = [];
+    
+    for (const question of questions) {
+      if (question.required) {
+        const answer = answers[question.step];
+        const isEmpty = answer === undefined || answer === null || answer === '' || 
+                       (Array.isArray(answer) && answer.length === 0);
+        
+        if (isEmpty) {
+          missingRequired.push({
+            step: question.step,
+            title: question.sidebarTitle,
+            question: question.question
+          });
+          console.log(`❌ Missing required field - Step ${question.step}: ${question.sidebarTitle}`);
+        }
+      }
+    }
+
+    if (missingRequired.length > 0) {
+      console.log('❌ Validation failed:', missingRequired);
+      
+      // Show specific missing fields in toast
+      const firstMissing = missingRequired[0];
+      toast.error(`Please complete required field: "${firstMissing.title}"`, {
+        duration: 4000,
+      });
+      
+      // Navigate to first missing required field
+      setCurrentStep(firstMissing.step);
+      
+      return false;
+    }
+
+    console.log('✅ All required fields validated successfully');
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    console.log('📋 Create Project button clicked');
+    console.log('📋 Current answers:', answers);
+    
+    // Validate required fields first
+    if (!validateRequiredFields()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    const loadingToast = toast.loading('Creating your project...');
+
+    try {
+      console.log('🚀 Submitting project to API...');
+      
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answers,
+          questions
+        }),
+      });
+
+      const data = await response.json();
+      console.log('📥 API Response:', data);
+
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        console.log('✅ Project created successfully:', data.project);
+        toast.success('🎉 Project created successfully!', {
+          duration: 5000,
+        });
+        
+        // Show project details in console and toast
+        console.log('📋 Project Details:', {
+          projectId: data.project.projectId,
+          userId: data.project.userId,
+          createdAt: data.project.createdAt
+        });
+
+        // Show project ID and redirect to app page
+        setTimeout(() => {
+          toast.success(`Project ID: ${data.project.projectId}`, {
+            duration: 4000,
+          });
+        }, 1000);
+
+        // Navigate to app page after success
+        console.log('🔄 Redirecting to app page...');
+        setTimeout(() => {
+          router.push('/app');
+        }, 2000);
+
+      } else {
+        console.error('❌ Project creation failed:', data);
+        
+        if (data.missingFields && data.missingFields.length > 0) {
+          console.log('❌ Missing required fields:', data.missingFields);
+          const firstMissing = data.missingFields[0];
+          toast.error(`Missing required field: "${firstMissing.title}"`, {
+            duration: 4000,
+          });
+          setCurrentStep(firstMissing.step);
+        } else {
+          toast.error(`❌ ${data.error || 'Failed to create project'}`, {
+            duration: 4000,
+          });
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Network error during project creation:', error);
+      toast.dismiss(loadingToast);
+      toast.error('❌ Network error. Please check your connection and try again.', {
+        duration: 4000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStepState = (question: Question) => {
@@ -217,7 +341,7 @@ export default function CreateProject() {
       
       <div className="question-section">
         <aside className="question-sidebar">
-          <h3>Steps</h3>
+          
           <ul>
             {questions.map((q) => (
               <li
@@ -226,7 +350,7 @@ export default function CreateProject() {
                 onClick={() => setCurrentStep(q.step)}
               >
                 {q.step}. {q.sidebarTitle}
-                {q.required && <span className="required-dot">*</span>}
+                
               </li>
             ))}
           </ul>
@@ -243,7 +367,7 @@ export default function CreateProject() {
 
         <main className="question-main">
           <h2>{currentQuestion.question}</h2>
-          {currentQuestion.required && <span className="required-indicator">*</span>}
+          
           
           {renderInput(currentQuestion)}
 
@@ -266,9 +390,9 @@ export default function CreateProject() {
               <button 
                 className="submit-button" 
                 onClick={handleSubmit}
-                disabled={currentQuestion.required && !answers[currentStep]}
+                disabled={isSubmitting}
               >
-                Create Project
+                {isSubmitting ? 'Creating Project...' : 'Create Project'}
               </button>
             )}
           </div>
