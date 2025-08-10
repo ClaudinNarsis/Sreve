@@ -216,9 +216,9 @@ export default function HomePage() {
               <div className="prompt-input" contentEditable data-placeholder="What do you want to create?"></div>
               <div className="chips-wrapper">
                 <div className="prompt-chips">
-                  <button className="chip">Create an ad script for a cookie brand</button>
-                  <button className="chip">Generate a UGC script for a new skincare line</button>
-                  <button className="chip">Write a hook for a fitness app</button>
+                  <button className="chip">Create a ad copy for hot-box</button>
+                  <button className="chip">Create 5 static ad-copies for a water bottle</button>
+                  <button className="chip">Create a UGC script for a Travel Agency</button>
                 </div>
               </div>
             </div>

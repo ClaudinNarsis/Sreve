@@ -1,11 +1,12 @@
-"use client";
+'use client';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import "./sample.css";
+import './sample.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { SignInButton } from '@clerk/nextjs';
+import { Resizable } from 'react-resizable';
 
 function SampleContent() {
   const searchParams = useSearchParams();
@@ -13,6 +14,7 @@ function SampleContent() {
   const answer = searchParams.get('answer') || '';
   const [loading, setLoading] = useState(true);
   const [displayedAnswer, setDisplayedAnswer] = useState('');
+  const [sidebarWidth, setSidebarWidth] = useState(300);
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
@@ -40,6 +42,10 @@ function SampleContent() {
     }
   }, [loading, answer]);
 
+  const onResize = (event, { size }) => {
+    setSidebarWidth(size.width);
+  };
+
   return (
     <div className="sample-page">
       <header className="header">
@@ -51,34 +57,48 @@ function SampleContent() {
         </nav>
       </header>
 
-      <main className="sample-content">
-        <div className="container">
-          <div className="sample-header">
-            
-          </div>
-
-          <div className="answer-container">
-            
-            <div className="answer-content">
-              {loading ? (
-                <div className="loading-container">Thinking ...</div>
-              ) : (
-                <div className="formatted-answer">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedAnswer}</ReactMarkdown>
-                </div>
-              )}
-            </div>
-            <div className="cta-section">
-              <p>Customise this for your brand? or want to chat with this answer?</p>
-              <SignInButton mode="modal" forceRedirectUrl="/onboarding">
-                <button className="cta-button">Get Started</button>
-              </SignInButton>
+      <div className="main-container">
+        <main className="sample-content">
+          <div className="container">
+            <div className="answer-container">
+              <div className="answer-content">
+                {loading ? (
+                  <div className="loading-container">Thinking ...</div>
+                ) : (
+                  <div className="formatted-answer">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedAnswer}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+              <div className="cta-section">
+                <p>Customise this for your brand? or want to chat with this answer?</p>
+                <SignInButton mode="modal" forceRedirectUrl="/onboarding">
+                  <button className="cta-button">Get Started</button>
+                </SignInButton>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-
-
+        </main>
+        <Resizable
+          width={sidebarWidth}
+          height={0}
+          onResize={onResize}
+          axis="x"
+          minConstraints={[200, 0]}
+          maxConstraints={[500, 0]}
+          className="resizable-sidebar"
+        >
+          <aside className="sidebar" style={{ width: sidebarWidth }}>
+            <div className="chat-box">
+              {/* Chat messages will go here */}
+            </div>
+            <div className="prompt-box">
+              <input type="text" placeholder="Type your message..." />
+              <button>Go</button>
+            </div>
+          </aside>
+        </Resizable>
+      </div>
     </div>
   );
 }
