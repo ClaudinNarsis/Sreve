@@ -1,0 +1,354 @@
+/* App page specific styles */
+
+/* Layout styles */
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 80px);
+  
+  background-color: #222;
+}
+
+/* Sidebar styles */
+.file-sidebar {
+  width: 280px;
+  background-color: #111;
+  border-right: 1px solid #333;
+  padding: 1rem;
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.file-sidebar.collapsed {
+  width: 50px;
+  padding: 1rem 0.5rem;
+}
+
+.file-sidebar.collapsed .sidebar-header h3,
+.file-sidebar.collapsed .folder-name,
+.file-sidebar.collapsed .file-name {
+  display: none;
+}
+
+.file-sidebar.collapsed .collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+.app-layout.sidebar-collapsed .main-content {
+  margin-left: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.sidebar-header h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.collapse-btn:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.collapse-btn svg {
+  transition: transform 0.3s ease;
+}
+
+/* File tree styles */
+.file-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.folder-item {
+  cursor: pointer;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.folder-header:hover {
+  background-color: #333;
+}
+
+.folder-icon {
+  color: #ccc;
+  transition: transform 0.2s;
+}
+
+.folder-icon-closed {
+  color: #ff6600;
+  display: none;
+}
+
+.folder-item:not(.expanded) .folder-icon {
+  transform: rotate(-90deg);
+}
+
+.folder-item:not(.expanded) .folder-icon-closed {
+  display: block;
+}
+
+.folder-item.expanded .folder-icon-closed {
+  display: none;
+}
+
+.folder-name {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.folder-content {
+  margin-left: 1.5rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid #333;
+  display: none;
+}
+
+.folder-item.expanded .folder-content {
+  display: block;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: #333;
+}
+
+.file-icon {
+  color: #999;
+  flex-shrink: 0;
+}
+
+.file-name {
+  color: #ccc;
+  font-size: 0.875rem;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+  display: none;
+}
+
+.sidebar-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Main content styles */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.beta-full-section {
+  background-color: #222;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.beta-full-container {
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  text-align: center;
+  background-color: #1e1e1e;
+  border-radius: 0.75rem;
+  box-shadow: 1px 1px 6px 1px rgba(80, 0, 184, 0.56);
+}
+
+.beta-full-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.beta-full-description {
+  color: #ccc;
+  line-height: 1.6;
+  margin: 1rem 0;
+}
+
+.beta-full-description.primary {
+  font-size: 1rem;
+}
+
+.beta-full-description.secondary {
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.beta-full-content {
+  margin-top: 1.5rem;
+}
+
+.user-message {
+  font-size: 0.875rem;
+  color: #ccc;
+  margin-top: 1rem;
+}
+
+.signin-section {
+  margin-top: 1.5rem;
+}
+
+.signin-prompt {
+  margin-bottom: 1rem;
+  color: #ccc;
+  font-size: 0.875rem;
+}
+
+.signin-button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  width: 100%;
+}
+
+.signin-button:hover {
+  background-color: #e65c00;
+}
+
+.signin-button:focus {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+/* Responsive design */
+@media (min-width: 640px) {
+  .beta-full-container {
+    padding: 2rem;
+  }
+  
+  .beta-full-title {
+    font-size: 2.25rem;
+  }
+  
+  .beta-full-description.primary {
+    font-size: 1.125rem;
+  }
+  
+  .beta-full-description.secondary {
+    font-size: 1rem;
+  }
+  
+  .signin-prompt {
+    font-size: 1rem;
+  }
+  
+  .signin-button {
+    width: auto;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: block;
+  }
+  
+  .file-sidebar {
+    position: fixed;
+    left: -280px;
+    top: 80px;
+    height: calc(100vh - 80px);
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  
+  .file-sidebar.open {
+    left: 0;
+  }
+  
+  .file-sidebar.collapsed {
+    width: 280px;
+    left: -280px;
+  }
+  
+  .file-sidebar.collapsed.open {
+    left: 0;
+  }
+  
+  .app-layout {
+    margin-top: 80px;
+  }
+  
+  .main-content {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .beta-full-section {
+    padding: 1rem;
+  }
+  
+  .file-sidebar {
+    width: 100vw;
+    left: -100vw;
+  }
+  
+  .file-sidebar.open {
+    left: 0;
+  }
+  
+  .file-sidebar.collapsed {
+    width: 100vw;
+    left: -100vw;
+  }
+}
