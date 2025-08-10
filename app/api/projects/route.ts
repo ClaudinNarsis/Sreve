@@ -6,17 +6,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 console.log('🔧 Projects API endpoint loaded');
 console.log('🔧 Environment variables check:', {
-  AWS_REGION: process.env.AWS_REGION,
-  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'MISSING',
-  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'MISSING',
+  REGION_AWS: process.env.REGION_AWS,
+  ACCESS_KEY_ID_AWS: process.env.ACCESS_KEY_ID_AWS ? 'SET' : 'MISSING',
+  SECRET_ACCESS_KEY_AWS: process.env.SECRET_ACCESS_KEY_AWS ? 'SET' : 'MISSING',
   ENVIRONMENT: process.env.ENVIRONMENT,
 });
 
 const client = new DynamoDBClient({
-  region: process.env.AWS_REGION,
+  region: process.env.REGION_AWS,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.ACCESS_KEY_ID_AWS!,
+    secretAccessKey: process.env.SECRET_ACCESS_KEY_AWS!,
   },
 });
 
