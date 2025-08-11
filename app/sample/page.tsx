@@ -5,7 +5,7 @@ import Link from 'next/link';
 import './sample.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { SignInButton } from '@clerk/nextjs';
+import { SignInButton, useClerk } from '@clerk/nextjs';
 import { Resizable } from 'react-resizable';
 
 function SampleContent() {
@@ -15,6 +15,11 @@ function SampleContent() {
   const [loading, setLoading] = useState(true);
   const [displayedAnswer, setDisplayedAnswer] = useState('');
   const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [messages, setMessages] = useState([
+    { text: 'what changes would you like me to do?', sender: 'bot' }
+  ]);
+  const [userInput, setUserInput] = useState('');
+  const { openSignIn } = useClerk();
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
@@ -44,6 +49,14 @@ function SampleContent() {
 
   const onResize = (event, { size }) => {
     setSidebarWidth(size.width);
+  };
+
+  const handleSendMessage = () => {
+    if (userInput.trim() !== '') {
+      setMessages([...messages, { text: userInput, sender: 'user' }]);
+      setUserInput('');
+      openSignIn();
+    }
   };
 
   return (
@@ -90,11 +103,25 @@ function SampleContent() {
         >
           <aside className="sidebar" style={{ width: sidebarWidth }}>
             <div className="chat-box">
-              {/* Chat messages will go here */}
+              {messages.map((message, index) => (
+                <div key={index} className={`chat-message ${message.sender}`}>
+                  {message.text}
+                </div>
+              ))}
             </div>
             <div className="prompt-box">
-              <input type="text" placeholder="Type your message..." />
-              <button>Go</button>
+              <input
+                type="text"
+                placeholder="Type your message..."
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <button onClick={handleSendMessage}>Go</button>
             </div>
           </aside>
         </Resizable>
