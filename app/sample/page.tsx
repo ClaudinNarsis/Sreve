@@ -5,7 +5,7 @@ import Link from 'next/link';
 import './sample.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { SignInButton } from '@clerk/nextjs';
+import { SignInButton, useClerk } from '@clerk/nextjs';
 import { Resizable } from 'react-resizable';
 
 function SampleContent() {
@@ -18,6 +18,8 @@ function SampleContent() {
   const [messages, setMessages] = useState([
     { text: 'what changes would you like me to do?', sender: 'bot' }
   ]);
+  const [userInput, setUserInput] = useState('');
+  const { openSignIn } = useClerk();
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
@@ -47,6 +49,14 @@ function SampleContent() {
 
   const onResize = (event, { size }) => {
     setSidebarWidth(size.width);
+  };
+
+  const handleSendMessage = () => {
+    if (userInput.trim() !== '') {
+      setMessages([...messages, { text: userInput, sender: 'user' }]);
+      setUserInput('');
+      openSignIn();
+    }
   };
 
   return (
@@ -100,8 +110,18 @@ function SampleContent() {
               ))}
             </div>
             <div className="prompt-box">
-              <input type="text" placeholder="Type your message..." />
-              <button>Go</button>
+              <input
+                type="text"
+                placeholder="Type your message..."
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
+              />
+              <button onClick={handleSendMessage}>Go</button>
             </div>
           </aside>
         </Resizable>
