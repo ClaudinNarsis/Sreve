@@ -15,6 +15,9 @@ function SampleContent() {
   const [loading, setLoading] = useState(true);
   const [displayedAnswer, setDisplayedAnswer] = useState('');
   const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [messages, setMessages] = useState([
+    { text: 'what changes would you like me to do?', sender: 'bot' }
+  ]);
 
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
@@ -90,7 +93,11 @@ function SampleContent() {
         >
           <aside className="sidebar" style={{ width: sidebarWidth }}>
             <div className="chat-box">
-              {/* Chat messages will go here */}
+              {messages.map((message, index) => (
+                <div key={index} className={`chat-message ${message.sender}`}>
+                  {message.text}
+                </div>
+              ))}
             </div>
             <div className="prompt-box">
               <input type="text" placeholder="Type your message..." />
