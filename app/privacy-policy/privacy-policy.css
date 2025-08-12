@@ -5,9 +5,13 @@
     font-family: sans-serif;
     color: #333;
   }
+
+  body{
+    text-align: justify !important;
+  }
   
   h1, h2, h3 {
-    color: #000;
+    color: #ffffff;
   }
   
   h1 {
