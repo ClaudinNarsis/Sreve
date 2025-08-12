@@ -329,7 +329,7 @@ export default function HomePage() {
             <ul className="footer-nav">
               <li><a href="#">About</a></li>
               <li><a href="#">FAQ</a></li>
-              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="/privacy-policy">Privacy Policy</a></li>
               <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0">Contact</a></li>
             </ul>
           </div>
