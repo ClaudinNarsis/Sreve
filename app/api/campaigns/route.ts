@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     console.log('📋 Request data:', requestData);
     
-    const { projectId, name, description } = requestData;
+    const { projectId, name, description, fileUrl, fileName, fileType } = requestData;
 
     if (!projectId || !name) {
       console.log('❌ Missing required data:', { projectId: !!projectId, name: !!name });
@@ -55,6 +55,9 @@ export async function POST(request: NextRequest) {
       userId,
       name,
       description: description || '',
+      fileUrl: fileUrl || '',
+      fileName: fileName || '',
+      fileType: fileType || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'created'
@@ -85,6 +88,9 @@ export async function POST(request: NextRequest) {
         userId,
         name,
         description: campaignData.description,
+        fileUrl: campaignData.fileUrl,
+        fileName: campaignData.fileName,
+        fileType: campaignData.fileType,
         createdAt: campaignData.createdAt,
         status: campaignData.status
       },

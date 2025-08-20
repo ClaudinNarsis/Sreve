@@ -11,6 +11,9 @@ interface Campaign {
   createdAt: string;
   updatedAt: string;
   status: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 interface CampaignExplorerProps {

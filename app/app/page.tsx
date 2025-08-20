@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import "./app.css";
 import { useState, useEffect } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
+import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
 
 interface QuestionOption {
@@ -42,7 +43,15 @@ interface QuestionsData {
 
 export default function App() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject'>('campaignExplorer');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedProjectId === null) {
+      setSelectedCampaignId(null);
+    }
+  }, [selectedProjectId]);
+
+  const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
   const { isCreating } = useAutoCreateUser();
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -367,7 +376,20 @@ export default function App() {
             </svg>
           </button>
           <SignedIn>
-            <ProjectExplorer onCampaignSelect={setSelectedCampaignId} onCreateProjectClick={() => setViewMode('createProject')} />
+            <ProjectExplorer 
+              onCampaignSelect={(campaignId, projectId) => {
+                setSelectedCampaignId(campaignId);
+                setSelectedProjectId(projectId);
+                setViewMode('campaignExplorer');
+              }}
+              onProjectSelect={(projectId) => {
+                setSelectedProjectId(projectId);
+                setSelectedCampaignId(null); // Clear selected campaign when a project is selected
+                setViewMode('projectDetails');
+              }}
+              onCreateProjectClick={() => setViewMode('createProject')}
+              selectedProjectId={selectedProjectId}
+            />
           </SignedIn>
           <SignedOut>
             <div style={{ padding: '1rem', color: '#ccc', textAlign: 'center' }}>
@@ -378,7 +400,7 @@ export default function App() {
         <main className="main-content">
           {viewMode === 'campaignExplorer' ? (
             <CampaignExplorer campaignId={selectedCampaignId} />
-          ) : (
+          ) : viewMode === 'createProject' ? (
             <div className="overall">
               <div className="create-project">
                 <h3>Create your project</h3>
@@ -436,6 +458,8 @@ export default function App() {
                 </main>
               </div>
             </div>
+          ) : (
+            <ProjectDetailsExplorer projectId={selectedProjectId} />
           )}
         </main>
       </div>
