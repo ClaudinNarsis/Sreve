@@ -10,8 +10,7 @@ import { useRouter } from 'next/navigation';
 
 import "./app.css";
 import { useState, useEffect } from "react";
-
-
+import CampaignExplorer from "../components/CampaignExplorer";
 
 
 interface QuestionOption {
@@ -42,7 +41,8 @@ interface QuestionsData {
 }
 
 export default function App() {
-  
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject'>('campaignExplorer');
   const { isCreating } = useAutoCreateUser();
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -322,10 +322,6 @@ export default function App() {
     }
   };
 
-  if (loading) {
-    return <div>Loading questions...</div>;
-  }
-
   if (!currentQuestion) {
     return <div>Question not found</div>;
   }
@@ -371,7 +367,7 @@ export default function App() {
             </svg>
           </button>
           <SignedIn>
-            <ProjectExplorer />
+            <ProjectExplorer onCampaignSelect={setSelectedCampaignId} onCreateProjectClick={() => setViewMode('createProject')} />
           </SignedIn>
           <SignedOut>
             <div style={{ padding: '1rem', color: '#ccc', textAlign: 'center' }}>
@@ -380,63 +376,67 @@ export default function App() {
           </SignedOut>
         </aside>
         <main className="main-content">
-          <div className="overall">
-            <div className="create-project">
-              <h3>Create your project</h3>
+          {viewMode === 'campaignExplorer' ? (
+            <CampaignExplorer campaignId={selectedCampaignId} />
+          ) : (
+            <div className="overall">
+              <div className="create-project">
+                <h3>Create your project</h3>
+              </div>
+              <div className="question-section">
+                <aside className="question-sidebar">
+                  <ul>
+                    {questions.map((q) => (
+                      <li
+                        key={q.step}
+                        className={getStepState(q)}
+                        onClick={() => setCurrentStep(q.step)}
+                      >
+                        {q.step}. {q.sidebarTitle}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="progress-bar">
+                    <div
+                      className="progress-fill"
+                      style={{ width: `${(currentStep / questions.length) * 100}%` }}
+                    />
+                  </div>
+                  <p className="progress-text">
+                    Step {currentStep} of {questions.length}
+                  </p>
+                </aside>
+                <main className="question-main">
+                  <h2>{currentQuestion.question}</h2>
+                  {renderInput(currentQuestion)}
+                  <div className="button-group">
+                    {currentStep > 1 && (
+                      <button className="prev-button" onClick={handlePrevious}>
+                        Previous
+                      </button>
+                    )}
+                    {currentStep < questions.length ? (
+                      <button
+                        className="next-button"
+                        onClick={handleNext}
+                        disabled={currentQuestion.required && !answers[currentStep]}
+                      >
+                        Next
+                      </button>
+                    ) : (
+                      <button
+                        className="submit-button"
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Creating Project...' : 'Create Project'}
+                      </button>
+                    )}
+                  </div>
+                </main>
+              </div>
             </div>
-            <div className="question-section">
-              <aside className="question-sidebar">
-                <ul>
-                  {questions.map((q) => (
-                    <li
-                      key={q.step}
-                      className={getStepState(q)}
-                      onClick={() => setCurrentStep(q.step)}
-                    >
-                      {q.step}. {q.sidebarTitle}
-                    </li>
-                  ))}
-                </ul>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{ width: `${(currentStep / questions.length) * 100}%` }}
-                  />
-                </div>
-                <p className="progress-text">
-                  Step {currentStep} of {questions.length}
-                </p>
-              </aside>
-              <main className="question-main">
-                <h2>{currentQuestion.question}</h2>
-                {renderInput(currentQuestion)}
-                <div className="button-group">
-                  {currentStep > 1 && (
-                    <button className="prev-button" onClick={handlePrevious}>
-                      Previous
-                    </button>
-                  )}
-                  {currentStep < questions.length ? (
-                    <button
-                      className="next-button"
-                      onClick={handleNext}
-                      disabled={currentQuestion.required && !answers[currentStep]}
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      className="submit-button"
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Creating Project...' : 'Create Project'}
-                    </button>
-                  )}
-                </div>
-              </main>
-            </div>
-          </div>
+          )}
         </main>
       </div>
     </>

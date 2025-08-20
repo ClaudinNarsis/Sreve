@@ -197,62 +197,34 @@ export async function GET(request: NextRequest) {
       console.log('🔍 Fetching all projects for user:', userId);
       
       try {
-        // For now, we'll scan the table and filter by userId
-        // In production, you should use a GSI for better performance
-        const scanCommand = new QueryCommand({
+        const scanCommand = new ScanCommand({
           TableName: TABLE_NAME,
-          IndexName: 'userId-createdAt-index', // This GSI would need to be created
-          KeyConditionExpression: 'userId = :userId',
+          FilterExpression: 'userId = :userId',
           ExpressionAttributeValues: {
             ':userId': userId
-          },
-          ScanIndexForward: false, // Latest first
+          }
         });
 
-        const result = await docClient.send(scanCommand);
-        console.log('📋 Projects found:', result.Items?.length || 0);
+        const scanResult = await docClient.send(scanCommand);
+        console.log('📋 Projects found via scan:', scanResult.Items?.length || 0);
+        
+        // Sort by createdAt descending (latest first)
+        const sortedProjects = (scanResult.Items || []).sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
         return NextResponse.json({ 
-          projects: result.Items || [],
+          projects: sortedProjects,
           success: true 
         });
         
       } catch (error) {
-        console.error('❌ Error querying projects by userId:', error);
-        
-        // Fallback: scan entire table (not recommended for production)
-        console.log('⚠️ Falling back to table scan...');
-        
-        try {
-          const scanCommand = new ScanCommand({
-            TableName: TABLE_NAME,
-            FilterExpression: 'userId = :userId',
-            ExpressionAttributeValues: {
-              ':userId': userId
-            }
-          });
-
-          const scanResult = await docClient.send(scanCommand);
-          console.log('📋 Projects found via scan:', scanResult.Items?.length || 0);
-          
-          // Sort by createdAt descending (latest first)
-          const sortedProjects = (scanResult.Items || []).sort((a, b) => 
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-
-          return NextResponse.json({ 
-            projects: sortedProjects,
-            success: true 
-          });
-          
-        } catch (scanError) {
-          console.error('❌ Error scanning projects:', scanError);
-          return NextResponse.json({ 
-            error: 'Failed to fetch projects',
-            projects: [],
-            success: false 
-          }, { status: 500 });
-        }
+        console.error('❌ Error scanning projects:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch projects',
+          projects: [],
+          success: false 
+        }, { status: 500 });
       }
     }
 

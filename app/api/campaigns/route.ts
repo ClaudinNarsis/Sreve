@@ -123,32 +123,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
-    const campaignId = searchParams.get('campaignId');
 
-    if (campaignId) {
-      // Get specific campaign
-      console.log('🔍 Fetching specific campaign:', campaignId);
-      
-      const getCommand = new GetCommand({
-        TableName: TABLE_NAME,
-        Key: { campaignId },
-      });
-
-      const result = await docClient.send(getCommand);
-
-      if (!result.Item) {
-        console.log('❌ Campaign not found:', campaignId);
-        return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-      }
-
-      if (result.Item.userId !== userId) {
-        console.log('❌ Unauthorized access to campaign:', campaignId);
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-      }
-
-      return NextResponse.json({ campaign: result.Item });
-
-    } else if (projectId) {
+    if (projectId) {
       // Get all campaigns for a project
       console.log('🔍 Fetching campaigns for project:', projectId);
       

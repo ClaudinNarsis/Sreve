@@ -25,7 +25,13 @@ interface Campaign {
   status: string;
 }
 
-export default function ProjectExplorer() {
+interface ProjectExplorerProps {
+  onCampaignSelect: (campaignId: string | null) => void;
+  selectedCampaignId: string | null;
+  onCreateProjectClick: () => void;
+}
+
+export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, onCreateProjectClick }: ProjectExplorerProps) {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -34,6 +40,7 @@ export default function ProjectExplorer() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [loadingCampaigns, setLoadingCampaigns] = useState<Set<string>>(new Set());
   const [creatingCampaign, setCreatingCampaign] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && user) {
@@ -101,8 +108,12 @@ export default function ProjectExplorer() {
       const newSet = new Set(prev);
       if (newSet.has(projectId)) {
         newSet.delete(projectId);
+        setSelectedProject(null);
+        onCampaignSelect(null); // Clear selected campaign when collapsing a project
       } else {
         newSet.add(projectId);
+        setSelectedProject(projectId);
+        onCampaignSelect(null); // Clear selected campaign when a new project is selected
         // Fetch campaigns when expanding
         if (!campaigns[projectId]) {
           fetchCampaigns(projectId);
@@ -118,8 +129,12 @@ export default function ProjectExplorer() {
   };
 
   const handleCreateProject = () => {
-    console.log('🔄 Redirecting to create project page...');
-    router.push('/create-project');
+    console.log('🔄 Triggering create project click...');
+    onCreateProjectClick();
+  };
+
+  const handleCampaignClick = (campaignId: string) => {
+    onCampaignSelect(campaignId);
   };
 
   const handleCreateCampaign = async (projectId: string) => {
@@ -195,7 +210,7 @@ export default function ProjectExplorer() {
             const isLoadingCampaigns = loadingCampaigns.has(project.projectId);
 
             return (
-              <div key={project.projectId} className="project-item">
+              <div key={project.projectId} className={`project-item ${selectedProject === project.projectId ? 'selected' : ''}`}>
                 <div 
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
@@ -237,7 +252,11 @@ export default function ProjectExplorer() {
                       ) : (
                         <div className="campaigns-list">
                           {projectCampaigns.map((campaign) => (
-                            <div key={campaign.campaignId} className="campaign-item">
+                            <div 
+                              key={campaign.campaignId} 
+                              className={`campaign-item ${selectedCampaignId === campaign.campaignId ? 'selected' : ''}`}
+                              onClick={() => handleCampaignClick(campaign.campaignId)}
+                            >
                               <svg className="campaign-icon" width="14" height="14" viewBox="0 0 24 24">
                                 <path d="M9 2v6h6V2"></path>
                                 <path d="M9 18H5a2 2 0 01-2-2v-5h18v5a2 2 0 01-2 2h-4"></path>
