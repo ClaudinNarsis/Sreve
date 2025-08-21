@@ -389,6 +389,7 @@ export default function App() {
               }}
               onCreateProjectClick={() => setViewMode('createProject')}
               selectedProjectId={selectedProjectId}
+              selectedCampaignId={selectedCampaignId} 
             />
           </SignedIn>
           <SignedOut>

@@ -1,112 +1,148 @@
-import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import React, { useState, useRef, useCallback } from 'react';
 import './CampaignExplorer.css';
-
-interface Campaign {
-  campaignId: string;
-  projectId: string;
-  userId: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  fileUrl?: string;
-  fileName?: string;
-  fileType?: string;
-}
 
 interface CampaignExplorerProps {
   campaignId: string | null;
 }
 
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [detailsPaneWidth, setDetailsPaneWidth] = useState(400);
+  const [detailsPaneHeight, setDetailsPaneHeight] = useState(300);
+  const [ideaViewWidth, setIdeaViewWidth] = useState(400);
+  const [ideaViewHeight, setIdeaViewHeight] = useState(300);
+  const [chatBoxHeight, setChatBoxHeight] = useState(200);
 
-  useEffect(() => {
-    if (!campaignId) {
-      setCampaign(null);
-      setLoading(false);
-      return;
-    }
+  const detailsResizeRef = useRef<HTMLDivElement>(null);
+  const ideaResizeRef = useRef<HTMLDivElement>(null);
+  const chatResizeRef = useRef<HTMLDivElement>(null);
 
-    const fetchCampaignDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/campaigns/${campaignId}`);
-        const data = await response.json();
+  const handleDetailsResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = detailsPaneWidth;
+    const startHeight = detailsPaneHeight;
 
-        if (response.ok && data.campaign) {
-          setCampaign(data.campaign);
-        } else {
-          setError(data.error || 'Failed to fetch campaign details');
-          toast.error(data.error || 'Failed to fetch campaign details');
-        }
-      } catch (err) {
-        setError('Error fetching campaign details');
-        toast.error('Error fetching campaign details');
-      } finally {
-        setLoading(false);
-      }
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.max(200, startWidth + (e.clientX - startX));
+      const newHeight = Math.max(150, startHeight + (e.clientY - startY));
+      setDetailsPaneWidth(newWidth);
+      setDetailsPaneHeight(newHeight);
     };
 
-    fetchCampaignDetails();
-  }, [campaignId]);
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
 
-  if (!campaignId) {
-    return (
-      <div className="campaign-explorer">
-        <div className="empty-state">
-          <p>Select a campaign to view details</p>
-        </div>
-      </div>
-    );
-  }
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [detailsPaneWidth, detailsPaneHeight]);
 
-  if (loading) {
-    return (
-      <div className="campaign-explorer">
-        <div className="loading-state">
-          <p>Loading campaign details...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleIdeaResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = ideaViewWidth;
+    const startHeight = ideaViewHeight;
 
-  if (error) {
-    return (
-      <div className="campaign-explorer">
-        <div className="error-state">
-          <p>Error: {error}</p>
-        </div>
-      </div>
-    );
-  }
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = Math.max(200, startWidth - (e.clientX - startX));
+      const newHeight = Math.max(150, startHeight + (e.clientY - startY));
+      setIdeaViewWidth(newWidth);
+      setIdeaViewHeight(newHeight);
+    };
 
-  if (!campaign) {
-    return (
-      <div className="campaign-explorer">
-        <div className="empty-state">
-          <p>Campaign not found</p>
-        </div>
-      </div>
-    );
-  }
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [ideaViewWidth, ideaViewHeight]);
+
+  const handleChatResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = chatBoxHeight;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeight = Math.max(100, startHeight - (e.clientY - startY));
+      setChatBoxHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [chatBoxHeight]);
 
   return (
-    <div className="campaign-explorer">
-      <div className="explorer-header">
-        <h3>Campaign Details</h3>
+    <div className="campaign-explorer-layout">
+      {/* Details Pane - Top Left */}
+      <div 
+        className="details-pane"
+        style={{
+          width: `${detailsPaneWidth}px`,
+          height: `${detailsPaneHeight}px`
+        }}
+      >
+        <div className="pane-header">
+          <h3>Details</h3>
+        </div>
+        <div className="pane-content">
+          {/* Empty for now */}
+        </div>
+        <div 
+          className="resize-handle resize-handle-se"
+          onMouseDown={handleDetailsResize}
+          ref={detailsResizeRef}
+        />
       </div>
-      <div className="campaign-details">
-        <p><strong>Name:</strong> {campaign.name}</p>
-        <p><strong>Description:</strong> {campaign.description || 'N/A'}</p>
-        <p><strong>Status:</strong> {campaign.status}</p>
-        <p><strong>Created At:</strong> {new Date(campaign.createdAt).toISOString()}</p>
-        <p><strong>Updated At:</strong> {new Date(campaign.updatedAt).toISOString()}</p>
+
+      {/* Idea View - Top Right */}
+      <div 
+        className="idea-view"
+        style={{
+          width: `${ideaViewWidth}px`,
+          height: `${ideaViewHeight}px`
+        }}
+      >
+        <div className="pane-header">
+          <h3>Ideas</h3>
+        </div>
+        <div className="pane-content">
+          {/* Empty for now */}
+        </div>
+        <div 
+          className="resize-handle resize-handle-sw"
+          onMouseDown={handleIdeaResize}
+          ref={ideaResizeRef}
+        />
+      </div>
+
+      {/* Chat Box - Bottom Center */}
+      <div 
+        className="chat-box"
+        style={{
+          height: `${chatBoxHeight}px`
+        }}
+      >
+        <div 
+          className="resize-handle resize-handle-n"
+          onMouseDown={handleChatResize}
+          ref={chatResizeRef}
+        />
+        <div className="pane-header">
+          <h3>Chat</h3>
+        </div>
+        <div className="pane-content">
+          {/* Empty for now */}
+        </div>
       </div>
     </div>
   );
