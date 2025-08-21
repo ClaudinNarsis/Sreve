@@ -5,29 +5,65 @@ interface CampaignExplorerProps {
   campaignId: string | null;
 }
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+}
+
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
-  const [detailsPaneWidth, setDetailsPaneWidth] = useState(400);
-  const [detailsPaneHeight, setDetailsPaneHeight] = useState(300);
-  const [ideaViewWidth, setIdeaViewWidth] = useState(400);
-  const [ideaViewHeight, setIdeaViewHeight] = useState(300);
-  const [chatBoxHeight, setChatBoxHeight] = useState(200);
+  const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(60);
+  const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      text: 'Hello! I\'m your campaign assistant. How can I help you today?',
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const detailsResizeRef = useRef<HTMLDivElement>(null);
-  const ideaResizeRef = useRef<HTMLDivElement>(null);
-  const chatResizeRef = useRef<HTMLDivElement>(null);
-
-  const handleDetailsResize = useCallback((e: React.MouseEvent) => {
+  const handleVerticalResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
+    const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
+    if (!containerRect) return;
+
+    const startY = e.clientY;
+    const startHeightPercent = topPanesHeightPercent;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaY = e.clientY - startY;
+      const deltaPercent = (deltaY / containerRect.height) * 100;
+      const newHeightPercent = Math.max(20, Math.min(80, startHeightPercent + deltaPercent));
+      setTopPanesHeightPercent(newHeightPercent);
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [topPanesHeightPercent]);
+
+  const handleHorizontalResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
+    if (!containerRect) return;
+
     const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = detailsPaneWidth;
-    const startHeight = detailsPaneHeight;
+    const startWidthPercent = ideaPaneWidthPercent;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.max(200, startWidth + (e.clientX - startX));
-      const newHeight = Math.max(150, startHeight + (e.clientY - startY));
-      setDetailsPaneWidth(newWidth);
-      setDetailsPaneHeight(newHeight);
+      const deltaX = e.clientX - startX;
+      const deltaPercent = (deltaX / containerRect.width) * 100;
+      const newWidthPercent = Math.max(20, Math.min(80, startWidthPercent + deltaPercent));
+      setIdeaPaneWidthPercent(newWidthPercent);
     };
 
     const handleMouseUp = () => {
@@ -37,111 +73,174 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [detailsPaneWidth, detailsPaneHeight]);
+  }, [ideaPaneWidthPercent]);
 
-  const handleIdeaResize = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = ideaViewWidth;
-    const startHeight = ideaViewHeight;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.max(200, startWidth - (e.clientX - startX));
-      const newHeight = Math.max(150, startHeight + (e.clientY - startY));
-      setIdeaViewWidth(newWidth);
-      setIdeaViewHeight(newHeight);
+  const simulateBotResponse = (userMessage: string): string => {
+    const responses = [
+      "That's an interesting point. Let me help you with that.",
+      "I understand your question. Here's what I think...",
+      "Great question! Based on your campaign, I'd suggest...",
+      "Let me analyze that for you. Here are some ideas:",
+      "I can help you with that. Have you considered...",
+      "That's a good approach. You might also want to think about..."
+    ];
+    
+    if (userMessage.toLowerCase().includes('help')) {
+      return "I'm here to help! I can assist with campaign strategy, content ideas, audience targeting, and performance analysis. What would you like to explore?";
+    }
+    
+    if (userMessage.toLowerCase().includes('idea')) {
+      return "Here are some creative ideas for your campaign: 1) Interactive content that engages your audience, 2) User-generated content campaigns, 3) Behind-the-scenes storytelling. Which direction interests you most?";
+    }
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+
+  const handleSendMessage = useCallback(async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: inputMessage.trim(),
+      sender: 'user',
+      timestamp: new Date()
     };
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [ideaViewWidth, ideaViewHeight]);
+    setTimeout(() => {
+      const botResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: simulateBotResponse(userMessage.text),
+        sender: 'bot',
+        timestamp: new Date()
+      };
 
-  const handleChatResize = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const startY = e.clientY;
-    const startHeight = chatBoxHeight;
+      setMessages(prev => [...prev, botResponse]);
+      setIsTyping(false);
+      setTimeout(scrollToBottom, 100);
+    }, 1000 + Math.random() * 2000);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = Math.max(100, startHeight - (e.clientY - startY));
-      setChatBoxHeight(newHeight);
-    };
+    setTimeout(scrollToBottom, 100);
+  }, [inputMessage]);
 
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [chatBoxHeight]);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
     <div className="campaign-explorer-layout">
-      {/* Details Pane - Top Left */}
+      {/* Top Row - Ideas and Details */}
       <div 
-        className="details-pane"
-        style={{
-          width: `${detailsPaneWidth}px`,
-          height: `${detailsPaneHeight}px`
-        }}
+        className="top-row" 
+        style={{ height: `${topPanesHeightPercent}%` }}
       >
-        <div className="pane-header">
-          <h3>Details</h3>
-        </div>
-        <div className="pane-content">
-          {/* Empty for now */}
-        </div>
+        {/* Idea View - Top Left */}
         <div 
-          className="resize-handle resize-handle-se"
-          onMouseDown={handleDetailsResize}
-          ref={detailsResizeRef}
+          className="idea-view"
+          style={{ width: `${ideaPaneWidthPercent}%` }}
+        >
+          <div className="pane-header">
+            <h3>Ideas</h3>
+          </div>
+          <div className="pane-content">
+            {/* Empty for now */}
+          </div>
+        </div>
+
+        {/* Vertical Resize Handle */}
+        <div 
+          className="resize-handle resize-handle-vertical"
+          onMouseDown={handleHorizontalResize}
         />
+
+        {/* Details Pane - Top Right */}
+        <div 
+          className="details-pane"
+          style={{ width: `${100 - ideaPaneWidthPercent}%` }}
+        >
+          <div className="pane-header">
+            <h3>Details</h3>
+          </div>
+          <div className="pane-content">
+            {/* Empty for now */}
+          </div>
+        </div>
       </div>
 
-      {/* Idea View - Top Right */}
+      {/* Horizontal Resize Handle */}
       <div 
-        className="idea-view"
-        style={{
-          width: `${ideaViewWidth}px`,
-          height: `${ideaViewHeight}px`
-        }}
-      >
-        <div className="pane-header">
-          <h3>Ideas</h3>
-        </div>
-        <div className="pane-content">
-          {/* Empty for now */}
-        </div>
-        <div 
-          className="resize-handle resize-handle-sw"
-          onMouseDown={handleIdeaResize}
-          ref={ideaResizeRef}
-        />
-      </div>
+        className="resize-handle resize-handle-horizontal"
+        onMouseDown={handleVerticalResize}
+      />
 
-      {/* Chat Box - Bottom Center */}
+      {/* Chat Box - Bottom */}
       <div 
         className="chat-box"
-        style={{
-          height: `${chatBoxHeight}px`
-        }}
+        style={{ height: `${100 - topPanesHeightPercent}%` }}
       >
-        <div 
-          className="resize-handle resize-handle-n"
-          onMouseDown={handleChatResize}
-          ref={chatResizeRef}
-        />
         <div className="pane-header">
-          <h3>Chat</h3>
+          <h3>Chat Assistant</h3>
         </div>
-        <div className="pane-content">
-          {/* Empty for now */}
+        <div className="chat-content">
+          <div className="chat-messages">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message ${message.sender === 'user' ? 'message-user' : 'message-bot'}`}
+              >
+                <div className="message-content">
+                  <p>{message.text}</p>
+                  <span className="message-time">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="message message-bot">
+                <div className="message-content">
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="chat-input">
+            <div className="input-container">
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                rows={1}
+                className="message-input"
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isTyping}
+                className="send-button"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
