@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './CampaignExplorer.css';
 
 interface CampaignExplorerProps {
@@ -70,6 +70,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [currentApiResponse, setCurrentApiResponse] = useState<ApiResponse | null>(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleVerticalResize = useCallback((e: React.MouseEvent) => {
@@ -123,6 +124,99 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const fetchChatMessages = useCallback(async (campaignId: string) => {
+    console.log('📥 Fetching chat messages for campaign:', campaignId);
+    setLoadingMessages(true);
+    
+    try {
+      const response = await fetch(`/api/chat?campaignId=${campaignId}`);
+      const data = await response.json();
+      
+      console.log('📋 Chat messages API response:', data);
+      
+      if (response.ok && data.success) {
+        const dbMessages = data.messages || [];
+        console.log('✅ Loaded messages from DB:', dbMessages.length);
+        
+        // Convert DB messages to ChatMessage format
+        const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: any) => ({
+          id: dbMsg.chatMessageId,
+          text: dbMsg.message,
+          sender: dbMsg.sender as 'user' | 'bot',
+          timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
+          apiResponse: dbMsg.apiResponse
+        }));
+        
+        // Set the most recent API response if available
+        const lastBotMessage = convertedMessages
+          .filter(msg => msg.sender === 'bot' && msg.apiResponse)
+          .pop();
+          
+        if (lastBotMessage?.apiResponse?.result) {
+          console.log('🎯 Setting current API response from last bot message');
+          setCurrentApiResponse(lastBotMessage.apiResponse.result);
+        }
+        
+        // Set messages (replacing the default welcome message)
+        setMessages(convertedMessages.length > 0 ? convertedMessages : [
+          {
+            id: '1',
+            text: 'Hello! I\'m your campaign assistant. How can I help you today?',
+            sender: 'bot',
+            timestamp: new Date()
+          }
+        ]);
+        
+        setTimeout(scrollToBottom, 100);
+      } else {
+        console.error('❌ Failed to load chat messages:', data.error);
+        // Keep default welcome message on error
+        setMessages([
+          {
+            id: '1',
+            text: 'Hello! I\'m your campaign assistant. How can I help you today?',
+            sender: 'bot',
+            timestamp: new Date()
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching chat messages:', error);
+      // Keep default welcome message on error
+      setMessages([
+        {
+          id: '1',
+          text: 'Hello! I\'m your campaign assistant. How can I help you today?',
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, []);
+
+  // Load chat messages when campaign changes
+  useEffect(() => {
+    console.log('🔄 Campaign ID changed:', campaignId);
+    
+    if (campaignId) {
+      fetchChatMessages(campaignId);
+    } else {
+      console.log('🔄 No campaign selected, showing default message');
+      // Reset to default state when no campaign is selected
+      setMessages([
+        {
+          id: '1',
+          text: 'Hello! I\'m your campaign assistant. How can I help you today?',
+          sender: 'bot',
+          timestamp: new Date()
+        }
+      ]);
+      setCurrentApiResponse(null);
+    }
+  }, [campaignId, fetchChatMessages]);
 
   const handleSendMessage = useCallback(async () => {
     console.log('🚀 handleSendMessage called');
@@ -421,7 +515,17 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         </div>
         <div className="chat-content">
           <div className="chat-messages">
-            {messages.map((message) => (
+            {loadingMessages && (
+              <div className="loading-messages">
+                <div className="loading-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span className="loading-text">Loading chat history...</span>
+              </div>
+            )}
+            {!loadingMessages && messages.map((message) => (
               <div
                 key={message.id}
                 className={`message ${message.sender === 'user' ? 'message-user' : 'message-bot'}`}
