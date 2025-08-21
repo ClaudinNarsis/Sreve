@@ -10,9 +10,53 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  apiResponse?: any;
+}
+
+interface ApiResponse {
+  chat: {
+    thinking: string;
+    clarifying_questions: string[];
+    topic: string;
+  };
+  detials: {
+    format: string;
+    critic: {
+      attention: { score: number; reason: string; };
+      trend_fit: { score: number; reason: string; };
+      originality: { score: number; reason: string; };
+      brand_fit: { score: number; reason: string; };
+      overall: number;
+      improvements: string[];
+    };
+  };
+  ideas: {
+    ideas: Array<{ angle: string; hook: string; description: string; }>;
+    examples: any[];
+    trends: Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: any[]; }>;
+    selection: {
+      selected: {
+        angle: string;
+        hook: string;
+        description: string;
+        scores: { [key: string]: number };
+        rationale: string;
+      };
+      rejected: Array<{ idea: any; reason: string; }>;
+    };
+    deliverable: {
+      title: string;
+      hook: string;
+      visual_concepts: string[];
+      copy_variants: string[];
+      platform_tips: string[];
+    };
+  };
 }
 
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
+  console.log('🔧 CampaignExplorer rendered with campaignId:', campaignId);
+  
   const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(60);
   const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -25,6 +69,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [currentApiResponse, setCurrentApiResponse] = useState<ApiResponse | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleVerticalResize = useCallback((e: React.MouseEvent) => {
@@ -79,30 +124,23 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const simulateBotResponse = (userMessage: string): string => {
-    const responses = [
-      "That's an interesting point. Let me help you with that.",
-      "I understand your question. Here's what I think...",
-      "Great question! Based on your campaign, I'd suggest...",
-      "Let me analyze that for you. Here are some ideas:",
-      "I can help you with that. Have you considered...",
-      "That's a good approach. You might also want to think about..."
-    ];
-    
-    if (userMessage.toLowerCase().includes('help')) {
-      return "I'm here to help! I can assist with campaign strategy, content ideas, audience targeting, and performance analysis. What would you like to explore?";
-    }
-    
-    if (userMessage.toLowerCase().includes('idea')) {
-      return "Here are some creative ideas for your campaign: 1) Interactive content that engages your audience, 2) User-generated content campaigns, 3) Behind-the-scenes storytelling. Which direction interests you most?";
-    }
-    
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-
   const handleSendMessage = useCallback(async () => {
-    if (!inputMessage.trim()) return;
+    console.log('🚀 handleSendMessage called');
+    console.log('📝 inputMessage:', inputMessage);
+    console.log('🏷️ campaignId:', campaignId);
+    
+    if (!inputMessage.trim()) {
+      console.log('❌ Empty input message, returning');
+      return;
+    }
+    
+    if (!campaignId) {
+      console.log('❌ No campaign ID, returning');
+      return;
+    }
 
+    console.log('✅ Validation passed, creating user message');
+    
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: inputMessage.trim(),
@@ -110,28 +148,89 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    console.log('📨 User message created:', userMessage);
+    
+    setMessages(prev => {
+      console.log('📝 Adding user message to chat');
+      return [...prev, userMessage];
+    });
     setInputMessage('');
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponse: ChatMessage = {
+    try {
+      console.log('📡 Making API call to /api/generate');
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaignId: campaignId,
+          userMessage: userMessage.text
+        }),
+      });
+
+      console.log('📡 API response status:', response.status);
+      console.log('📡 API response ok:', response.ok);
+      
+      const data = await response.json();
+      console.log('📋 API response data:', data);
+
+      if (response.ok && data.success) {
+        const apiResponse = data.apiResponse;
+        
+        // Update the current API response for the panes
+        if (apiResponse?.result) {
+          setCurrentApiResponse(apiResponse.result);
+        }
+
+        const botResponse: ChatMessage = {
+          id: data.botMessageId,
+          text: apiResponse?.result?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
+          sender: 'bot',
+          timestamp: new Date(),
+          apiResponse: apiResponse
+        };
+
+        setMessages(prev => [...prev, botResponse]);
+        
+        // Show clarifying questions if any
+        if (apiResponse?.result?.chat?.clarifying_questions?.length > 0) {
+          setTimeout(() => {
+            const clarifyingMessage: ChatMessage = {
+              id: (Date.now() + 2).toString(),
+              text: `I have some clarifying questions: ${apiResponse.result.chat.clarifying_questions.join('; ')}`,
+              sender: 'bot',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, clarifyingMessage]);
+            setTimeout(scrollToBottom, 100);
+          }, 1000);
+        }
+      } else {
+        throw new Error(data.error || 'Failed to get response');
+      }
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: simulateBotResponse(userMessage.text),
+        text: `Sorry, I encountered an error: ${error.message}. Please try again.`,
         sender: 'bot',
         timestamp: new Date()
       };
-
-      setMessages(prev => [...prev, botResponse]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
       setTimeout(scrollToBottom, 100);
-    }, 1000 + Math.random() * 2000);
+    }
+  }, [inputMessage, campaignId]);
 
-    setTimeout(scrollToBottom, 100);
-  }, [inputMessage]);
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    console.log('⌨️ Key pressed:', e.key);
+    console.log('⌨️ Shift key:', e.shiftKey);
+    
     if (e.key === 'Enter' && !e.shiftKey) {
+      console.log('✅ Enter key without shift - calling handleSendMessage');
       e.preventDefault();
       handleSendMessage();
     }
@@ -153,7 +252,67 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
             <h3>Ideas</h3>
           </div>
           <div className="pane-content">
-            {/* Empty for now */}
+            {currentApiResponse?.ideas ? (
+              <div className="ideas-content">
+                <div className="section">
+                  <h4>Generated Ideas</h4>
+                  {currentApiResponse.ideas.ideas.map((idea, index) => (
+                    <div key={index} className="idea-card">
+                      <div className="idea-angle">{idea.angle}</div>
+                      <div className="idea-hook">"{idea.hook}"</div>
+                      <div className="idea-description">{idea.description}</div>
+                    </div>
+                  ))}
+                </div>
+                
+                {currentApiResponse.ideas.selection?.selected && (
+                  <div className="section">
+                    <h4>Selected Idea</h4>
+                    <div className="selected-idea">
+                      <div className="idea-angle">{currentApiResponse.ideas.selection.selected.angle}</div>
+                      <div className="idea-hook">"{currentApiResponse.ideas.selection.selected.hook}"</div>
+                      <div className="idea-description">{currentApiResponse.ideas.selection.selected.description}</div>
+                      <div className="rationale">{currentApiResponse.ideas.selection.selected.rationale}</div>
+                      <div className="scores">
+                        {Object.entries(currentApiResponse.ideas.selection.selected.scores || {}).map(([key, score]) => (
+                          <span key={key} className="score-badge">{key}: {score}/10</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentApiResponse.ideas.deliverable && (
+                  <div className="section">
+                    <h4>Deliverable</h4>
+                    <div className="deliverable">
+                      <div className="deliverable-title">{currentApiResponse.ideas.deliverable.title}</div>
+                      <div className="deliverable-hook">Hook: "{currentApiResponse.ideas.deliverable.hook}"</div>
+                      
+                      <div className="subsection">
+                        <h5>Visual Concepts</h5>
+                        <ul>
+                          {currentApiResponse.ideas.deliverable.visual_concepts?.map((concept, index) => (
+                            <li key={index}>{concept}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="subsection">
+                        <h5>Copy Variants</h5>
+                        <ul>
+                          {currentApiResponse.ideas.deliverable.copy_variants?.map((copy, index) => (
+                            <li key={index}>"{copy}"</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="empty-content">Ideas will appear here after you send a message</div>
+            )}
           </div>
         </div>
 
@@ -172,7 +331,76 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
             <h3>Details</h3>
           </div>
           <div className="pane-content">
-            {/* Empty for now */}
+            {currentApiResponse?.detials ? (
+              <div className="details-content">
+                <div className="section">
+                  <h4>Format</h4>
+                  <div className="format-info">{currentApiResponse.detials.format}</div>
+                </div>
+
+                {currentApiResponse.detials.critic && (
+                  <div className="section">
+                    <h4>Analysis & Critique</h4>
+                    <div className="critic-scores">
+                      <div className="score-item">
+                        <span className="score-label">Attention:</span>
+                        <span className="score-value">{currentApiResponse.detials.critic.attention?.score}/10</span>
+                        <div className="score-reason">{currentApiResponse.detials.critic.attention?.reason}</div>
+                      </div>
+                      
+                      <div className="score-item">
+                        <span className="score-label">Trend Fit:</span>
+                        <span className="score-value">{currentApiResponse.detials.critic.trend_fit?.score}/10</span>
+                        <div className="score-reason">{currentApiResponse.detials.critic.trend_fit?.reason}</div>
+                      </div>
+                      
+                      <div className="score-item">
+                        <span className="score-label">Originality:</span>
+                        <span className="score-value">{currentApiResponse.detials.critic.originality?.score}/10</span>
+                        <div className="score-reason">{currentApiResponse.detials.critic.originality?.reason}</div>
+                      </div>
+                      
+                      <div className="score-item">
+                        <span className="score-label">Brand Fit:</span>
+                        <span className="score-value">{currentApiResponse.detials.critic.brand_fit?.score}/10</span>
+                        <div className="score-reason">{currentApiResponse.detials.critic.brand_fit?.reason}</div>
+                      </div>
+                      
+                      <div className="overall-score">
+                        <span className="score-label">Overall Score:</span>
+                        <span className="score-value">{currentApiResponse.detials.critic.overall}/10</span>
+                      </div>
+                    </div>
+                    
+                    {currentApiResponse.detials.critic.improvements?.length > 0 && (
+                      <div className="improvements">
+                        <h5>Suggested Improvements</h5>
+                        <ul>
+                          {currentApiResponse.detials.critic.improvements.map((improvement, index) => (
+                            <li key={index}>{improvement}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {currentApiResponse?.ideas?.trends?.length > 0 && (
+                  <div className="section">
+                    <h4>Trends</h4>
+                    {currentApiResponse.ideas.trends.map((trend, index) => (
+                      <div key={index} className="trend-item">
+                        <div className="trend-title">{trend.title}</div>
+                        <div className="trend-snippet">{trend.snippet}</div>
+                        {trend.url && <a href={trend.url} target="_blank" rel="noopener noreferrer" className="trend-link">View Source</a>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="empty-content">Analysis details will appear here after you send a message</div>
+            )}
           </div>
         </div>
       </div>
@@ -223,14 +451,23 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
             <div className="input-container">
               <textarea
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onChange={(e) => {
+                  console.log('📝 Input changed:', e.target.value);
+                  setInputMessage(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
                 rows={1}
                 className="message-input"
               />
               <button
-                onClick={handleSendMessage}
+                onClick={() => {
+                  console.log('🖱️ Send button clicked');
+                  console.log('🖱️ Button disabled:', !inputMessage.trim() || isTyping);
+                  console.log('🖱️ Input message:', inputMessage);
+                  console.log('🖱️ Is typing:', isTyping);
+                  handleSendMessage();
+                }}
                 disabled={!inputMessage.trim() || isTyping}
                 className="send-button"
               >

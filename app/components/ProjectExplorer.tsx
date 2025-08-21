@@ -140,8 +140,7 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
   };
 
   const handleCreateCampaign = async (projectId: string) => {
-    const campaignName = prompt('Enter campaign name:');
-    if (!campaignName?.trim()) return;
+    const campaignName = 'New Campaign';
 
     console.log('🔄 Creating campaign for project:', projectId);
     setCreatingCampaign(projectId);
@@ -152,7 +151,7 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          name: campaignName.trim(),
+          name: campaignName,
           description: ''
         })
       });
@@ -164,6 +163,8 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
         toast.success('Campaign created successfully!');
         // Refresh campaigns for this project
         await fetchCampaigns(projectId);
+        // Automatically select the new campaign to show Campaign Explorer
+        onCampaignSelect(data.campaign.campaignId, projectId);
       } else {
         console.error('❌ Failed to create campaign:', data.error);
         toast.error(data.error || 'Failed to create campaign');
