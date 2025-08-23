@@ -2,25 +2,16 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Metadata } from 'next';
 
-interface BlogPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   return {
-    title: `SREVE - ${params.slug.replace(/-/g, ' ')}`,
+    title: `SREVE - ${slug.replace(/-/g, ' ')}`,
   };
 }
 
-export async function generateStaticParams(): Promise<BlogPageProps['params'][]> {
-  const postsDirectory = path.join(process.cwd(), 'public/blogs');
-  const filenames = await fs.readdir(postsDirectory);
-
-  return filenames.map(filename => ({
-    slug: filename.replace(/\.html$/, ''),
-  }));
+export function generateStaticParams() {
+  const slugs = ['post-1', 'post-2'];
+  return slugs.map(slug => ({ slug }));
 }
 
 async function getPostContent(slug: string) {
@@ -32,15 +23,23 @@ async function getPostContent(slug: string) {
   }
 }
 
-export default async function BlogPostPage({ params }: BlogPageProps) {
-  const content = await getPostContent(params.slug);
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const content = await getPostContent(slug);
 
   if (!content) return <div>Post not found</div>;
 
   return (
     <main>
       <div className="container">
-        <div className="blog-post-content" dangerouslySetInnerHTML={{ __html: content }} />
+        <div
+          className="blog-post-content"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
       </div>
     </main>
   );
