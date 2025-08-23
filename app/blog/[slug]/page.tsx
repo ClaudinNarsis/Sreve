@@ -18,13 +18,7 @@ async function getPostContent(slug: string) {
   }
 }
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default async function BlogPostPage({ params }: PageProps) {
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const content = await getPostContent(params.slug);
 
   if (!content) {
@@ -34,7 +28,6 @@ export default async function BlogPostPage({ params }: PageProps) {
   return (
     <main>
         <div className="container">
-            {/* <h1 className="blog-post-title">{params.slug.replace(/-/g, ' ')}</h1> */}
             <div className="blog-post-content" dangerouslySetInnerHTML={{ __html: content }} />
         </div>
     </main>
