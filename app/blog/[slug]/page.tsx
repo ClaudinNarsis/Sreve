@@ -18,7 +18,13 @@ async function getPostContent(slug: string) {
   }
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+interface PageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default async function BlogPostPage({ params }: PageProps) {
   const content = await getPostContent(params.slug);
 
   if (!content) {
