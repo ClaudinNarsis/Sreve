@@ -2,7 +2,13 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+interface BlogPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   return {
     title: `SREVE - ${params.slug.replace(/-/g, ' ')}`,
   };
@@ -17,13 +23,12 @@ async function getPostContent(slug: string) {
   }
 }
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Example slugs; replace with dynamic fetch if needed
-  const slugs = ['post-1', 'post-2'];
+export function generateStaticParams(): BlogPageProps['params'][] {
+  const slugs = ['post-1', 'post-2']; // Replace with dynamic fetch if needed
   return slugs.map(slug => ({ slug }));
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: BlogPageProps) {
   const content = await getPostContent(params.slug);
 
   if (!content) {
@@ -32,9 +37,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <main>
-        <div className="container">
-            <div className="blog-post-content" dangerouslySetInnerHTML={{ __html: content }} />
-        </div>
+      <div className="container">
+        <div className="blog-post-content" dangerouslySetInnerHTML={{ __html: content }} />
+      </div>
     </main>
   );
 }
