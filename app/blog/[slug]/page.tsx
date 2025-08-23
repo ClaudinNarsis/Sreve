@@ -1,4 +1,3 @@
-
 import { promises as fs } from 'fs';
 import path from 'path';
 import { Metadata } from 'next';
@@ -16,6 +15,12 @@ async function getPostContent(slug: string) {
   } catch (error) {
     return null;
   }
+}
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  // Example slugs; replace with dynamic fetch if needed
+  const slugs = ['post-1', 'post-2'];
+  return slugs.map(slug => ({ slug }));
 }
 
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {

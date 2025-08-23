@@ -3,7 +3,7 @@ import { dark } from '@clerk/themes';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
-  title: 'Sreve - Creative Targeting Made Simple',
+  title: 'Sreve - your creative co-pilot',
   description: 'Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand\'s voice.',
   icons: {
     icon: '/assets/favicon.png'
