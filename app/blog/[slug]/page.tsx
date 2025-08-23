@@ -14,26 +14,28 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
   };
 }
 
+export async function generateStaticParams(): Promise<BlogPageProps['params'][]> {
+  const postsDirectory = path.join(process.cwd(), 'public/blogs');
+  const filenames = await fs.readdir(postsDirectory);
+
+  return filenames.map(filename => ({
+    slug: filename.replace(/\.html$/, ''),
+  }));
+}
+
 async function getPostContent(slug: string) {
   const filePath = path.join(process.cwd(), 'public/blogs', `${slug}.html`);
   try {
     return await fs.readFile(filePath, 'utf-8');
-  } catch (error) {
+  } catch {
     return null;
   }
-}
-
-export function generateStaticParams(): BlogPageProps['params'][] {
-  const slugs = ['post-1', 'post-2']; // Replace with dynamic fetch if needed
-  return slugs.map(slug => ({ slug }));
 }
 
 export default async function BlogPostPage({ params }: BlogPageProps) {
   const content = await getPostContent(params.slug);
 
-  if (!content) {
-    return <div>Post not found</div>;
-  }
+  if (!content) return <div>Post not found</div>;
 
   return (
     <main>
