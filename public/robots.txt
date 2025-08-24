@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /onboarding
+Disallow: /create-project
+Disallow: /app
+Disallow: /dev-test
+Disallow: /sample
+
+# Allow blog content
+Allow: /blog/
+
+# Sitemap location
+Sitemap: https://sreve.online/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1

@@ -2,6 +2,7 @@
 "use client";
 import './blog.css';
 import Link from 'next/link';
+import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
@@ -35,8 +36,7 @@ export default function BlogLayout({
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/logo.png" alt="Sreve Logo" className="logo" />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <nav className="nav-links" aria-label="Primary">
           <a href="/#features">Product</a>

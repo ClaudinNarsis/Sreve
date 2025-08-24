@@ -35,7 +35,7 @@ section{
 }
 
 .logo {
-  height: 40px;
+  /* height: 40px; */
 }
 
 .nav-links {
@@ -753,7 +753,7 @@ p {
     font-size: 1rem;
   }
   .header .logo {
-    height: 30px;
+    /* height: 30px; */
   }
   .header .cta-button {
     font-size: 0.8rem;

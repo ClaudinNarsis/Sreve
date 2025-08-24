@@ -1,6 +1,7 @@
 "use client";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -324,8 +325,7 @@ export default function CreateProject() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/logo.png" alt="Sreve Logo" className="logo" />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <SignedOut>
