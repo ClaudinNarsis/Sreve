@@ -1,0 +1,72 @@
+{
+  "name": "Sreve - AI Creative Co-pilot for Marketing Agencies",
+  "short_name": "Sreve",
+  "description": "Generate scroll-stopping UGC scripts, hooks, ad copy, and fresh creative ideas — all in your brand's voice.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#ff6600",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business", "marketing"],
+  "lang": "en-US",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/favicon-32x32.png", 
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Generate Copy",
+      "short_name": "Generate",
+      "description": "Generate AI copywriting content",
+      "url": "/app",
+      "icons": [
+        {
+          "src": "/assets/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Blog",
+      "short_name": "Blog", 
+      "description": "Read marketing insights and tips",
+      "url": "/blog",
+      "icons": [
+        {
+          "src": "/assets/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ]
+}

@@ -1,22 +1,63 @@
-/* Global resets and tokens */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
+/* Global resets and tokens - Critical CSS */
+*, *::before, *::after { 
+  box-sizing: border-box; 
+}
 
-/* Bring over site styles */
-/* stylesheet is linked in <head> from layout.tsx to avoid @import delays */
+html, body { 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+}
+
+/* Performance optimizations */
+img, video { 
+  max-width: 100%; 
+  height: auto; 
+}
+
+/* Critical above-the-fold styles */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #111;
+}
 
 .header.sticky {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(17, 17, 17, 0.95);
   backdrop-filter: blur(10px);
   z-index: 1000;
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+}
+
+.hero {
+  min-height: 600px;
+  background-color: #020202;
 }
 
 .prompt-box.highlight {
   box-shadow: 0 0 20px 5px rgba(255, 165, 0, 0.8);
   transition: box-shadow 0.3s ease-in-out;
+}
+
+/* Features grid layout */
+.features-grid {
+  display: grid;
+  /* grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); */
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature {
+  text-align: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
 }
