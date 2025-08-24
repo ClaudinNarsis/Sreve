@@ -1,5 +1,6 @@
 "use client";
 import Link from 'next/link';
+import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -175,12 +176,12 @@ export default function HomePage() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/logo.png" alt="Sreve Logo" className="logo" />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <nav className="nav-links" aria-label="Primary">
           <a href="#features">Product</a>
           <a href="#pricing">Pricing</a>
+          <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -204,8 +205,8 @@ export default function HomePage() {
       <section className="hero" id="hero">
         <div className="container">
           <p style={{ marginBottom: 0 }}>A creativity tool for marketers and founders. </p>
-          <h1> Boring AI writes meh copy. <strong>Sreve</strong> writes<br />scroll-stoppers.</h1>
-          <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
+          <h1>Boring AI writes meh copy. <span style={{fontWeight: 'bold', color: '#ff6600'}}>Sreve</span> writes scroll-stoppers.</h1>
+          <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>
@@ -226,31 +227,38 @@ export default function HomePage() {
           </div>
           <div style={{ marginTop: '1rem' }}>
             <a href="#demo-video-section" className="theme-link">Trusted by 500+ brands and agencies</a>
+            <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+              <Link href="/blog" style={{ color: '#ff6600', textDecoration: 'underline' }}>
+                Read our latest insights on AI copywriting and marketing automation →
+              </Link>
+            </p>
           </div>
         </div>
       </section>
 
       <section className="features-section" id="features">
-        <div className="feature">
-          <h2>Unhinged (In a Good Way)</h2>
-          <p>“No intern would dare write this.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-1.png" alt="Feature 1" />
-        </div>
-        <div className="feature">
-          <h2>Thinks Like a Strategist</h2>
-          <p>“This feels like something my strategist would say.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-2.png" alt="Feature 2" />
-        </div>
-        <div className="feature">
-          <h2>Built for creative teams</h2>
-          <p>“Before Sreve, Everything needs rewriting or “seasoning” to work”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-3.png" alt="Feature 3" />
+        <div className="container">
+          <h2 style={{textAlign: 'center', marginBottom: '3rem'}}>Why Agencies Choose Sreve Over Generic AI</h2>
+          <div className="features-grid">
+            <article className="feature">
+              <h3>Unhinged (In a Good Way)</h3>
+              <p>"No intern would dare write this."</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" />
+            </article>
+            <article className="feature">
+              <h3>Thinks Like a Strategist</h3>
+              <p>"This feels like something my strategist would say."</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" />
+            </article>
+            <article className="feature">
+              <h3>Built for Creative Teams</h3>
+              <p>"Before Sreve, Everything needs rewriting or "seasoning" to work"</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" />
+            </article>
+          </div>
         </div>
       </section>
 
@@ -285,29 +293,28 @@ export default function HomePage() {
       </section>
 
       <section className="testimonial-section">
-        <h2>Hear it from our Clients</h2>
-        <div className="grid">
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p3.jpeg" alt="Priya" className="testimonial-avatar" />
-            <h3>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It’s now a core part of our workflow."</h3>
-            <p>— Priya, Performance Marketer, Beauty Startup</p>
+        <div className="container">
+          <h2>Hear it from our Clients</h2>
+          <div className="grid">
+            <article className="card">
+              <Image src="/assets/p3.jpeg" alt="Priya - Performance Marketer testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
+              <blockquote>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It's now a core part of our workflow."</blockquote>
+              <cite>— Priya, Performance Marketer, Beauty Startup</cite>
+            </article>
+            <article className="card">
+              <Image src="/assets/p1.jpg" alt="Arjun - Growth Lead testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
+              <blockquote>"I've tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</blockquote>
+              <cite>— Arjun, Growth Lead, DTC Apparel Brand</cite>
+            </article>
+            <article className="card">
+              <Image src="/assets/p2.jpeg" alt="Lisa - Agency Founder testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
+              <blockquote>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</blockquote>
+              <cite>— Lisa, Founder</cite>
+            </article>
           </div>
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p1.jpg" alt="Arjun" className="testimonial-avatar" />
-            <h3>"I’ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</h3>
-            <p>— Arjun, Growth Lead, DTC Apparel Brand</p>
+          <div className="trust-badge">
+            <p className="trust-text">✅ Trusted by 500+ creatives</p>
           </div>
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p2.jpeg" alt="Lisa" className="testimonial-avatar" />
-            <h3>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</h3>
-            <p>— Lisa, Founder</p>
-          </div>
-        </div>
-        <div className="trust-badge">
-          <p className="trust-text">✅ Trusted by 500+ creatives</p>
         </div>
       </section>
 
@@ -327,10 +334,9 @@ export default function HomePage() {
         <div className="footer-content">
           <div className="footer-section">
             <ul className="footer-nav">
-              <li><a href="#">About</a></li>
-              <li><a href="#">FAQ</a></li>
-              <li><a href="/privacy-policy">Privacy Policy</a></li>
-              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0">Contact</a></li>
+              <li><Link href="/blog">Blog</Link></li>
+              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank">Contact</a></li>
             </ul>
           </div>
         </div>

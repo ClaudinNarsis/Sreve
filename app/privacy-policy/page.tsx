@@ -90,7 +90,7 @@ const PrivacyPolicy = () => {
         <li>
           <p>
             <strong>Website</strong> refers to sreve, accessible from
-            http://localhost:3000
+            https://sreve.online
           </p>
         </li>
         <li>
