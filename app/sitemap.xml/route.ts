@@ -44,6 +44,45 @@ export async function GET() {
     }
   ];
 
+  const toolRoutes = [
+    {
+      url: `${baseUrl}/tools`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/tools/ai-sentence-rewriter`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/tools/ai-caption-generator`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/tools/blog-idea-generator`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/tools/ai-content-generator`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/tools/social-media-post-generator`,
+      lastModified: new Date().toISOString(),
+      changeFrequency: 'weekly',
+      priority: 0.8
+    }
+  ];
+
   const blogRoutes = blogPosts.map(post => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: post.lastModified,
@@ -51,7 +90,7 @@ export async function GET() {
     priority: 0.6
   }));
 
-  const allRoutes = [...staticRoutes, ...blogRoutes];
+  const allRoutes = [...staticRoutes, ...toolRoutes, ...blogRoutes];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
