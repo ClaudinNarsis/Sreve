@@ -1,0 +1,274 @@
+/* Tools Pages Styles */
+.tools-grid-section {
+  background: #2a2a2a;
+}
+
+.tool-card {
+  background-color: #1f1f1f3e !important;
+  border: 0px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Prompt Box Styles for Tools Pages */
+.prompt-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #555;
+  box-shadow: 0 0px 6px #9c4dff;
+  border-radius: 12px;
+  padding: 0.5rem;
+  background-color: #1d1d1d;
+  margin: 2rem auto 0;
+  gap: 0.5rem;
+  width: 80%;
+}
+.prompt-input-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chips-wrapper {
+  position: relative;
+}
+
+.chips-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, rgba(51, 51, 51, 0), #1d1d1d 50%);
+  pointer-events: none;
+}
+.prompt-chips {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-right: 30px;
+  overflow-x: auto;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.prompt-chips::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  /* background: linear-gradient(135deg, #ff6600, #ff8533); */
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+}
+
+.prompt-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  padding: 1.7rem 0.75rem;
+  outline: none;
+  min-height: 2rem;
+  resize: none;
+  text-align: left;
+}
+
+.prompt-input:empty:before {
+  content: attr(data-placeholder);
+  color: #888;
+  pointer-events: none;
+}
+
+.generate-button {
+  background: linear-gradient(135deg, #ff6600, #ff8533);
+  color: white !important;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  margin-top: 1rem;
+}
+
+.generate-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 102, 0, 0.3);
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature {
+  background: rgb(51, 51, 51);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.feature:hover {
+  transform: translateY(-2px);
+}
+
+.feature h3 {
+  color: #ff6600;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+/* Platform Cards */
+.platform-card, .niche-card, .content-type-card, .use-case-card {
+  transition: transform 0.2s ease;
+}
+
+.platform-card:hover, .niche-card:hover, .content-type-card:hover, .use-case-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Testimonial Cards */
+.testimonial-section .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.testimonial-section .card {
+  transition: transform 0.2s ease;
+}
+
+.testimonial-section .card:hover {
+  transform: translateY(-2px);
+}
+
+.testimonial-avatar {
+  object-fit: cover;
+}
+
+/* Process Steps */
+.process-step {
+  text-align: center;
+  padding: 2rem;
+  transition: transform 0.2s ease;
+}
+
+.process-step:hover {
+  transform: translateY(-2px);
+}
+
+/* Content Types */
+.content-type {
+  transition: transform 0.2s ease;
+}
+
+.content-type:hover {
+  transform: translateY(-2px);
+}
+
+/* Platform Showcase */
+.platform-showcase {
+  transition: transform 0.2s ease;
+}
+
+.platform-showcase:hover {
+  transform: translateY(-2px);
+}
+
+/* Stats Section */
+.stats-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(255, 133, 51, 0.1));
+  pointer-events: none;
+}
+
+/* CTA Sections */
+.cta-section {
+  background: linear-gradient(90deg, #414141, #1f1f1f) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .prompt-box {
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .prompt-input-container {
+    padding: 1rem;
+  }
+  
+  .chip {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .generate-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .testimonial-section .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero h1 {
+    font-size: 2rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .prompt-chips {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .chip {
+    text-align: center;
+  }
+  
+  .hero {
+    padding-top: 100px !important;
+  }
+}
