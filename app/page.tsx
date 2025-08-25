@@ -176,10 +176,11 @@ export default function HomePage() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={73} height={37} priority />
         </Link>
         <nav className="nav-links" aria-label="Primary">
           <a href="#features">Product</a>
+          <Link href="/tools">Tools</Link>
           <a href="#pricing">Pricing</a>
           <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
@@ -194,7 +195,7 @@ export default function HomePage() {
             <Link href="/app">
               <button className="cta-button go-to-app-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
             </Link>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </SignedIn>
         </div>
         <button className="mobile-menu-button" aria-label="Open menu">
