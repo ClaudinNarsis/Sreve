@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'AI Sentence Rewriter Tool - Rewrite Any Sentence Instantly | Sreve',
@@ -45,5 +46,39 @@ export default function SentenceRewriterLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <Script id="sentence-rewriter-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "AI Sentence Rewriter Tool",
+          "description": "Transform your sentences with our advanced AI sentence rewriter. Improve clarity, change tone, and avoid repetition while preserving meaning.",
+          "url": "https://sreve.online/tools/ai-sentence-rewriter",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "name": "Free AI Sentence Rewriter"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "url": "https://sreve.online"
+          },
+          "featureList": [
+            "Instant sentence rewriting",
+            "Multiple writing styles",
+            "Preserve original meaning",
+            "Grammar improvement",
+            "Plagiarism-free results"
+          ]
+        })}
+      </Script>
+      {children}
+    </>
+  )
 }

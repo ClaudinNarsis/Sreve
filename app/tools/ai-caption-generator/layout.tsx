@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'AI Caption Generator for Social Media - Create Engaging Captions | Sreve',
@@ -45,5 +46,40 @@ export default function CaptionGeneratorLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <Script id="caption-generator-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "AI Caption Generator for Social Media",
+          "description": "Generate captivating captions for Instagram, TikTok, LinkedIn, and more. Our AI creates scroll-stopping captions that drive engagement.",
+          "url": "https://sreve.online/tools/ai-caption-generator",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "name": "Free AI Caption Generator"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "url": "https://sreve.online"
+          },
+          "featureList": [
+            "Instagram captions",
+            "TikTok captions",
+            "LinkedIn captions",
+            "Twitter captions",
+            "Brand voice matching",
+            "Hashtag suggestions"
+          ]
+        })}
+      </Script>
+      {children}
+    </>
+  )
 }

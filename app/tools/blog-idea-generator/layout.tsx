@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Blog Idea Generator Tool - Never Run Out of Content Ideas | Sreve',
@@ -45,5 +46,39 @@ export default function BlogIdeaGeneratorLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <Script id="blog-idea-generator-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Blog Idea Generator Tool",
+          "description": "Generate endless blog post ideas with trending topics and SEO-optimized titles for any niche.",
+          "url": "https://sreve.online/tools/blog-idea-generator",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "name": "Free Blog Idea Generator"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "url": "https://sreve.online"
+          },
+          "featureList": [
+            "SEO-optimized titles",
+            "Trending topics",
+            "Niche-specific ideas",
+            "Content outlines",
+            "Bulk generation"
+          ]
+        })}
+      </Script>
+      {children}
+    </>
+  )
 }

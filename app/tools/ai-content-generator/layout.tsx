@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'AI Content Generator Tool - Create High-Quality Content Instantly | Sreve',
@@ -45,5 +46,39 @@ export default function ContentGeneratorLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <Script id="content-generator-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "AI Content Generator Tool",
+          "description": "Generate compelling articles, blog posts, and marketing content with our advanced AI content generator.",
+          "url": "https://sreve.online/tools/ai-content-generator",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "name": "Free AI Content Generator"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "url": "https://sreve.online"
+          },
+          "featureList": [
+            "Long-form content",
+            "Blog articles",
+            "Marketing copy",
+            "SEO optimization",
+            "Multi-language support"
+          ]
+        })}
+      </Script>
+      {children}
+    </>
+  )
 }

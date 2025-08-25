@@ -10,6 +10,9 @@ Disallow: /sample
 # Allow blog content
 Allow: /blog/
 
+# Allow tools pages
+Allow: /tools/
+
 # Sitemap location
 Sitemap: https://sreve.online/sitemap.xml
 

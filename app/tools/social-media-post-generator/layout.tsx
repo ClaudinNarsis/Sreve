@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Social Media Post Generator - Create Viral Posts in Seconds | Sreve',
@@ -45,5 +46,39 @@ export default function SocialMediaPostGeneratorLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <Script id="social-media-generator-schema" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Social Media Post Generator",
+          "description": "Generate engaging social media posts for all platforms. Create viral content that drives engagement and grows your brand.",
+          "url": "https://sreve.online/tools/social-media-post-generator",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "name": "Free Social Media Post Generator"
+          },
+          "provider": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "url": "https://sreve.online"
+          },
+          "featureList": [
+            "Multi-platform content",
+            "Viral post creation",
+            "Engagement optimization",
+            "Brand voice matching",
+            "Platform-specific formats"
+          ]
+        })}
+      </Script>
+      {children}
+    </>
+  )
 }
