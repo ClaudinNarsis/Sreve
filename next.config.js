@@ -14,6 +14,8 @@ const nextConfig = {
     domains: ['sreve.online'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000,
+    dangerouslyAllowSVG: false,
   },
   
   // Headers for SEO and performance
@@ -45,7 +47,22 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
     ];
+  },
+  
+  // Experimental features for performance
+  experimental: {
+    optimizeCss: true,
+    gzipSize: true,
   },
   
   // Trailing slash consistency
