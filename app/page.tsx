@@ -1,7 +1,13 @@
 "use client";
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+const LazyTestimonials = dynamic(() => import('./components/LazyTestimonials'), {
+  ssr: false,
+  loading: () => <div style={{ height: '400px', backgroundColor: '#f8f8f8' }} />
+});
+import React, { useEffect, useState, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
@@ -9,12 +15,25 @@ export default function HomePage() {
   const router = useRouter();
   const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
 
-  useEffect(() => {
-    fetch('/sample-responses.json')
-      .then(response => response.json())
-      .then(data => setSampleResponses(data))
-      .catch(error => console.error('Error loading sample responses:', error));
+  const loadSampleResponses = useMemo(() => {
+    let controller: AbortController | null = null;
+    return () => {
+      if (controller) controller.abort();
+      controller = new AbortController();
+      fetch('/sample-responses.json', { signal: controller.signal })
+        .then(response => response.json())
+        .then(data => setSampleResponses(data))
+        .catch(error => {
+          if (error.name !== 'AbortError') {
+            console.error('Error loading sample responses:', error);
+          }
+        });
+    };
   }, []);
+
+  useEffect(() => {
+    loadSampleResponses();
+  }, [loadSampleResponses]);
 
   const handleGenerateClick = () => {
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
@@ -33,10 +52,16 @@ export default function HomePage() {
       }
     }
   };
+  const handleMobileMenu = useMemo(() => {
+    return () => {
+      const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
+      const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
+      mobileBtn?.addEventListener('click', () => navLinks?.classList.toggle('active'));
+    };
+  }, []);
+
   useEffect(() => {
-    const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
-    const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
-    mobileBtn?.addEventListener('click', () => navLinks?.classList.toggle('active'));
+    handleMobileMenu();
 
     const track = document.querySelector<HTMLElement>('.carousel-track');
     const initialOffset = 1200;
@@ -52,63 +77,41 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
-    const howItWorksSection = document.getElementById('how-it-works');
-    if (!howItWorksSection) return;
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          howItWorksSection.classList.remove('section-hidden');
-          howItWorksSection.classList.add('is-visible');
-        } else {
-          howItWorksSection.classList.add('section-hidden');
-          howItWorksSection.classList.remove('is-visible');
-        }
-      });
-    });
-    observer.observe(howItWorksSection);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const exampleSection = document.getElementById('demo-video-section');
-    if (!exampleSection) return;
-    const exampleObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          exampleSection.classList.add('in-view');
-        } else {
-          exampleSection.classList.remove('in-view');
-        }
-      });
-    });
-    exampleObserver.observe(exampleSection);
-    return () => exampleObserver.disconnect();
-  }, []);
-
-  // Initialize external meeting scheduler strictly on the client after mount
-  useEffect(() => {
-    const containerId = 'meeting-scheduler';
-    const initSchedulerIfAvailable = () => {
-      if (typeof window !== 'undefined' && (window as any).initScheduler) {
-        (window as any).initScheduler('https://meetings.superagi.com/Claudin-Narsis/30min', containerId);
-      }
+  const setupIntersectionObserver = useMemo(() => {
+    return (elementId: string, visibleClass: string, hiddenClass?: string) => {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              if (hiddenClass) element.classList.remove(hiddenClass);
+              element.classList.add(visibleClass);
+            } else {
+              if (hiddenClass) element.classList.add(hiddenClass);
+              element.classList.remove(visibleClass);
+            }
+          });
+        },
+        { rootMargin: '50px' }
+      );
+      
+      observer.observe(element);
+      return () => observer.disconnect();
     };
-
-    // Avoid adding duplicate script tags in Fast Refresh
-    const existingScript = document.querySelector('script[data-ms-widget="1"]') as HTMLScriptElement | null;
-    if (existingScript) {
-      initSchedulerIfAvailable();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://sales.superagi.com/meetingSchedulerWidget.js';
-    script.async = true;
-    script.setAttribute('data-ms-widget', '1');
-    script.onload = initSchedulerIfAvailable;
-    document.body.appendChild(script);
   }, []);
+
+  useEffect(() => {
+    const cleanupHowItWorks = setupIntersectionObserver('how-it-works', 'is-visible', 'section-hidden');
+    return cleanupHowItWorks;
+  }, [setupIntersectionObserver]);
+
+  useEffect(() => {
+    const cleanupDemo = setupIntersectionObserver('demo-video-section', 'in-view');
+    return cleanupDemo;
+  }, [setupIntersectionObserver]);
+
 
   useEffect(() => {
     const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
@@ -245,19 +248,19 @@ export default function HomePage() {
               <h3>Unhinged (In a Good Way)</h3>
               <p>"No intern would dare write this."</p>
               <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-              <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" />
+              <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Thinks Like a Strategist</h3>
               <p>"This feels like something my strategist would say."</p>
               <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-              <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" />
+              <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Built for Creative Teams</h3>
               <p>"Before Sreve, Everything needs rewriting or "seasoning" to work"</p>
               <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-              <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" />
+              <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABAAABAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAE/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
           </div>
         </div>
@@ -293,31 +296,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="testimonial-section">
-        <div className="container">
-          <h2>Hear it from our Clients</h2>
-          <div className="grid">
-            <article className="card">
-              <Image src="/assets/p3.jpeg" alt="Priya - Performance Marketer testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
-              <blockquote>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It's now a core part of our workflow."</blockquote>
-              <cite>— Priya, Performance Marketer, Beauty Startup</cite>
-            </article>
-            <article className="card">
-              <Image src="/assets/p1.jpg" alt="Arjun - Growth Lead testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
-              <blockquote>"I've tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</blockquote>
-              <cite>— Arjun, Growth Lead, DTC Apparel Brand</cite>
-            </article>
-            <article className="card">
-              <Image src="/assets/p2.jpeg" alt="Lisa - Agency Founder testimonial" className="testimonial-avatar" width={80} height={80} loading="lazy" />
-              <blockquote>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</blockquote>
-              <cite>— Lisa, Founder</cite>
-            </article>
-          </div>
-          <div className="trust-badge">
-            <p className="trust-text">✅ Trusted by 500+ creatives</p>
-          </div>
-        </div>
-      </section>
+      <LazyTestimonials />
 
       <section className="final-cta-section" id="contact-us">
         <h3>Get creative ideas for your brand — free while we're in beta</h3>
@@ -325,8 +304,7 @@ export default function HomePage() {
           <p className="cta-note">⚡ Limited spots available this month</p>
           <div className="container contact-box">
             <p className="contact-text">Have questions? Book a quick call with our team.</p>
-            <div id="meeting-scheduler" style={{ width: '100%', height: 600, marginTop: '2rem' }}>
-            </div>
+            <button className="cta-button" onClick={(e) => gtagClick(e as any, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
           </div>
         </div>
       </section>
