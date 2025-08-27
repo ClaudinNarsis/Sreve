@@ -63,6 +63,25 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     gzipSize: true,
+    optimizePackageImports: ['react-hot-toast', '@clerk/nextjs'],
+  },
+
+  // Bundle analyzer and optimization
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks.cacheGroups,
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      };
+    }
+    return config;
   },
   
   // Trailing slash consistency

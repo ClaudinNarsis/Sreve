@@ -105,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             })(window, document, "clarity", "script", "rjguvuzjgr");
           `}</Script>
-          <Script async src="https://www.googletagmanager.com/gtag/js?id=AW-17102136063" strategy="lazyOnload" />
+          <Script async src="https://www.googletagmanager.com/gtag/js?id=AW-17102136063" strategy="afterInteractive" />
           <Script id="gtm-gtag" strategy="lazyOnload">{`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);} 
