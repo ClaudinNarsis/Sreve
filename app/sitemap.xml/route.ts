@@ -4,11 +4,25 @@ import path from 'path';
 const baseUrl = 'https://sreve.online';
 
 async function getBlogPosts() {
+  // Dynamic blog posts (Next.js pages)
+  const dynamicPosts = [
+    {
+      slug: 'cheaper-jasper-alternative-2025',
+      lastModified: new Date('2025-01-27').toISOString()
+    },
+    {
+      slug: 'top-5-tools-for-creative-and-marketing-agencies',
+      lastModified: new Date('2025-08-23').toISOString()
+    }
+  ];
+
+  // Static blog posts from files
+  let staticPosts: Array<{slug: string; lastModified: string}> = [];
   try {
     const postsDirectory = path.join(process.cwd(), 'public/blogs');
     const filenames = await fs.readdir(postsDirectory);
     
-    return filenames
+    staticPosts = filenames
       .filter(name => name.endsWith('.html'))
       .map(name => ({
         slug: name.replace(/\.html$/, ''),
@@ -16,8 +30,9 @@ async function getBlogPosts() {
       }));
   } catch (error) {
     console.error('Error reading blog posts:', error);
-    return [];
   }
+
+  return [...dynamicPosts, ...staticPosts];
 }
 
 export async function GET() {
