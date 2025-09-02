@@ -18,7 +18,7 @@ const TABLE_NAME = `Campaigns_${process.env.ENVIRONMENT}`;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { campaignId: string } }
+  { params }: { params: Promise<{ campaignId: string }> }
 ) {
   console.log('📥 GET /api/campaigns/[campaignId] - Single campaign fetch request received');
   
@@ -31,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const campaignId = params.campaignId;
+    const { campaignId } = await params;
     console.log('🔍 Fetching specific campaign:', campaignId);
     
     const getCommand = new GetCommand({
