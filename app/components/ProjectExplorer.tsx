@@ -25,7 +25,15 @@ interface Campaign {
   status: string;
 }
 
-export default function ProjectExplorer() {
+interface ProjectExplorerProps {
+  onCampaignSelect: (campaignId: string | null, projectId: string | null) => void;
+  selectedCampaignId: string | null;
+  onCreateProjectClick: () => void;
+  selectedProjectId: string | null;
+  onProjectSelect: (projectId: string | null) => void;
+}
+
+export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, onCreateProjectClick, selectedProjectId, onProjectSelect }: ProjectExplorerProps) {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -34,6 +42,7 @@ export default function ProjectExplorer() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [loadingCampaigns, setLoadingCampaigns] = useState<Set<string>>(new Set());
   const [creatingCampaign, setCreatingCampaign] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && user) {
@@ -101,8 +110,12 @@ export default function ProjectExplorer() {
       const newSet = new Set(prev);
       if (newSet.has(projectId)) {
         newSet.delete(projectId);
+        setSelectedProject(null);
+        onProjectSelect(null); // Deselect project in parent
       } else {
         newSet.add(projectId);
+        setSelectedProject(projectId);
+        onProjectSelect(projectId); // Select project in parent
         // Fetch campaigns when expanding
         if (!campaigns[projectId]) {
           fetchCampaigns(projectId);
@@ -118,13 +131,16 @@ export default function ProjectExplorer() {
   };
 
   const handleCreateProject = () => {
-    console.log('🔄 Redirecting to create project page...');
-    router.push('/create-project');
+    console.log('🔄 Triggering create project click...');
+    onCreateProjectClick();
+  };
+
+  const handleCampaignClick = (campaignId: string, projectId: string) => {
+    onCampaignSelect(campaignId, projectId);
   };
 
   const handleCreateCampaign = async (projectId: string) => {
-    const campaignName = prompt('Enter campaign name:');
-    if (!campaignName?.trim()) return;
+    const campaignName = 'New Campaign';
 
     console.log('🔄 Creating campaign for project:', projectId);
     setCreatingCampaign(projectId);
@@ -135,7 +151,7 @@ export default function ProjectExplorer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          name: campaignName.trim(),
+          name: campaignName,
           description: ''
         })
       });
@@ -147,6 +163,8 @@ export default function ProjectExplorer() {
         toast.success('Campaign created successfully!');
         // Refresh campaigns for this project
         await fetchCampaigns(projectId);
+        // Automatically select the new campaign to show Campaign Explorer
+        onCampaignSelect(data.campaign.campaignId, projectId);
       } else {
         console.error('❌ Failed to create campaign:', data.error);
         toast.error(data.error || 'Failed to create campaign');
@@ -195,7 +213,7 @@ export default function ProjectExplorer() {
             const isLoadingCampaigns = loadingCampaigns.has(project.projectId);
 
             return (
-              <div key={project.projectId} className="project-item">
+              <div key={project.projectId} className={`project-item ${selectedProjectId === project.projectId ? 'selected' : ''}`}>
                 <div 
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
@@ -237,7 +255,11 @@ export default function ProjectExplorer() {
                       ) : (
                         <div className="campaigns-list">
                           {projectCampaigns.map((campaign) => (
-                            <div key={campaign.campaignId} className="campaign-item">
+                            <div 
+                              key={campaign.campaignId} 
+                              className={`campaign-item ${selectedCampaignId === campaign.campaignId ? 'selected' : ''}`}
+                              onClick={() => handleCampaignClick(campaign.campaignId, campaign.projectId)}
+                            >
                               <svg className="campaign-icon" width="14" height="14" viewBox="0 0 24 24">
                                 <path d="M9 2v6h6V2"></path>
                                 <path d="M9 18H5a2 2 0 01-2-2v-5h18v5a2 2 0 01-2 2h-4"></path>
