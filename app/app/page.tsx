@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import ProjectExplorer from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
@@ -339,7 +340,7 @@ export default function App() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button className="sidebar-toggle" onClick={() => {

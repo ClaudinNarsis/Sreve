@@ -18,7 +18,7 @@ const TABLE_NAME = `Projects_${process.env.ENVIRONMENT}`;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   console.log('📥 GET /api/projects/[projectId] - Single project fetch request received');
   
@@ -31,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const projectId = params.projectId;
+    const { projectId } = await params;
     console.log('🔍 Fetching specific project:', projectId);
     
     const getCommand = new GetCommand({
