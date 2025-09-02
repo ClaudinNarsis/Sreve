@@ -208,9 +208,9 @@ export default function HomePage() {
 
       <section className="hero" id="hero">
         <div className="container">
-          <p style={{ marginBottom: 0 }}>A creativity tool for marketers and founders. </p>
+          <p style={{ marginBottom: 0 }}>AI Blog Generator & Viral Post Creator for marketers and founders. </p>
           <h1>Boring AI writes meh copy. <span style={{fontWeight: 'bold', color: '#ff6600'}}>Sreve</span> writes scroll-stoppers.</h1>
-          <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
+          <p> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>

@@ -162,98 +162,39 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get('projectId');
 
-    if (projectId) {
-      // Get specific project
-      console.log('🔍 Fetching specific project:', projectId);
-      
-      const getCommand = new GetCommand({
+    // Get all projects for user
+    console.log('🔍 Fetching all projects for user:', userId);
+    
+    try {
+      const scanCommand = new ScanCommand({
         TableName: TABLE_NAME,
-        Key: {
-          projectId,
-        },
+        FilterExpression: 'userId = :userId',
+        ExpressionAttributeValues: {
+          ':userId': userId
+        }
       });
 
-      const result = await docClient.send(getCommand);
-      console.log('📋 DynamoDB query result:', result);
-
-      if (!result.Item) {
-        console.log('❌ Project not found:', projectId);
-        return NextResponse.json({ error: 'Project not found' }, { status: 404 });
-      }
-
-      // Check if project belongs to user
-      if (result.Item.userId !== userId) {
-        console.log('❌ Unauthorized access to project:', projectId);
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-      }
-
-      console.log('✅ Project found:', projectId);
-      return NextResponse.json({ project: result.Item });
-
-    } else {
-      // Get all projects for user
-      console.log('🔍 Fetching all projects for user:', userId);
+      const scanResult = await docClient.send(scanCommand);
+      console.log('📋 Projects found via scan:', scanResult.Items?.length || 0);
       
-      try {
-        // For now, we'll scan the table and filter by userId
-        // In production, you should use a GSI for better performance
-        const scanCommand = new QueryCommand({
-          TableName: TABLE_NAME,
-          IndexName: 'userId-createdAt-index', // This GSI would need to be created
-          KeyConditionExpression: 'userId = :userId',
-          ExpressionAttributeValues: {
-            ':userId': userId
-          },
-          ScanIndexForward: false, // Latest first
-        });
+      // Sort by createdAt descending (latest first)
+      const sortedProjects = (scanResult.Items || []).sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
-        const result = await docClient.send(scanCommand);
-        console.log('📋 Projects found:', result.Items?.length || 0);
-
-        return NextResponse.json({ 
-          projects: result.Items || [],
-          success: true 
-        });
-        
-      } catch (error) {
-        console.error('❌ Error querying projects by userId:', error);
-        
-        // Fallback: scan entire table (not recommended for production)
-        console.log('⚠️ Falling back to table scan...');
-        
-        try {
-          const scanCommand = new ScanCommand({
-            TableName: TABLE_NAME,
-            FilterExpression: 'userId = :userId',
-            ExpressionAttributeValues: {
-              ':userId': userId
-            }
-          });
-
-          const scanResult = await docClient.send(scanCommand);
-          console.log('📋 Projects found via scan:', scanResult.Items?.length || 0);
-          
-          // Sort by createdAt descending (latest first)
-          const sortedProjects = (scanResult.Items || []).sort((a, b) => 
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-
-          return NextResponse.json({ 
-            projects: sortedProjects,
-            success: true 
-          });
-          
-        } catch (scanError) {
-          console.error('❌ Error scanning projects:', scanError);
-          return NextResponse.json({ 
-            error: 'Failed to fetch projects',
-            projects: [],
-            success: false 
-          }, { status: 500 });
-        }
-      }
+      return NextResponse.json({ 
+        projects: sortedProjects,
+        success: true 
+      });
+      
+    } catch (error) {
+      console.error('❌ Error scanning projects:', error);
+      return NextResponse.json({ 
+        error: 'Failed to fetch projects',
+        projects: [],
+        success: false 
+      }, { status: 500 });
     }
 
   } catch (error) {

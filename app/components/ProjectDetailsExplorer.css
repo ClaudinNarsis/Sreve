@@ -1,0 +1,53 @@
+.project-details-explorer {
+  width: 100%;
+  background-color: #282c34;
+  color: #abb2bf;
+  padding: 15px;
+  font-family: 'Arial', sans-serif;
+  box-sizing: border-box;
+}
+
+.project-details-explorer .explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3e4451;
+}
+
+.project-details-explorer .explorer-header h3 {
+  margin: 0;
+  color: #61afef;
+  font-size: 1.2em;
+}
+
+.project-details p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.project-details strong {
+  color: #c678dd;
+}
+
+.project-details pre {
+  background-color: #1e1e1e;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.loading-state,
+.empty-state,
+.error-state {
+  text-align: center;
+  padding: 20px;
+  color: #abb2bf;
+}
+
+.error-state p {
+  color: #e06c75;
+}
