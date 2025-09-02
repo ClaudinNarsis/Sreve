@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import ProjectExplorer from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
@@ -9,7 +10,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 import "./app.css";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
 import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
@@ -339,7 +340,7 @@ export default function App() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={73} height={37} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button className="sidebar-toggle" onClick={() => {
