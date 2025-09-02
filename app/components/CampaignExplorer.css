@@ -541,7 +541,7 @@
 .campaign-explorer .explorer-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #3e4451;
