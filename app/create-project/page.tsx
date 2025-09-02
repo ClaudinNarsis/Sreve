@@ -1,18 +1,11 @@
 "use client";
-
-import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import ProjectExplorer from "../components/ProjectExplorer";
-import "../components/ProjectExplorer.css";
-import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-
-import "./app.css";
+import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
-import CampaignExplorer from "../components/CampaignExplorer";
-import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
-
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import "./create-project.css";
 
 interface QuestionOption {
   value: string;
@@ -41,18 +34,7 @@ interface QuestionsData {
   questions: Question[];
 }
 
-export default function App() {
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (selectedProjectId === null) {
-      setSelectedCampaignId(null);
-    }
-  }, [selectedProjectId]);
-
-  const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
-  const { isCreating } = useAutoCreateUser();
+export default function CreateProject() {
   const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
@@ -331,6 +313,10 @@ export default function App() {
     }
   };
 
+  if (loading) {
+    return <div>Loading questions...</div>;
+  }
+
   if (!currentQuestion) {
     return <div>Question not found</div>;
   }
@@ -342,126 +328,80 @@ export default function App() {
           <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button className="sidebar-toggle" onClick={() => {
-            const sidebar = document.querySelector('.file-sidebar');
-            sidebar?.classList.toggle('open');
-          }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </SignedIn>
         </div>
       </header>
-      <div className="app-layout">
-        <aside className="file-sidebar" id="sidebar">
-          <button className="collapse-btn" onClick={() => {
-            const sidebar = document.getElementById('sidebar');
-            const layout = document.querySelector('.app-layout');
-            sidebar?.classList.toggle('collapsed');
-            layout?.classList.toggle('sidebar-collapsed');
-          }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
-          </button>
-          <SignedIn>
-            <ProjectExplorer 
-              onCampaignSelect={(campaignId, projectId) => {
-                setSelectedCampaignId(campaignId);
-                setSelectedProjectId(projectId);
-                setViewMode('campaignExplorer');
-              }}
-              onProjectSelect={(projectId) => {
-                setSelectedProjectId(projectId);
-                setSelectedCampaignId(null); // Clear selected campaign when a project is selected
-                setViewMode('projectDetails');
-              }}
-              onCreateProjectClick={() => setViewMode('createProject')}
-              selectedProjectId={selectedProjectId}
-              selectedCampaignId={selectedCampaignId} 
+      <div className="overall">
+      <div className="create-project">
+        <h3>Create your project</h3>
+      </div>
+      <div className="question-section">
+      
+        <aside className="question-sidebar">
+          
+          <ul>
+            {questions.map((q) => (
+              <li
+                key={q.step}
+                className={getStepState(q)}
+                onClick={() => setCurrentStep(q.step)}
+              >
+                {q.step}. {q.sidebarTitle}
+                
+              </li>
+            ))}
+          </ul>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${(currentStep / questions.length) * 100}%` }}
             />
-          </SignedIn>
-          <SignedOut>
-            <div style={{ padding: '1rem', color: '#ccc', textAlign: 'center' }}>
-              <p>Sign in to view your projects</p>
-            </div>
-          </SignedOut>
+          </div>
+          <p className="progress-text">
+            Step {currentStep} of {questions.length}
+          </p>
         </aside>
-        <main className="main-content">
-          {viewMode === 'campaignExplorer' ? (
-            <CampaignExplorer campaignId={selectedCampaignId} />
-          ) : viewMode === 'createProject' ? (
-            <div className="overall">
-              <div className="create-project">
-                <h3>Create your project</h3>
-              </div>
-              <div className="question-section">
-                <aside className="question-sidebar">
-                  <ul>
-                    {questions.map((q) => (
-                      <li
-                        key={q.step}
-                        className={getStepState(q)}
-                        onClick={() => setCurrentStep(q.step)}
-                      >
-                        {q.step}. {q.sidebarTitle}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${(currentStep / questions.length) * 100}%` }}
-                    />
-                  </div>
-                  <p className="progress-text">
-                    Step {currentStep} of {questions.length}
-                  </p>
-                </aside>
-                <main className="question-main">
-                  <h2>{currentQuestion.question}</h2>
-                  {renderInput(currentQuestion)}
-                  <div className="button-group">
-                    {currentStep > 1 && (
-                      <button className="prev-button" onClick={handlePrevious}>
-                        Previous
-                      </button>
-                    )}
-                    {currentStep < questions.length ? (
-                      <button
-                        className="next-button"
-                        onClick={handleNext}
-                        disabled={currentQuestion.required && !answers[currentStep]}
-                      >
-                        Next
-                      </button>
-                    ) : (
-                      <button
-                        className="submit-button"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Creating Project...' : 'Create Project'}
-                      </button>
-                    )}
-                  </div>
-                </main>
-              </div>
-            </div>
-          ) : (
-            <ProjectDetailsExplorer projectId={selectedProjectId} />
-          )}
+
+        <main className="question-main">
+          <h2>{currentQuestion.question}</h2>
+          
+          
+          {renderInput(currentQuestion)}
+
+          <div className="button-group">
+            {currentStep > 1 && (
+              <button className="prev-button" onClick={handlePrevious}>
+                Previous
+              </button>
+            )}
+            
+            {currentStep < questions.length ? (
+              <button 
+                className="next-button" 
+                onClick={handleNext}
+                disabled={currentQuestion.required && !answers[currentStep]}
+              >
+                Next
+              </button>
+            ) : (
+              <button 
+                className="submit-button" 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Creating Project...' : 'Create Project'}
+              </button>
+            )}
+          </div>
         </main>
+      </div>
       </div>
     </>
   );

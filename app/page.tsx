@@ -1,6 +1,13 @@
 "use client";
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const LazyTestimonials = dynamic(() => import('./components/LazyTestimonials'), {
+  ssr: false,
+  loading: () => <div style={{ height: '400px', backgroundColor: '#f8f8f8' }} />
+});
+import React, { useEffect, useState, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
@@ -8,12 +15,25 @@ export default function HomePage() {
   const router = useRouter();
   const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
 
-  useEffect(() => {
-    fetch('/sample-responses.json')
-      .then(response => response.json())
-      .then(data => setSampleResponses(data))
-      .catch(error => console.error('Error loading sample responses:', error));
+  const loadSampleResponses = useMemo(() => {
+    let controller: AbortController | null = null;
+    return () => {
+      if (controller) controller.abort();
+      controller = new AbortController();
+      fetch('/sample-responses.json', { signal: controller.signal })
+        .then(response => response.json())
+        .then(data => setSampleResponses(data))
+        .catch(error => {
+          if (error.name !== 'AbortError') {
+            console.error('Error loading sample responses:', error);
+          }
+        });
+    };
   }, []);
+
+  useEffect(() => {
+    loadSampleResponses();
+  }, [loadSampleResponses]);
 
   const handleGenerateClick = () => {
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
@@ -32,10 +52,16 @@ export default function HomePage() {
       }
     }
   };
+  const handleMobileMenu = useMemo(() => {
+    return () => {
+      const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
+      const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
+      mobileBtn?.addEventListener('click', () => navLinks?.classList.toggle('active'));
+    };
+  }, []);
+
   useEffect(() => {
-    const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
-    const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
-    mobileBtn?.addEventListener('click', () => navLinks?.classList.toggle('active'));
+    handleMobileMenu();
 
     const track = document.querySelector<HTMLElement>('.carousel-track');
     const initialOffset = 1200;
@@ -51,63 +77,41 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
-    const howItWorksSection = document.getElementById('how-it-works');
-    if (!howItWorksSection) return;
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          howItWorksSection.classList.remove('section-hidden');
-          howItWorksSection.classList.add('is-visible');
-        } else {
-          howItWorksSection.classList.add('section-hidden');
-          howItWorksSection.classList.remove('is-visible');
-        }
-      });
-    });
-    observer.observe(howItWorksSection);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const exampleSection = document.getElementById('demo-video-section');
-    if (!exampleSection) return;
-    const exampleObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          exampleSection.classList.add('in-view');
-        } else {
-          exampleSection.classList.remove('in-view');
-        }
-      });
-    });
-    exampleObserver.observe(exampleSection);
-    return () => exampleObserver.disconnect();
-  }, []);
-
-  // Initialize external meeting scheduler strictly on the client after mount
-  useEffect(() => {
-    const containerId = 'meeting-scheduler';
-    const initSchedulerIfAvailable = () => {
-      if (typeof window !== 'undefined' && (window as any).initScheduler) {
-        (window as any).initScheduler('https://meetings.superagi.com/Claudin-Narsis/30min', containerId);
-      }
+  const setupIntersectionObserver = useMemo(() => {
+    return (elementId: string, visibleClass: string, hiddenClass?: string) => {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              if (hiddenClass) element.classList.remove(hiddenClass);
+              element.classList.add(visibleClass);
+            } else {
+              if (hiddenClass) element.classList.add(hiddenClass);
+              element.classList.remove(visibleClass);
+            }
+          });
+        },
+        { rootMargin: '50px' }
+      );
+      
+      observer.observe(element);
+      return () => observer.disconnect();
     };
-
-    // Avoid adding duplicate script tags in Fast Refresh
-    const existingScript = document.querySelector('script[data-ms-widget="1"]') as HTMLScriptElement | null;
-    if (existingScript) {
-      initSchedulerIfAvailable();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://sales.superagi.com/meetingSchedulerWidget.js';
-    script.async = true;
-    script.setAttribute('data-ms-widget', '1');
-    script.onload = initSchedulerIfAvailable;
-    document.body.appendChild(script);
   }, []);
+
+  useEffect(() => {
+    const cleanupHowItWorks = setupIntersectionObserver('how-it-works', 'is-visible', 'section-hidden');
+    return cleanupHowItWorks;
+  }, [setupIntersectionObserver]);
+
+  useEffect(() => {
+    const cleanupDemo = setupIntersectionObserver('demo-video-section', 'in-view');
+    return cleanupDemo;
+  }, [setupIntersectionObserver]);
+
 
   useEffect(() => {
     const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
@@ -175,12 +179,13 @@ export default function HomePage() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/logo.png" alt="Sreve Logo" className="logo" />
+          <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={73} height={37} priority />
         </Link>
         <nav className="nav-links" aria-label="Primary">
           <a href="#features">Product</a>
+          <Link href="/tools">Tools</Link>
           <a href="#pricing">Pricing</a>
+          <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -193,7 +198,7 @@ export default function HomePage() {
             <Link href="/app">
               <button className="cta-button go-to-app-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
             </Link>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </SignedIn>
         </div>
         <button className="mobile-menu-button" aria-label="Open menu">
@@ -204,8 +209,8 @@ export default function HomePage() {
       <section className="hero" id="hero">
         <div className="container">
           <p style={{ marginBottom: 0 }}>A creativity tool for marketers and founders. </p>
-          <h1> Boring AI writes meh copy. <strong>Sreve</strong> writes<br />scroll-stoppers.</h1>
-          <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand’s voice.</p>
+          <h1>Boring AI writes meh copy. <span style={{fontWeight: 'bold', color: '#ff6600'}}>Sreve</span> writes scroll-stoppers.</h1>
+          <p> Generate UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>
@@ -226,31 +231,38 @@ export default function HomePage() {
           </div>
           <div style={{ marginTop: '1rem' }}>
             <a href="#demo-video-section" className="theme-link">Trusted by 500+ brands and agencies</a>
+            <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+              <Link href="/blog" style={{ color: '#ff6600', textDecoration: 'underline' }}>
+                Read our latest insights on AI copywriting and marketing automation →
+              </Link>
+            </p>
           </div>
         </div>
       </section>
 
       <section className="features-section" id="features">
-        <div className="feature">
-          <h2>Unhinged (In a Good Way)</h2>
-          <p>“No intern would dare write this.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-1.png" alt="Feature 1" />
-        </div>
-        <div className="feature">
-          <h2>Thinks Like a Strategist</h2>
-          <p>“This feels like something my strategist would say.”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-2.png" alt="Feature 2" />
-        </div>
-        <div className="feature">
-          <h2>Built for creative teams</h2>
-          <p>“Before Sreve, Everything needs rewriting or “seasoning” to work”</p>
-          <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/1-3.png" alt="Feature 3" />
+        <div className="container">
+          <h2 style={{textAlign: 'center', marginBottom: '3rem'}}>Why Agencies Choose Sreve Over Generic AI</h2>
+          <div className="features-grid">
+            <article className="feature">
+              <h3>Unhinged (In a Good Way)</h3>
+              <p>"No intern would dare write this."</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
+            </article>
+            <article className="feature">
+              <h3>Thinks Like a Strategist</h3>
+              <p>"This feels like something my strategist would say."</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
+            </article>
+            <article className="feature">
+              <h3>Built for Creative Teams</h3>
+              <p>"Before Sreve, Everything needs rewriting or "seasoning" to work"</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABAAABAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAE/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
+            </article>
+          </div>
         </div>
       </section>
 
@@ -284,32 +296,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="testimonial-section">
-        <h2>Hear it from our Clients</h2>
-        <div className="grid">
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p3.jpeg" alt="Priya" className="testimonial-avatar" />
-            <h3>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It’s now a core part of our workflow."</h3>
-            <p>— Priya, Performance Marketer, Beauty Startup</p>
-          </div>
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p1.jpg" alt="Arjun" className="testimonial-avatar" />
-            <h3>"I’ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</h3>
-            <p>— Arjun, Growth Lead, DTC Apparel Brand</p>
-          </div>
-          <div className="card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/p2.jpeg" alt="Lisa" className="testimonial-avatar" />
-            <h3>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</h3>
-            <p>— Lisa, Founder</p>
-          </div>
-        </div>
-        <div className="trust-badge">
-          <p className="trust-text">✅ Trusted by 500+ creatives</p>
-        </div>
-      </section>
+      <LazyTestimonials />
 
       <section className="final-cta-section" id="contact-us">
         <h3>Get creative ideas for your brand — free while we're in beta</h3>
@@ -317,8 +304,7 @@ export default function HomePage() {
           <p className="cta-note">⚡ Limited spots available this month</p>
           <div className="container contact-box">
             <p className="contact-text">Have questions? Book a quick call with our team.</p>
-            <div id="meeting-scheduler" style={{ width: '100%', height: 600, marginTop: '2rem' }}>
-            </div>
+            <button className="cta-button" onClick={(e) => gtagClick(e as any, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
           </div>
         </div>
       </section>
@@ -327,10 +313,9 @@ export default function HomePage() {
         <div className="footer-content">
           <div className="footer-section">
             <ul className="footer-nav">
-              <li><a href="#">About</a></li>
-              <li><a href="#">FAQ</a></li>
-              <li><a href="/privacy-policy">Privacy Policy</a></li>
-              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0">Contact</a></li>
+              <li><Link href="/blog">Blog</Link></li>
+              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
+              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank">Contact</a></li>
             </ul>
           </div>
         </div>
