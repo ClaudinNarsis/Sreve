@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     console.log('📋 Request data:', requestData);
     
-    const { projectId, name, description } = requestData;
+    const { projectId, name, description, fileUrl, fileName, fileType } = requestData;
 
     if (!projectId || !name) {
       console.log('❌ Missing required data:', { projectId: !!projectId, name: !!name });
@@ -55,6 +55,9 @@ export async function POST(request: NextRequest) {
       userId,
       name,
       description: description || '',
+      fileUrl: fileUrl || '',
+      fileName: fileName || '',
+      fileType: fileType || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'created'
@@ -85,6 +88,9 @@ export async function POST(request: NextRequest) {
         userId,
         name,
         description: campaignData.description,
+        fileUrl: campaignData.fileUrl,
+        fileName: campaignData.fileName,
+        fileType: campaignData.fileType,
         createdAt: campaignData.createdAt,
         status: campaignData.status
       },
@@ -123,32 +129,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
-    const campaignId = searchParams.get('campaignId');
 
-    if (campaignId) {
-      // Get specific campaign
-      console.log('🔍 Fetching specific campaign:', campaignId);
-      
-      const getCommand = new GetCommand({
-        TableName: TABLE_NAME,
-        Key: { campaignId },
-      });
-
-      const result = await docClient.send(getCommand);
-
-      if (!result.Item) {
-        console.log('❌ Campaign not found:', campaignId);
-        return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-      }
-
-      if (result.Item.userId !== userId) {
-        console.log('❌ Unauthorized access to campaign:', campaignId);
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-      }
-
-      return NextResponse.json({ campaign: result.Item });
-
-    } else if (projectId) {
+    if (projectId) {
       // Get all campaigns for a project
       console.log('🔍 Fetching campaigns for project:', projectId);
       

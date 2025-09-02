@@ -12,6 +12,8 @@ export const metadata = {
   keywords: [
     'AI copywriting',
     'marketing agency AI',
+    'blog generator',
+    'viral post generator',
     'ad copy generator',
     'UGC scripts',
     'creative AI tools',
@@ -19,7 +21,9 @@ export const metadata = {
     'agency AI',
     'copy AI',
     'marketing automation',
-    'creative co-pilot'
+    'creative co-pilot',
+    'AI content generator',
+    'social media post generator'
   ],
   authors: [{ name: 'Sreve Team' }],
   creator: 'Sreve',
