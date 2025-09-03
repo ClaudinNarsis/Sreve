@@ -55,7 +55,7 @@ interface ApiResponse {
 }
 
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
-  console.log('🔧 CampaignExplorer rendered with campaignId:', campaignId);
+  console.log('🎯 [CAMPAIGN-EXPLORER] Component rendered with campaignId:', campaignId);
   
   const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(60);
   const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
@@ -71,6 +71,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [currentApiResponse, setCurrentApiResponse] = useState<ApiResponse | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleVerticalResize = useCallback((e: React.MouseEvent) => {
@@ -199,12 +201,13 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
 
   // Load chat messages when campaign changes
   useEffect(() => {
-    console.log('🔄 Campaign ID changed:', campaignId);
+    console.log('🎯 [CAMPAIGN-EXPLORER] Campaign ID changed:', campaignId);
     
     if (campaignId) {
+      console.log('🎯 [CAMPAIGN-EXPLORER] Fetching messages for campaign:', campaignId);
       fetchChatMessages(campaignId);
     } else {
-      console.log('🔄 No campaign selected, showing default message');
+      console.log('🎯 [CAMPAIGN-EXPLORER] No campaign selected, showing default message');
       // Reset to default state when no campaign is selected
       setMessages([
         {
@@ -219,9 +222,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   }, [campaignId, fetchChatMessages]);
 
   const handleSendMessage = useCallback(async () => {
-    console.log('🚀 handleSendMessage called');
-    console.log('📝 inputMessage:', inputMessage);
-    console.log('🏷️ campaignId:', campaignId);
+    console.log('🚀 [CAMPAIGN-EXPLORER] handleSendMessage called');
+    console.log('🎯 [CAMPAIGN-EXPLORER] inputMessage:', inputMessage);
+    console.log('🎯 [CAMPAIGN-EXPLORER] campaignId:', campaignId);
     
     if (!inputMessage.trim()) {
       console.log('❌ Empty input message, returning');
@@ -242,17 +245,18 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       timestamp: new Date()
     };
 
-    console.log('📨 User message created:', userMessage);
+    console.log('🎯 [CAMPAIGN-EXPLORER] User message created:', userMessage);
     
     setMessages(prev => {
       console.log('📝 Adding user message to chat');
       return [...prev, userMessage];
     });
     setInputMessage('');
-    setIsTyping(true);
+    setIsStreaming(true);
+    setStreamingStatus('Connecting to AI...');
 
     try {
-      console.log('📡 Making API call to /api/generate');
+      console.log('🎯 [CAMPAIGN-EXPLORER] Starting streaming request to /api/generate');
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -264,48 +268,116 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         }),
       });
 
-      console.log('📡 API response status:', response.status);
-      console.log('📡 API response ok:', response.ok);
-      
-      const data = await response.json();
-      console.log('📋 API response data:', data);
+      console.log('🎯 [CAMPAIGN-EXPLORER] Streaming response status:', response.status);
 
-      if (response.ok && data.success) {
-        const apiResponse = data.apiResponse;
-        
-        // Update the current API response for the panes
-        if (apiResponse?.result) {
-          setCurrentApiResponse(apiResponse.result);
-        }
-
-        const botResponse: ChatMessage = {
-          id: data.botMessageId,
-          text: apiResponse?.result?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
-          sender: 'bot',
-          timestamp: new Date(),
-          apiResponse: apiResponse
-        };
-
-        setMessages(prev => [...prev, botResponse]);
-        
-        // Show clarifying questions if any
-        if (apiResponse?.result?.chat?.clarifying_questions?.length > 0) {
-          setTimeout(() => {
-            const clarifyingMessage: ChatMessage = {
-              id: (Date.now() + 2).toString(),
-              text: `I have some clarifying questions: ${apiResponse.result.chat.clarifying_questions.join('; ')}`,
-              sender: 'bot',
-              timestamp: new Date()
-            };
-            setMessages(prev => [...prev, clarifyingMessage]);
-            setTimeout(scrollToBottom, 100);
-          }, 1000);
-        }
-      } else {
-        throw new Error(data.error || 'Failed to get response');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      if (!response.body) {
+        throw new Error('No response body received');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let botMessageId = '';
+      let finalResult: any = null;
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('🎯 [CAMPAIGN-EXPLORER] Stream ended');
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.trim() && line.startsWith('data: ')) {
+              const dataStr = line.slice(6); // Remove "data: " prefix
+              
+              try {
+                const parsed = JSON.parse(dataStr);
+                console.log(`🎯 [CAMPAIGN-EXPLORER] Stream update: ${parsed.step} - ${parsed.message}`);
+                
+                // Update streaming status based on step
+                const statusMessages: Record<string, string> = {
+                  connected: '🔗 Connected to AI',
+                  start: '🚀 Starting content generation...',
+                  intent: '🎯 Analyzing your request...',
+                  examples: '📚 Researching examples...',
+                  trends: '📈 Finding trending topics...',
+                  ideation: '💡 Generating creative ideas...',
+                  selection: '✨ Selecting the best idea...',
+                  script: '📝 Creating your content...',
+                  critique: '🔍 Reviewing and improving...',
+                  packaging: '📦 Finalizing output...',
+                  complete: '✅ Content generation complete!',
+                  stored: '💾 Saved successfully!'
+                };
+
+                const statusMessage = statusMessages[parsed.step] || parsed.message || `Processing: ${parsed.step}`;
+                setStreamingStatus(statusMessage);
+
+                // Handle different steps
+                if (parsed.step === 'connected' && parsed.userMessageId) {
+                  console.log('🎯 [CAMPAIGN-EXPLORER] Connected, userMessageId:', parsed.userMessageId);
+                } else if (parsed.step === 'complete' && parsed.result) {
+                  console.log('🎯 [CAMPAIGN-EXPLORER] ✅ Final result received');
+                  finalResult = parsed.result;
+                  setCurrentApiResponse(parsed.result);
+                } else if (parsed.step === 'stored' && parsed.botMessageId) {
+                  console.log('🎯 [CAMPAIGN-EXPLORER] ✅ Response stored, botMessageId:', parsed.botMessageId);
+                  botMessageId = parsed.botMessageId;
+                } else if (parsed.step === 'error') {
+                  console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Stream error:', parsed.error);
+                  throw new Error(parsed.error || 'Unknown streaming error');
+                }
+              } catch (parseError) {
+                console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Error parsing streaming data:', parseError);
+                // Continue processing other lines
+              }
+            }
+          }
+        }
+
+        // Create the final bot message when streaming completes
+        if (finalResult) {
+          const botResponse: ChatMessage = {
+            id: botMessageId || (Date.now() + 1).toString(),
+            text: finalResult?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
+            sender: 'bot',
+            timestamp: new Date(),
+            apiResponse: { result: finalResult }
+          };
+
+          setMessages(prev => [...prev, botResponse]);
+          
+          // Show clarifying questions if any
+          if (finalResult?.chat?.clarifying_questions?.length > 0) {
+            setTimeout(() => {
+              const clarifyingMessage: ChatMessage = {
+                id: (Date.now() + 2).toString(),
+                text: `I have some clarifying questions: ${finalResult.chat.clarifying_questions.join('; ')}`,
+                sender: 'bot',
+                timestamp: new Date()
+              };
+              setMessages(prev => [...prev, clarifyingMessage]);
+              setTimeout(scrollToBottom, 100);
+            }, 1000);
+          }
+        }
+
+      } catch (streamError) {
+        console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Stream reading error:', streamError);
+        throw streamError;
+      }
+
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Error in streaming request:', error);
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: `Sorry, I encountered an error: ${error.message}. Please try again.`,
@@ -313,8 +385,10 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      setStreamingStatus('❌ Error occurred');
     } finally {
-      setIsTyping(false);
+      setIsStreaming(false);
+      setStreamingStatus(null);
       setTimeout(scrollToBottom, 100);
     }
   }, [inputMessage, campaignId]);
@@ -538,14 +612,22 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                 </div>
               </div>
             ))}
-            {isTyping && (
+            {isStreaming && streamingStatus && (
               <div className="message message-bot">
                 <div className="message-content">
-                  <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                  <div className="streaming-status">
+                    <div className="streaming-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <p style={{ margin: '0 0 0 10px', fontSize: '14px', color: '#666' }}>
+                      {streamingStatus}
+                    </p>
                   </div>
+                  <span className="message-time">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
               </div>
             )}
@@ -567,12 +649,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
               <button
                 onClick={() => {
                   console.log('🖱️ Send button clicked');
-                  console.log('🖱️ Button disabled:', !inputMessage.trim() || isTyping);
+                  console.log('🖱️ Button disabled:', !inputMessage.trim() || isStreaming);
                   console.log('🖱️ Input message:', inputMessage);
-                  console.log('🖱️ Is typing:', isTyping);
+                  console.log('🖱️ Is streaming:', isStreaming);
                   handleSendMessage();
                 }}
-                disabled={!inputMessage.trim() || isTyping}
+                disabled={!inputMessage.trim() || isStreaming}
                 className="send-button"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
