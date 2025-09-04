@@ -1,3 +1,14 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .campaign-explorer-layout {
   width: 100%;
   height: 100vh;
@@ -433,7 +444,7 @@
 }
 
 .critic-scores {
-  background-color: #2d2d30;
+  
   border-radius: 6px;
   padding: 12px;
 }
@@ -484,6 +495,7 @@
 
 .improvements {
   margin-top: 15px;
+  text-align: left;
 }
 
 .improvements ul {
@@ -494,7 +506,7 @@
 .improvements li {
   margin-bottom: 5px;
   line-height: 1.4;
-  color: #e06c75;
+  color: #daa741;
 }
 
 .trend-item {

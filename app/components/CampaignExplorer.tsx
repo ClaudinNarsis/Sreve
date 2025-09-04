@@ -73,6 +73,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleVerticalResize = useCallback((e: React.MouseEvent) => {
@@ -404,6 +405,128 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     }
   };
 
+  const handleScoreClick = (scoreKey: string) => {
+    setActiveScoreReason(activeScoreReason === scoreKey ? null : scoreKey);
+  };
+
+  const GaugeMeter: React.FC<{
+    label: string;
+    score: number;
+    reason: string;
+    scoreKey: string;
+  }> = ({ label, score, reason, scoreKey }) => {
+    const percentage = (score / 10) * 100;
+    const isActive = activeScoreReason === scoreKey;
+    const strokeDasharray = `${percentage * 1.57} 157`;
+    
+    return (
+      <div className="gauge-card" style={{ 
+        maxWidth: '200px',
+        minWidth: '180px',
+        flex: '1',
+        
+        borderRadius: '12px',
+        padding: '20px',
+        border: isActive ? '2px solid #4CAF50' : '0.3px solid #444',
+        boxShadow: isActive ? 
+          '0 8px 25px rgba(76, 175, 80, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4)' :
+          '0 4px 15px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        position: 'relative'
+      }}>
+        <div 
+          className="gauge-wrapper"
+          onClick={() => handleScoreClick(scoreKey)}
+        >
+          <div className="gauge-label" style={{ 
+            color: '#f0f0f0', 
+            fontWeight: 'bold', 
+            marginBottom: '15px',
+            fontSize: '14px',
+            textAlign: 'center'
+          }}>
+            {label}
+          </div>
+          
+          <div className="semi-circular-gauge" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            position: 'relative'
+          }}>
+            <svg width="120" height="65" style={{ marginBottom: '10px' }}>
+              <defs>
+                <linearGradient id={`gradient-${scoreKey}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={score >= 8 ? '#4CAF50' : score >= 6 ? '#FF9800' : '#f44336'} />
+                  <stop offset="100%" stopColor={score >= 8 ? '#66BB6A' : score >= 6 ? '#FFB74D' : '#EF5350'} />
+                </linearGradient>
+              </defs>
+              
+              <path
+                d="M 10 55 A 50 50 0 0 1 110 55"
+                fill="none"
+                stroke="#333"
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+              
+              <path
+                d="M 10 55 A 50 50 0 0 1 110 55"
+                fill="none"
+                stroke={`url(#gradient-${scoreKey})`}
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={strokeDasharray}
+                strokeDashoffset="0"
+                style={{
+                  transition: 'stroke-dasharray 0.8s ease-in-out'
+                }}
+              />
+            </svg>
+            
+            <div className="gauge-score" style={{
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: '28px',
+              position: 'absolute',
+              bottom: '15px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
+            }}>
+              {score}
+            </div>
+            
+            <div style={{
+              color: '#aaa',
+              fontSize: '12px',
+              fontWeight: 'normal',
+              marginTop: '5px'
+            }}>
+              / 10
+            </div>
+          </div>
+        </div>
+        
+        {isActive && (
+          <div className="gauge-reason" style={{
+            marginTop: '15px',
+            padding: '12px',
+            backgroundColor: '#1a1a1a',
+            borderRadius: '8px',
+            color: '#e0e0e0',
+            fontSize: '13px',
+            lineHeight: '1.4',
+            border: '1px solid #555',
+            animation: 'fadeIn 0.3s ease-in-out',
+            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
+          }}>
+            {reason}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="campaign-explorer-layout">
       {/* Top Row - Ideas and Details */}
@@ -494,66 +617,76 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           <div className="pane-content">
             {currentApiResponse?.ideas || currentApiResponse?.detials ? (
               <div className="details-content">
-                {/* Generated Ideas Section - Moved from Ideas Pane */}
-                {currentApiResponse?.ideas?.ideas && (
-                  <div className="section">
-                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Generated Ideas</h4>
-                    <div className="generated-ideas-list">
-                      {currentApiResponse.ideas.ideas.map((idea, index) => (
-                        <div key={index} className="idea-card" style={{ 
-                          backgroundColor: '#f8f8f8', 
-                          border: '1px solid #ddd', 
-                          marginBottom: '12px',
-                          padding: '12px'
-                        }}>
-                          <div className="idea-angle" style={{ color: '#000', fontWeight: 'bold' }}>{idea.angle}</div>
-                          <div className="idea-hook" style={{ color: '#333', fontStyle: 'italic', marginTop: '4px' }}>"{idea.hook}"</div>
-                          <div className="idea-description" style={{ color: '#666', marginTop: '6px', fontSize: '0.9em' }}>{idea.description}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                
                 
                 {currentApiResponse?.detials && (
                   <div className="section">
-                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Format</h4>
-                    <div className="format-info" style={{ color: '#555' }}>{currentApiResponse.detials.format}</div>
+                    
+                    <div className="format-info" style={{ color: '#f5f5f5' }}>{currentApiResponse.detials.format}</div>
                   </div>
                 )}
 
                 {currentApiResponse?.detials?.critic && (
                   <div className="section">
-                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Analysis & Critique</h4>
-                    <div className="critic-scores">
-                      <div className="score-item">
-                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Attention:</span>
-                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.attention?.score}/10</span>
-                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.attention?.reason}</div>
-                      </div>
+                    
+                    <div className="overall-score" style={{
+                      marginBottom: '30px',
+                      padding: '20px',
+                      backgroundColor: '#000',
                       
-                      <div className="score-item">
-                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Trend Fit:</span>
-                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.trend_fit?.score}/10</span>
-                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.trend_fit?.reason}</div>
+                      borderRadius: '12px',
+                      textAlign: 'center',
+                      border: '2px solid #000',
+                      boxShadow: currentApiResponse.detials.critic.overall >= 8 ? '0px -1px 1px #4CAF50' : 
+                               currentApiResponse.detials.critic.overall >= 6 ? '0px -1px 1px #FF9800' : '0px -1px 1px #f44336',
+                    }}>
+                      <div style={{ color: '#f0f0f0', fontWeight: 'bold', marginBottom: '8px', fontSize: '16px' }}>Overall Score</div>
+                      <div style={{ 
+                        color: currentApiResponse.detials.critic.overall >= 8 ? '#4CAF50' : 
+                               currentApiResponse.detials.critic.overall >= 6 ? '#FF9800' : '#f44336',
+                        fontWeight: '900', 
+                        
+                        fontSize: '48px',
+                        textShadow: '0 4px 8px rgba(0, 0, 0, 0.6)',
+                        letterSpacing: '2px'
+                      }}>
+                        {currentApiResponse.detials.critic.overall}/10
                       </div>
+                    </div>
+                    
+                    <div className="critic-scores" style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '16px',
+                      justifyContent: 'center'
+                    }}>
+                      <GaugeMeter 
+                        label="Attention"
+                        score={currentApiResponse.detials.critic.attention?.score || 0}
+                        reason={currentApiResponse.detials.critic.attention?.reason || ''}
+                        scoreKey="attention"
+                      />
                       
-                      <div className="score-item">
-                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Originality:</span>
-                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.originality?.score}/10</span>
-                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.originality?.reason}</div>
-                      </div>
+                      <GaugeMeter 
+                        label="Trend Fit"
+                        score={currentApiResponse.detials.critic.trend_fit?.score || 0}
+                        reason={currentApiResponse.detials.critic.trend_fit?.reason || ''}
+                        scoreKey="trend_fit"
+                      />
                       
-                      <div className="score-item">
-                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Brand Fit:</span>
-                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.brand_fit?.score}/10</span>
-                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.brand_fit?.reason}</div>
-                      </div>
+                      <GaugeMeter 
+                        label="Originality"
+                        score={currentApiResponse.detials.critic.originality?.score || 0}
+                        reason={currentApiResponse.detials.critic.originality?.reason || ''}
+                        scoreKey="originality"
+                      />
                       
-                      <div className="overall-score">
-                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Overall Score:</span>
-                        <span className="score-value" style={{ color: '#000', fontWeight: 'bold', fontSize: '1.1em' }}>{currentApiResponse.detials.critic.overall}/10</span>
-                      </div>
+                      <GaugeMeter 
+                        label="Brand Fit"
+                        score={currentApiResponse.detials.critic.brand_fit?.score || 0}
+                        reason={currentApiResponse.detials.critic.brand_fit?.reason || ''}
+                        scoreKey="brand_fit"
+                      />
                     </div>
                     
                     {currentApiResponse.detials.critic.improvements?.length > 0 && (
@@ -568,27 +701,28 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                     )}
                   </div>
                 )}
-                
-                {currentApiResponse?.ideas?.trends?.length > 0 && (
+                {/* Generated Ideas Section - Moved from Ideas Pane */}
+                {currentApiResponse?.ideas?.ideas && (
                   <div className="section">
-                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Trends</h4>
-                    {currentApiResponse.ideas.trends.map((trend, index) => (
-                      <div key={index} className="trend-item" style={{ 
-                        backgroundColor: '#f8f8f8', 
-                        border: '1px solid #ddd',
-                        marginBottom: '12px',
-                        padding: '12px'
-                      }}>
-                        <div className="trend-title" style={{ color: '#000', fontWeight: 'bold' }}>{trend.title}</div>
-                        <div className="trend-snippet" style={{ color: '#555', marginTop: '6px' }}>{trend.snippet}</div>
-                        {trend.url && (
-                          <a href={trend.url} target="_blank" rel="noopener noreferrer" className="trend-link" 
-                             style={{ color: '#333', textDecoration: 'underline' }}>View Source</a>
-                        )}
-                      </div>
-                    ))}
+                    <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Other Directions</h5>
+
+                    <div className="generated-ideas-list">
+                      {currentApiResponse.ideas.ideas.map((idea, index) => (
+                        <div key={index} className="idea-card" style={{ 
+                          backgroundColor: '#080808', 
+                          
+                          marginBottom: '12px',
+                          padding: '12px'
+                        }}>
+                          <div className="idea-angle" style={{ color: '#f0f0f0', fontWeight: '400', fontSize: '1em' }}>{idea.angle}</div>
+                          <div className="idea-hook" style={{ color: '#f3f3f3', fontStyle: 'italic', marginTop: '4px', fontSize: '1.3em' }}>"{idea.hook}"</div>
+                          <div className="idea-description" style={{ color: '#f6f6f6', marginTop: '6px', fontSize: '0.9em' }}>{idea.description}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
+                
               </div>
             ) : (
               <div className="empty-content" style={{ color: '#666' }}>Analysis details and generated ideas will appear here after you send a message</div>
