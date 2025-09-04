@@ -17,8 +17,7 @@
 }
 
 .details-pane {
-  background-color: #252526;
-  border: 1px solid #3c3c3c;
+  background-color: #1a1a1a;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -26,8 +25,8 @@
 }
 
 .idea-view {
-  background-color: #252526;
-  border: 1px solid #3c3c3c;
+  background-color: #000000;
+  text-align: left;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -35,8 +34,7 @@
 }
 
 .chat-box {
-  background-color: #252526;
-  border: 1px solid #3c3c3c;
+  background-color: #1f1f1f;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -45,9 +43,8 @@
 }
 
 .pane-header {
-  background-color: #2d2d30;
+  background-color: #1f1f1f;
   padding: 8px 12px;
-  border-bottom: 1px solid #3c3c3c;
   font-weight: 600;
   color: #cccccc;
   user-select: none;
@@ -64,6 +61,7 @@
   flex: 1;
   overflow: auto;
   color: #d4d4d4;
+  background-color: #000;
 }
 
 .resize-handle {
@@ -101,6 +99,7 @@
 .chat-content {
   display: flex;
   flex-direction: column;
+  background-color: #000;
   height: calc(100% - 40px);
   padding: 0;
 }

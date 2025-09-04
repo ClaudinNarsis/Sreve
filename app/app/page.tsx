@@ -408,7 +408,7 @@ export default function App() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button className="sidebar-toggle" onClick={() => {
@@ -439,9 +439,7 @@ export default function App() {
             sidebar?.classList.toggle('collapsed');
             layout?.classList.toggle('sidebar-collapsed');
           }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
+            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
           </button>
           <SignedIn>
             <ProjectExplorer 

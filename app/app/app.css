@@ -10,9 +10,10 @@
 
 /* Sidebar styles */
 .file-sidebar {
-  width: 280px;
-  background-color: #111;
+  width: 220px;
+  text-align: right;
   border-right: 1px solid #333;
+  background-color: #1e1e1e;
   padding: 1rem;
   overflow-y: auto;
   flex-shrink: 0;

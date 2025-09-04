@@ -57,7 +57,7 @@ interface ApiResponse {
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   console.log('🎯 [CAMPAIGN-EXPLORER] Component rendered with campaignId:', campaignId);
   
-  const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(60);
+  const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(80);
   const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -416,50 +416,46 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           className="idea-view"
           style={{ width: `${ideaPaneWidthPercent}%` }}
         >
-          <div className="pane-header">
-            <h3>Ideas</h3>
-          </div>
           <div className="pane-content">
             {currentApiResponse?.ideas ? (
               <div className="ideas-content">
-                <div className="section">
-                  <h4>Generated Ideas</h4>
-                  {currentApiResponse.ideas.ideas.map((idea, index) => (
-                    <div key={index} className="idea-card">
-                      <div className="idea-angle">{idea.angle}</div>
-                      <div className="idea-hook">"{idea.hook}"</div>
-                      <div className="idea-description">{idea.description}</div>
-                    </div>
-                  ))}
-                </div>
-                
+                {/* Selected Idea - Priority Display */}
                 {currentApiResponse.ideas.selection?.selected && (
-                  <div className="section">
-                    <h4>Selected Idea</h4>
-                    <div className="selected-idea">
-                      <div className="idea-angle">{currentApiResponse.ideas.selection.selected.angle}</div>
-                      <div className="idea-hook">"{currentApiResponse.ideas.selection.selected.hook}"</div>
-                      <div className="idea-description">{currentApiResponse.ideas.selection.selected.description}</div>
-                      <div className="rationale">{currentApiResponse.ideas.selection.selected.rationale}</div>
-                      <div className="scores">
-                        {Object.entries(currentApiResponse.ideas.selection.selected.scores || {}).map(([key, score]) => (
-                          <span key={key} className="score-badge">{key}: {score}/10</span>
-                        ))}
+                  <div className="section selected-idea-priority">
+                    
+                    <div className="selected-idea-card">
+                      <div className="idea-angle" style={{ fontWeight: 'bold', color: '#a1a1a1', fontSize: '1.3em', marginTop: '10px' }}>
+                        {currentApiResponse.ideas.selection.selected.angle}
                       </div>
+                      <div className="idea-hook" style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.6em' }}>
+                        "{currentApiResponse.ideas.selection.selected.hook}"
+                      </div>
+                      <div className="idea-description" style={{ color: '#a6a6a6', marginTop: '8px' , fontSize: '1.2em' }}>
+                        {currentApiResponse.ideas.selection.selected.description}
+                      </div>
+                      <div className="rationale" style={{ color: '#a5a5a5', marginTop: '15px', fontStyle: 'italic', fontSize: '1em' }}>
+                        {currentApiResponse.ideas.selection.selected.rationale}
+                      </div>
+                      
                     </div>
                   </div>
                 )}
 
+                {/* Deliverables Section */}
                 {currentApiResponse.ideas.deliverable && (
-                  <div className="section">
-                    <h4>Deliverable</h4>
+                  <div className="section deliverable-section">
+                    
                     <div className="deliverable">
-                      <div className="deliverable-title">{currentApiResponse.ideas.deliverable.title}</div>
-                      <div className="deliverable-hook">Hook: "{currentApiResponse.ideas.deliverable.hook}"</div>
+                      <div className="deliverable-title" style={{ fontWeight: 'bold', color: '#f0f0f0', fontSize: '1.1em' }}>
+                        {currentApiResponse.ideas.deliverable.title}
+                      </div>
+                      <div className="deliverable-hook" style={{ color: '#f3f3f3', marginTop: '8px' }}>
+                        Hook: "{currentApiResponse.ideas.deliverable.hook}"
+                      </div>
                       
                       <div className="subsection">
-                        <h5>Visual Concepts</h5>
-                        <ul>
+                        <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Visual Concepts</h5>
+                        <ul style={{ color: '#f5f5f5' }}>
                           {currentApiResponse.ideas.deliverable.visual_concepts?.map((concept, index) => (
                             <li key={index}>{concept}</li>
                           ))}
@@ -467,8 +463,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                       </div>
                       
                       <div className="subsection">
-                        <h5>Copy Variants</h5>
-                        <ul>
+                        <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Copy Variants</h5>
+                        <ul style={{ color: '#f5f5f5' }}>
                           {currentApiResponse.ideas.deliverable.copy_variants?.map((copy, index) => (
                             <li key={index}>"{copy}"</li>
                           ))}
@@ -479,7 +475,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                 )}
               </div>
             ) : (
-              <div className="empty-content">Ideas will appear here after you send a message</div>
+              <div className="empty-content" style={{ color: '#666' }}>Selected idea and deliverables will appear here after you send a message</div>
             )}
           </div>
         </div>
@@ -495,55 +491,75 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           className="details-pane"
           style={{ width: `${100 - ideaPaneWidthPercent}%` }}
         >
-          <div className="pane-header">
-            <h3>Details</h3>
-          </div>
           <div className="pane-content">
-            {currentApiResponse?.detials ? (
+            {currentApiResponse?.ideas || currentApiResponse?.detials ? (
               <div className="details-content">
-                <div className="section">
-                  <h4>Format</h4>
-                  <div className="format-info">{currentApiResponse.detials.format}</div>
-                </div>
-
-                {currentApiResponse.detials.critic && (
+                {/* Generated Ideas Section - Moved from Ideas Pane */}
+                {currentApiResponse?.ideas?.ideas && (
                   <div className="section">
-                    <h4>Analysis & Critique</h4>
+                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Generated Ideas</h4>
+                    <div className="generated-ideas-list">
+                      {currentApiResponse.ideas.ideas.map((idea, index) => (
+                        <div key={index} className="idea-card" style={{ 
+                          backgroundColor: '#f8f8f8', 
+                          border: '1px solid #ddd', 
+                          marginBottom: '12px',
+                          padding: '12px'
+                        }}>
+                          <div className="idea-angle" style={{ color: '#000', fontWeight: 'bold' }}>{idea.angle}</div>
+                          <div className="idea-hook" style={{ color: '#333', fontStyle: 'italic', marginTop: '4px' }}>"{idea.hook}"</div>
+                          <div className="idea-description" style={{ color: '#666', marginTop: '6px', fontSize: '0.9em' }}>{idea.description}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {currentApiResponse?.detials && (
+                  <div className="section">
+                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Format</h4>
+                    <div className="format-info" style={{ color: '#555' }}>{currentApiResponse.detials.format}</div>
+                  </div>
+                )}
+
+                {currentApiResponse?.detials?.critic && (
+                  <div className="section">
+                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Analysis & Critique</h4>
                     <div className="critic-scores">
                       <div className="score-item">
-                        <span className="score-label">Attention:</span>
-                        <span className="score-value">{currentApiResponse.detials.critic.attention?.score}/10</span>
-                        <div className="score-reason">{currentApiResponse.detials.critic.attention?.reason}</div>
+                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Attention:</span>
+                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.attention?.score}/10</span>
+                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.attention?.reason}</div>
                       </div>
                       
                       <div className="score-item">
-                        <span className="score-label">Trend Fit:</span>
-                        <span className="score-value">{currentApiResponse.detials.critic.trend_fit?.score}/10</span>
-                        <div className="score-reason">{currentApiResponse.detials.critic.trend_fit?.reason}</div>
+                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Trend Fit:</span>
+                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.trend_fit?.score}/10</span>
+                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.trend_fit?.reason}</div>
                       </div>
                       
                       <div className="score-item">
-                        <span className="score-label">Originality:</span>
-                        <span className="score-value">{currentApiResponse.detials.critic.originality?.score}/10</span>
-                        <div className="score-reason">{currentApiResponse.detials.critic.originality?.reason}</div>
+                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Originality:</span>
+                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.originality?.score}/10</span>
+                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.originality?.reason}</div>
                       </div>
                       
                       <div className="score-item">
-                        <span className="score-label">Brand Fit:</span>
-                        <span className="score-value">{currentApiResponse.detials.critic.brand_fit?.score}/10</span>
-                        <div className="score-reason">{currentApiResponse.detials.critic.brand_fit?.reason}</div>
+                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Brand Fit:</span>
+                        <span className="score-value" style={{ color: '#333' }}>{currentApiResponse.detials.critic.brand_fit?.score}/10</span>
+                        <div className="score-reason" style={{ color: '#666', fontSize: '0.9em' }}>{currentApiResponse.detials.critic.brand_fit?.reason}</div>
                       </div>
                       
                       <div className="overall-score">
-                        <span className="score-label">Overall Score:</span>
-                        <span className="score-value">{currentApiResponse.detials.critic.overall}/10</span>
+                        <span className="score-label" style={{ color: '#000', fontWeight: 'bold' }}>Overall Score:</span>
+                        <span className="score-value" style={{ color: '#000', fontWeight: 'bold', fontSize: '1.1em' }}>{currentApiResponse.detials.critic.overall}/10</span>
                       </div>
                     </div>
                     
                     {currentApiResponse.detials.critic.improvements?.length > 0 && (
                       <div className="improvements">
-                        <h5>Suggested Improvements</h5>
-                        <ul>
+                        <h5 style={{ color: '#000', fontWeight: 'bold' }}>Suggested Improvements</h5>
+                        <ul style={{ color: '#555' }}>
                           {currentApiResponse.detials.critic.improvements.map((improvement, index) => (
                             <li key={index}>{improvement}</li>
                           ))}
@@ -555,19 +571,27 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                 
                 {currentApiResponse?.ideas?.trends?.length > 0 && (
                   <div className="section">
-                    <h4>Trends</h4>
+                    <h4 style={{ color: '#000', fontWeight: 'bold' }}>Trends</h4>
                     {currentApiResponse.ideas.trends.map((trend, index) => (
-                      <div key={index} className="trend-item">
-                        <div className="trend-title">{trend.title}</div>
-                        <div className="trend-snippet">{trend.snippet}</div>
-                        {trend.url && <a href={trend.url} target="_blank" rel="noopener noreferrer" className="trend-link">View Source</a>}
+                      <div key={index} className="trend-item" style={{ 
+                        backgroundColor: '#f8f8f8', 
+                        border: '1px solid #ddd',
+                        marginBottom: '12px',
+                        padding: '12px'
+                      }}>
+                        <div className="trend-title" style={{ color: '#000', fontWeight: 'bold' }}>{trend.title}</div>
+                        <div className="trend-snippet" style={{ color: '#555', marginTop: '6px' }}>{trend.snippet}</div>
+                        {trend.url && (
+                          <a href={trend.url} target="_blank" rel="noopener noreferrer" className="trend-link" 
+                             style={{ color: '#333', textDecoration: 'underline' }}>View Source</a>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="empty-content">Analysis details will appear here after you send a message</div>
+              <div className="empty-content" style={{ color: '#666' }}>Analysis details and generated ideas will appear here after you send a message</div>
             )}
           </div>
         </div>
