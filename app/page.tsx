@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
   const router = useRouter();
+  console.log('🎯 [LANDING] HomePage component loaded');
   const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
 
   const loadSampleResponses = useMemo(() => {
@@ -35,21 +36,73 @@ export default function HomePage() {
     loadSampleResponses();
   }, [loadSampleResponses]);
 
+  // Check for pending prompts after auth redirect to landing page
+  useEffect(() => {
+    console.log('🎯 [LANDING] Checking for pending prompts after potential auth redirect');
+    
+    const checkPendingPromptOnLanding = () => {
+      const pendingPrompt = sessionStorage.getItem('pendingPrompt');
+      const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
+      
+      console.log('🎯 [LANDING] Pending prompt check:', { 
+        hasPendingPrompt: !!pendingPrompt,
+        pendingPrompt: pendingPrompt,
+        timestamp: pendingTimestamp 
+      });
+      
+      if (pendingPrompt && pendingTimestamp) {
+        // Check if prompt is still fresh (5 minutes)
+        const timestamp = parseInt(pendingTimestamp);
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        
+        if (timestamp > fiveMinutesAgo) {
+          console.log('🎯 [LANDING] Found valid pending prompt after auth, redirecting to create-project');
+          
+          // Small delay to ensure auth state is fully settled
+          setTimeout(() => {
+            router.push('/create-project');
+          }, 1000);
+        } else {
+          console.log('🎯 [LANDING] Pending prompt expired, clearing');
+          sessionStorage.removeItem('pendingPrompt');
+          sessionStorage.removeItem('pendingPromptTimestamp');
+        }
+      }
+    };
+
+    // Delay to ensure auth state is settled
+    const timer = setTimeout(checkPendingPromptOnLanding, 2000);
+    return () => clearTimeout(timer);
+  }, [router]);
+
   const handleGenerateClick = () => {
+    console.log('🎯 [LANDING] Generate button clicked');
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
     const inputText = promptInput?.innerText?.trim() || '';
+    console.log('🎯 [LANDING] Input text:', inputText);
     
     if (inputText) {
       const matchingResponse = sampleResponses.responses.find(
         response => response.prompt.toLowerCase() === inputText.toLowerCase()
       );
+      console.log('🎯 [LANDING] Matching sample response:', matchingResponse ? 'Found' : 'Not found');
       
       if (matchingResponse) {
+        console.log('🎯 [LANDING] Redirecting to sample page');
         router.push(`/sample?prompt=${encodeURIComponent(matchingResponse.prompt)}&answer=${encodeURIComponent(matchingResponse.answer)}`);
       } else {
+        console.log('🎯 [LANDING] Storing prompt in sessionStorage for post-auth processing');
+        // Store prompt in sessionStorage to survive auth redirects
+        sessionStorage.setItem('pendingPrompt', inputText);
+        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+        
+        console.log('🎯 [LANDING] Triggering sign-in flow');
+        // Trigger sign-in - user will be redirected through auth flow and return to app
         const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
         signInButton?.click();
       }
+    } else {
+      console.log('🎯 [LANDING] No input text provided');
     }
   };
   const handleMobileMenu = useMemo(() => {

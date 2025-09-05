@@ -7,10 +7,10 @@ import ProjectExplorer from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
 import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
@@ -43,6 +43,8 @@ interface QuestionsData {
 }
 
 export default function App() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
@@ -52,9 +54,75 @@ export default function App() {
     }
   }, [selectedProjectId]);
 
+  // Handle URL parameters for auto-selecting campaign
+  useEffect(() => {
+    const campaignId = searchParams.get('campaignId');
+    const projectId = searchParams.get('projectId');
+    
+    console.log('🎯 [APP] URL parameters check:', { campaignId, projectId });
+    
+    if (campaignId && projectId) {
+      console.log('🎯 [APP] Auto-selecting campaign from URL:', { campaignId, projectId });
+      setSelectedCampaignId(campaignId);
+      setSelectedProjectId(projectId);
+      setViewMode('campaignExplorer');
+      
+      // Clear URL parameters after processing
+      const newUrl = window.location.pathname;
+      console.log('🎯 [APP] Clearing URL parameters, new URL:', newUrl);
+      window.history.replaceState({}, '', newUrl);
+    } else {
+      console.log('🎯 [APP] No URL parameters to process');
+    }
+  }, [searchParams]);
+
+  // Check for pending prompts after auth and auto-process them
+  useEffect(() => {
+    console.log('🎯 [APP] useEffect for pending prompt check triggered');
+    
+    const checkPendingPrompt = async () => {
+      console.log('🎯 [APP] checkPendingPrompt function called');
+      const pendingPrompt = sessionStorage.getItem('pendingPrompt');
+      const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
+      
+      console.log('🎯 [APP] Checking for pending prompt:', { 
+        hasPendingPrompt: !!pendingPrompt,
+        pendingPrompt: pendingPrompt,
+        timestamp: pendingTimestamp 
+      });
+      
+      if (pendingPrompt && pendingTimestamp) {
+        // Check if prompt is still fresh (5 minutes)
+        const timestamp = parseInt(pendingTimestamp);
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        
+        if (timestamp > fiveMinutesAgo) {
+          console.log('🎯 [APP] Found valid pending prompt, auto-creating project and campaign');
+          
+          try {
+            // Navigate to create-project which will handle the rest
+            router.push('/create-project');
+          } catch (error) {
+            console.error('🎯 [APP] Error processing pending prompt:', error);
+            // Clear expired/invalid prompt
+            sessionStorage.removeItem('pendingPrompt');
+            sessionStorage.removeItem('pendingPromptTimestamp');
+          }
+        } else {
+          console.log('🎯 [APP] Pending prompt expired, clearing');
+          sessionStorage.removeItem('pendingPrompt');
+          sessionStorage.removeItem('pendingPromptTimestamp');
+        }
+      }
+    };
+
+    // Small delay to ensure auth state is settled
+    const timer = setTimeout(checkPendingPrompt, 1000);
+    return () => clearTimeout(timer);
+  }, [router]);
+
   const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
   const { isCreating } = useAutoCreateUser();
-  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -340,7 +408,7 @@ export default function App() {
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button className="sidebar-toggle" onClick={() => {
@@ -371,9 +439,7 @@ export default function App() {
             sidebar?.classList.toggle('collapsed');
             layout?.classList.toggle('sidebar-collapsed');
           }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
+            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
           </button>
           <SignedIn>
             <ProjectExplorer 

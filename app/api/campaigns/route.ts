@@ -20,11 +20,11 @@ const TABLE_NAME = `Campaigns_${process.env.ENVIRONMENT}`;
 console.log('🔧 DynamoDB Campaigns table name:', TABLE_NAME);
 
 export async function POST(request: NextRequest) {
-  console.log('📥 POST /api/campaigns - Campaign creation request received');
+  console.log('🎯 [API-CAMPAIGNS] POST /api/campaigns - Campaign creation request received');
   
   try {
     const { userId } = await auth();
-    console.log('👤 Authenticated user ID:', userId);
+    console.log('🎯 [API-CAMPAIGNS] Authenticated user ID:', userId);
     
     if (!userId) {
       console.log('❌ User not authenticated');
@@ -32,12 +32,12 @@ export async function POST(request: NextRequest) {
     }
 
     const requestData = await request.json();
-    console.log('📋 Request data:', requestData);
+    console.log('🎯 [API-CAMPAIGNS] Request data:', requestData);
     
     const { projectId, name, description, fileUrl, fileName, fileType } = requestData;
 
     if (!projectId || !name) {
-      console.log('❌ Missing required data:', { projectId: !!projectId, name: !!name });
+      console.log('🎯 [API-CAMPAIGNS] ❌ Missing required data:', { projectId: !!projectId, name: !!name });
       return NextResponse.json({ 
         error: 'Project ID and campaign name are required',
         success: false 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       status: 'created'
     };
 
-    console.log('💾 Attempting to save campaign to DynamoDB:', {
+    console.log('🎯 [API-CAMPAIGNS] 💾 Attempting to save campaign to DynamoDB:', {
       campaignId,
       projectId,
       userId,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     });
 
     const result = await docClient.send(putCommand);
-    console.log('✅ Campaign created in DynamoDB successfully:', result);
+    console.log('🎯 [API-CAMPAIGNS] ✅ Campaign created in DynamoDB successfully:', result);
 
     return NextResponse.json({ 
       message: 'Campaign created successfully',

@@ -3,7 +3,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import NextImage from "next/image";
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface QuestionOption {
@@ -35,6 +35,39 @@ interface QuestionsData {
 
 export default function CreateProject() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Check for prompt in URL params (fallback) or sessionStorage (primary)
+  const urlPrompt = searchParams.get('prompt');
+  const [promptText, setPromptText] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check sessionStorage first, then URL params as fallback
+    const storedPrompt = sessionStorage.getItem('pendingPrompt');
+    const storedTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
+    
+    if (storedPrompt && storedTimestamp) {
+      // Check if stored prompt is not too old (5 minutes max)
+      const timestamp = parseInt(storedTimestamp);
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+      
+      if (timestamp > fiveMinutesAgo) {
+        console.log('🎯 [CREATE-PROJECT] Found valid prompt in sessionStorage:', storedPrompt);
+        setPromptText(storedPrompt);
+      } else {
+        console.log('🎯 [CREATE-PROJECT] Stored prompt expired, clearing');
+        sessionStorage.removeItem('pendingPrompt');
+        sessionStorage.removeItem('pendingPromptTimestamp');
+      }
+    } else if (urlPrompt) {
+      console.log('🎯 [CREATE-PROJECT] Using prompt from URL params:', urlPrompt);
+      setPromptText(urlPrompt);
+    } else {
+      console.log('🎯 [CREATE-PROJECT] No prompt found in storage or URL');
+    }
+  }, [urlPrompt]);
+  
+  console.log('🎯 [CREATE-PROJECT] Component initialized with prompt:', promptText);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -122,11 +155,13 @@ export default function CreateProject() {
   };
 
   const handleSubmit = async () => {
-    console.log('📋 Create Project button clicked');
-    console.log('📋 Current answers:', answers);
+    console.log('🎯 [CREATE-PROJECT] Create Project button clicked');
+    console.log('🎯 [CREATE-PROJECT] Current answers:', answers);
+    console.log('🎯 [CREATE-PROJECT] Prompt text from URL:', promptText);
     
     // Validate required fields first
     if (!validateRequiredFields()) {
+      console.log('🎯 [CREATE-PROJECT] Validation failed, returning');
       return;
     }
 
@@ -134,7 +169,7 @@ export default function CreateProject() {
     const loadingToast = toast.loading('Creating your project...');
 
     try {
-      console.log('🚀 Submitting project to API...');
+      console.log('🎯 [CREATE-PROJECT] Submitting project to API...');
       
       const response = await fetch('/api/projects', {
         method: 'POST',
@@ -165,21 +200,94 @@ export default function CreateProject() {
           createdAt: data.project.createdAt
         });
 
-        // Show project ID and redirect to app page
-        setTimeout(() => {
-          toast.success(`Project ID: ${data.project.projectId}`, {
-            duration: 4000,
-          });
-        }, 1000);
+        // Create campaign and send initial message if prompt exists
+        if (promptText) {
+          try {
+            console.log('🎯 [CREATE-PROJECT] Creating campaign with initial message:', promptText);
+            
+            // Create campaign
+            console.log('🎯 [CREATE-PROJECT] Calling /api/campaigns...');
+            const campaignResponse = await fetch('/api/campaigns', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectId: data.project.projectId,
+                name: `Campaign from prompt`,
+                description: `Auto-created campaign from: ${promptText.substring(0, 100)}...`
+              }),
+            });
 
-        // Navigate to app page after success
-        console.log('🔄 Redirecting to app page...');
-        setTimeout(() => {
-          router.push('/app');
-        }, 2000);
+            console.log('🎯 [CREATE-PROJECT] Campaign API response status:', campaignResponse.status);
+            const campaignData = await campaignResponse.json();
+            console.log('🎯 [CREATE-PROJECT] Campaign API response data:', campaignData);
+            
+            if (campaignResponse.ok && campaignData.success) {
+              console.log('🎯 [CREATE-PROJECT] ✅ Campaign created successfully:', campaignData.campaign);
+              
+              // Store initial prompt in sessionStorage for the campaign
+              console.log('🎯 [CREATE-PROJECT] Storing initial prompt in sessionStorage...');
+              sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, promptText);
+              
+              // Clear the pending prompt since we've successfully processed it
+              console.log('🎯 [CREATE-PROJECT] Clearing pendingPrompt from sessionStorage');
+              sessionStorage.removeItem('pendingPrompt');
+              sessionStorage.removeItem('pendingPromptTimestamp');
+              
+              toast.success('🎉 Campaign created! Redirecting to your campaign...', {
+                duration: 3000,
+              });
+              
+              // Navigate to app page with the campaign selected
+              const redirectUrl = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${data.project.projectId}`;
+              console.log('🎯 [CREATE-PROJECT] Redirecting to:', redirectUrl);
+              setTimeout(() => {
+                router.push(redirectUrl);
+              }, 1500);
+            } else {
+              console.error('🎯 [CREATE-PROJECT] ❌ Failed to create campaign:', campaignData);
+              
+              // Clear sessionStorage since campaign creation failed
+              console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage due to campaign creation failure');
+              sessionStorage.removeItem('pendingPrompt');
+              sessionStorage.removeItem('pendingPromptTimestamp');
+              
+              // Still navigate to app page
+              setTimeout(() => {
+                router.push('/app');
+              }, 2000);
+            }
+          } catch (error) {
+            console.error('🎯 [CREATE-PROJECT] ❌ Error in campaign creation flow:', error);
+            
+            // Clear sessionStorage since an error occurred
+            console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage due to error in campaign creation flow');
+            sessionStorage.removeItem('pendingPrompt');
+            sessionStorage.removeItem('pendingPromptTimestamp');
+            
+            // Still navigate to app page
+            setTimeout(() => {
+              router.push('/app');
+            }, 2000);
+          }
+        } else {
+          console.log('🎯 [CREATE-PROJECT] No prompt text, navigating normally');
+          // No prompt text, navigate normally
+          setTimeout(() => {
+            router.push('/app');
+          }, 2000);
+        }
 
       } else {
-        console.error('❌ Project creation failed:', data);
+        console.error('🎯 [CREATE-PROJECT] ❌ Project creation failed:', data);
+        
+        // Clear sessionStorage since project creation failed
+        if (promptText) {
+          console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage due to project creation failure');
+          sessionStorage.removeItem('pendingPrompt');
+          sessionStorage.removeItem('pendingPromptTimestamp');
+        }
         
         if (data.missingFields && data.missingFields.length > 0) {
           console.log('❌ Missing required fields:', data.missingFields);
@@ -196,7 +304,15 @@ export default function CreateProject() {
       }
 
     } catch (error) {
-      console.error('❌ Network error during project creation:', error);
+      console.error('🎯 [CREATE-PROJECT] ❌ Network error during project creation:', error);
+      
+      // Clear sessionStorage since a network error occurred
+      if (promptText) {
+        console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage due to network error');
+        sessionStorage.removeItem('pendingPrompt');
+        sessionStorage.removeItem('pendingPromptTimestamp');
+      }
+      
       toast.dismiss(loadingToast);
       toast.error('❌ Network error. Please check your connection and try again.', {
         duration: 4000,

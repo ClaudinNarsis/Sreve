@@ -1,32 +1,32 @@
 .project-explorer {
-  width: 250px;
-  background-color: #282c34;
+  width: 200px;
+  /* background-color: #282c34; */
   color: #abb2bf;
-  padding: 15px;
+  padding: 24px 8px;
   font-family: 'Arial', sans-serif;
   height: 100vh;
   overflow-y: auto;
   box-sizing: border-box;
-  border-right: 1px solid #3e4451;
+  text-align: left;
+  /* border-right: 1px solid #3e4451; */
 }
 
 .explorer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #3e4451;
+  margin-bottom: 10px;
+  margin-top: 10px;
 }
 
 .explorer-header h3 {
   margin: 0;
-  color: #61afef;
+  color: #c7c7c7;
   font-size: 1.2em;
 }
 
 .create-btn {
-  background-color: #56b6c2;
+  background-color: #626262;
   color: white;
   border: none;
   border-radius: 50%;
@@ -41,7 +41,7 @@
 }
 
 .create-btn:hover {
-  background-color: #48a0ac;
+  background-color: #d96500;
 }
 
 .create-btn.small {
@@ -98,7 +98,7 @@
 .project-header {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
+  padding: 10px 0px;
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
@@ -138,13 +138,13 @@
 }
 
 .project-item.selected .project-name {
-  color: #61afef;
+  color: #cecece;
 }
 
 .project-content {
-  padding-left: 20px;
+  padding-left: 10px;
   border-left: 1px solid #3e4451;
-  margin-left: 10px;
+  margin-left: 8px;
 }
 
 .campaigns-section {
@@ -156,7 +156,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  color: #c678dd;
+  color: #d1ca96;
   font-size: 0.9em;
   padding-right: 5px;
 }
@@ -188,7 +188,7 @@
 
 .campaign-item.selected {
   background-color: #4a505c;
-  color: #56b6c2;
+  color: #dbdbdb;
 }
 
 .campaign-icon {
@@ -202,8 +202,10 @@
 
 .campaign-name {
   color: #abb2bf;
+  font-size: 0.9em;
 }
 
 .campaign-item.selected .campaign-name {
-  color: #56b6c2;
+  color: #dedede;
+  font-size: 0.9em;
 }

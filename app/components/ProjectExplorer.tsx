@@ -188,7 +188,7 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
   return (
     <div className="project-explorer">
       <div className="explorer-header">
-        <h3>Explorer</h3>
+        <h3>Projects</h3>
         <button 
           className="create-btn" 
           onClick={handleCreateProject}
