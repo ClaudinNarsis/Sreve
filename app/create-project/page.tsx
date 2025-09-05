@@ -226,54 +226,25 @@ export default function CreateProject() {
             if (campaignResponse.ok && campaignData.success) {
               console.log('🎯 [CREATE-PROJECT] ✅ Campaign created successfully:', campaignData.campaign);
               
-              // Send initial message to the campaign
-              console.log('🎯 [CREATE-PROJECT] Sending initial message to campaign...');
-              const messageResponse = await fetch('/api/generate', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  campaignId: campaignData.campaign.campaignId,
-                  userMessage: promptText
-                }),
-              });
-
-              console.log('🎯 [CREATE-PROJECT] Message API response status:', messageResponse.status);
-              const messageData = await messageResponse.json();
-              console.log('🎯 [CREATE-PROJECT] Message API response data:', messageData);
+              // Store initial prompt in sessionStorage for the campaign
+              console.log('🎯 [CREATE-PROJECT] Storing initial prompt in sessionStorage...');
+              sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, promptText);
               
-              if (messageResponse.ok && messageData.success) {
-                console.log('🎯 [CREATE-PROJECT] ✅ Initial message sent successfully');
-                
-                // Clear sessionStorage since we've successfully processed the prompt
-                console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage after successful processing');
-                sessionStorage.removeItem('pendingPrompt');
-                sessionStorage.removeItem('pendingPromptTimestamp');
-                
-                toast.success('🎉 Campaign created and message sent!', {
-                  duration: 3000,
-                });
-                
-                // Navigate to app page with the campaign selected
-                const redirectUrl = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${data.project.projectId}`;
-                console.log('🎯 [CREATE-PROJECT] Redirecting to:', redirectUrl);
-                setTimeout(() => {
-                  router.push(redirectUrl);
-                }, 1500);
-              } else {
-                console.error('🎯 [CREATE-PROJECT] ❌ Failed to send initial message:', messageData);
-                
-                // Clear sessionStorage since message sending failed
-                console.log('🎯 [CREATE-PROJECT] Clearing sessionStorage due to message sending failure');
-                sessionStorage.removeItem('pendingPrompt');
-                sessionStorage.removeItem('pendingPromptTimestamp');
-                
-                // Still navigate to app page
-                setTimeout(() => {
-                  router.push('/app');
-                }, 2000);
-              }
+              // Clear the pending prompt since we've successfully processed it
+              console.log('🎯 [CREATE-PROJECT] Clearing pendingPrompt from sessionStorage');
+              sessionStorage.removeItem('pendingPrompt');
+              sessionStorage.removeItem('pendingPromptTimestamp');
+              
+              toast.success('🎉 Campaign created! Redirecting to your campaign...', {
+                duration: 3000,
+              });
+              
+              // Navigate to app page with the campaign selected
+              const redirectUrl = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${data.project.projectId}`;
+              console.log('🎯 [CREATE-PROJECT] Redirecting to:', redirectUrl);
+              setTimeout(() => {
+                router.push(redirectUrl);
+              }, 1500);
             } else {
               console.error('🎯 [CREATE-PROJECT] ❌ Failed to create campaign:', campaignData);
               

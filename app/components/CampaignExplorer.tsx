@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './CampaignExplorer.css';
+import { useWebSocket, WebSocketStatus, WebSocketMessage } from '../hooks/useWebSocket';
 
 interface CampaignExplorerProps {
   campaignId: string | null;
@@ -74,9 +75,14 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { socket, status: wsStatus, sendMessage, connect, disconnect, lastMessage } = useWebSocket(
+    process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_ENDPOINT || 'wss://9ofoev2w94.execute-api.ap-south-1.amazonaws.com/api'
+  );
 
-  const handleVerticalResize = useCallback((e: React.MouseEvent) => {
+  const handleVerticalResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
     if (!containerRect) return;
@@ -100,7 +106,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     document.addEventListener('mouseup', handleMouseUp);
   }, [topPanesHeightPercent]);
 
-  const handleHorizontalResize = useCallback((e: React.MouseEvent) => {
+  const handleHorizontalResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
     if (!containerRect) return;
@@ -222,22 +228,265 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     }
   }, [campaignId, fetchChatMessages]);
 
+  // Check for and handle initial prompts from create-project page
+  useEffect(() => {
+    if (!campaignId) return;
+
+    const initialPromptKey = `initialPrompt_${campaignId}`;
+    const initialPromptTimestampKey = `${initialPromptKey}_timestamp`;
+    
+    const initialPrompt = sessionStorage.getItem(initialPromptKey);
+    const initialPromptTimestamp = sessionStorage.getItem(initialPromptTimestampKey);
+
+    if (initialPrompt && initialPromptTimestamp) {
+      const timestamp = parseInt(initialPromptTimestamp);
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      // Check if the initial prompt is not too old (5 minutes max)
+      if (now - timestamp < fiveMinutes) {
+        console.log('🎯 [CAMPAIGN-EXPLORER] Found initial prompt from create-project, sending automatically:', initialPrompt);
+        
+        // Auto-send using the new on-demand approach
+        setTimeout(() => {
+          console.log('🎯 [CAMPAIGN-EXPLORER] Auto-sending initial prompt via on-demand WebSocket');
+          setInputMessage(initialPrompt);
+          
+          // Set pending message instead of calling handleSendMessage directly
+          setPendingMessage(initialPrompt);
+          
+          // Connect WebSocket - the pending message will be sent when connected
+          console.log('🎯 [CAMPAIGN-EXPLORER] Connecting WebSocket for initial prompt');
+          connect();
+        }, 1000);
+        
+        // Clean up sessionStorage after processing
+        sessionStorage.removeItem(initialPromptKey);
+        sessionStorage.removeItem(initialPromptTimestampKey);
+      } else {
+        console.log('🎯 [CAMPAIGN-EXPLORER] Initial prompt is too old, ignoring');
+        // Clean up old sessionStorage entries
+        sessionStorage.removeItem(initialPromptKey);
+        sessionStorage.removeItem(initialPromptTimestampKey);
+      }
+    }
+  }, [campaignId, connect]);
+
+  // Handle pending messages when WebSocket connects
+  useEffect(() => {
+    if (wsStatus === 'connected' && pendingMessage && campaignId) {
+      console.log('🚀 [CAMPAIGN-EXPLORER] WebSocket connected, sending pending message:', pendingMessage);
+      
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: pendingMessage,
+        sender: 'user',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+      setStreamingStatus('Sending message...');
+
+      const messagePayload = {
+        action: 'generate',
+        query: pendingMessage
+      };
+
+      const success = sendMessage(messagePayload);
+      
+      if (!success) {
+        console.error('❌ [CAMPAIGN-EXPLORER] Failed to send pending message');
+        setStreamingStatus('❌ Failed to send message');
+        setIsStreaming(false);
+      }
+
+      // Clear pending message
+      setPendingMessage(null);
+    }
+  }, [wsStatus, pendingMessage, campaignId, sendMessage]);
+
+  // Cleanup WebSocket on component unmount
+  useEffect(() => {
+    return () => {
+      console.log('🧹 [CAMPAIGN-EXPLORER] Component unmounting, cleaning up WebSocket');
+      disconnect();
+    };
+  }, [disconnect]);
+
+  // Handle WebSocket messages
+  useEffect(() => {
+    console.log('📨 [CAMPAIGN-EXPLORER] WebSocket message effect triggered');
+    console.log('🔍 [CAMPAIGN-EXPLORER] lastMessage value:', lastMessage);
+    
+    if (!lastMessage) {
+      console.log('⚠️ [CAMPAIGN-EXPLORER] No lastMessage, skipping processing');
+      return;
+    }
+
+    console.log('🎯 [CAMPAIGN-EXPLORER] Processing WebSocket message:', {
+      type: lastMessage.type,
+      hasData: !!lastMessage.data,
+      hasMessage: !!lastMessage.message,
+      hasError: !!lastMessage.error,
+      timestamp: new Date().toISOString()
+    });
+
+    switch (lastMessage.type) {
+      case 'start':
+        console.log('🎯 [WEBSOCKET] Generation started:', lastMessage.message);
+        setStreamingStatus(lastMessage.message || 'Starting content generation...');
+        break;
+
+      case 'stream':
+        if (lastMessage.data) {
+          const statusMessages: Record<string, string> = {
+            connected: '🔗 Connected to AI',
+            start: '🚀 Starting content generation...',
+            intent: '🎯 Analyzing your request...',
+            examples: '📚 Researching examples...',
+            trends: '📈 Finding trending topics...',
+            ideation: '💡 Generating creative ideas...',
+            selection: '✨ Selecting the best idea...',
+            script: '📝 Creating your content...',
+            critique: '🔍 Reviewing and improving...',
+            packaging: '📦 Finalizing output...',
+            complete: '✅ Content generation complete!',
+            stored: '💾 Saved successfully!'
+          };
+
+          const statusMessage = statusMessages[lastMessage.data.step] || 
+                               lastMessage.data.message || 
+                               `Processing: ${lastMessage.data.step}`;
+          setStreamingStatus(statusMessage);
+
+          if (lastMessage.data.result) {
+            console.log('🎯 [WEBSOCKET] Final result received');
+            setCurrentApiResponse(lastMessage.data.result);
+          }
+        }
+        break;
+
+      case 'complete':
+        console.log('🎯 [WEBSOCKET] Generation completed:', lastMessage.message);
+        setIsStreaming(false);
+        setStreamingStatus(null);
+        
+        // Create final bot message if we have a result
+        if (currentApiResponse) {
+          const botResponse: ChatMessage = {
+            id: (Date.now()).toString(),
+            text: currentApiResponse?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
+            sender: 'bot',
+            timestamp: new Date(),
+            apiResponse: { result: currentApiResponse }
+          };
+
+          setMessages(prev => [...prev, botResponse]);
+          
+          // Show clarifying questions if any
+          if (currentApiResponse?.chat?.clarifying_questions?.length > 0) {
+            setTimeout(() => {
+              const clarifyingMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                text: `I have some clarifying questions: ${currentApiResponse.chat.clarifying_questions.join('; ')}`,
+                sender: 'bot',
+                timestamp: new Date()
+              };
+              setMessages(prev => [...prev, clarifyingMessage]);
+              setTimeout(scrollToBottom, 100);
+            }, 1000);
+          }
+          
+          setTimeout(scrollToBottom, 100);
+        }
+
+        // Disconnect WebSocket after completion
+        console.log('🔌 [CAMPAIGN-EXPLORER] Content generation complete, disconnecting WebSocket');
+        setTimeout(() => {
+          disconnect();
+          console.log('✅ [CAMPAIGN-EXPLORER] WebSocket disconnected after completion');
+        }, 2000); // Small delay to ensure all messages are processed
+        
+        break;
+
+      case 'error':
+        console.error('🎯 [WEBSOCKET] Error:', lastMessage.error || lastMessage.message);
+        setIsStreaming(false);
+        setStreamingStatus('❌ Error occurred');
+        
+        const errorMessage: ChatMessage = {
+          id: (Date.now()).toString(),
+          text: `Sorry, I encountered an error: ${lastMessage.error || lastMessage.message}. Please try again.`,
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setTimeout(scrollToBottom, 100);
+
+        // Disconnect WebSocket after error
+        console.log('🔌 [CAMPAIGN-EXPLORER] Error occurred, disconnecting WebSocket');
+        setTimeout(() => {
+          disconnect();
+          console.log('✅ [CAMPAIGN-EXPLORER] WebSocket disconnected after error');
+        }, 1000);
+        
+        break;
+    }
+  }, [lastMessage, currentApiResponse]);
+
   const handleSendMessage = useCallback(async () => {
     console.log('🚀 [CAMPAIGN-EXPLORER] handleSendMessage called');
-    console.log('🎯 [CAMPAIGN-EXPLORER] inputMessage:', inputMessage);
-    console.log('🎯 [CAMPAIGN-EXPLORER] campaignId:', campaignId);
+    console.log('🎯 [CAMPAIGN-EXPLORER] Function parameters:', {
+      inputMessage: inputMessage,
+      inputMessageLength: inputMessage?.length,
+      campaignId: campaignId,
+      wsStatus: wsStatus,
+      isStreaming: isStreaming
+    });
     
+    // Validation checks with detailed logging
     if (!inputMessage.trim()) {
-      console.log('❌ Empty input message, returning');
+      console.log('❌ [CAMPAIGN-EXPLORER] Validation failed: Empty input message');
+      console.log('🔍 [CAMPAIGN-EXPLORER] Input message details:', {
+        original: inputMessage,
+        trimmed: inputMessage.trim(),
+        length: inputMessage.length
+      });
       return;
     }
     
     if (!campaignId) {
-      console.log('❌ No campaign ID, returning');
+      console.log('❌ [CAMPAIGN-EXPLORER] Validation failed: No campaign ID');
+      console.log('🔍 [CAMPAIGN-EXPLORER] Campaign ID value:', campaignId);
       return;
     }
 
-    console.log('✅ Validation passed, creating user message');
+    // Check if we need to connect first
+    if (wsStatus !== 'connected') {
+      console.log('🔄 [CAMPAIGN-EXPLORER] WebSocket not connected, initiating connection');
+      console.log('🔍 [CAMPAIGN-EXPLORER] WebSocket status details:', {
+        currentStatus: wsStatus,
+        socket: !!socket,
+        socketReadyState: socket?.readyState
+      });
+      
+      // Start connection process
+      setStreamingStatus('Connecting to server...');
+      
+      // Add small delay to prevent rapid re-connections in React Strict Mode
+      setTimeout(() => {
+        connect();
+      }, 100);
+      
+      // Store the message to send after connection
+      console.log('📝 [CAMPAIGN-EXPLORER] Storing message to send after connection');
+      setPendingMessage(inputMessage.trim());
+      setInputMessage('');
+      setIsStreaming(true);
+      return;
+    }
+
+    console.log('✅ [CAMPAIGN-EXPLORER] All validations passed, proceeding with message send');
     
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -249,136 +498,59 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     console.log('🎯 [CAMPAIGN-EXPLORER] User message created:', userMessage);
     
     setMessages(prev => {
-      console.log('📝 Adding user message to chat');
+      console.log('📝 [CAMPAIGN-EXPLORER] Adding user message to chat, current message count:', prev.length);
       return [...prev, userMessage];
     });
     setInputMessage('');
     setIsStreaming(true);
-    setStreamingStatus('Connecting to AI...');
+    setStreamingStatus('Sending message...');
+    
+    console.log('🎯 [CAMPAIGN-EXPLORER] UI state updated, preparing WebSocket message');
 
     try {
-      console.log('🎯 [CAMPAIGN-EXPLORER] Starting streaming request to /api/generate');
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          campaignId: campaignId,
-          userMessage: userMessage.text
-        }),
-      });
+      const messagePayload = {
+        action: 'generate',
+        query: userMessage.text
+      };
+      
+      console.log('🎯 [CAMPAIGN-EXPLORER] WebSocket message payload:', messagePayload);
+      console.log('🎯 [CAMPAIGN-EXPLORER] About to call sendMessage function...');
+      
+      const success = sendMessage(messagePayload);
+      
+      console.log('🎯 [CAMPAIGN-EXPLORER] sendMessage function returned:', success);
+      console.log('🎯 [CAMPAIGN-EXPLORER] Return type:', typeof success);
 
-      console.log('🎯 [CAMPAIGN-EXPLORER] Streaming response status:', response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!success) {
+        console.error('❌ [CAMPAIGN-EXPLORER] sendMessage returned false - message failed to send');
+        console.error('🔍 [CAMPAIGN-EXPLORER] Possible reasons:', [
+          'WebSocket not connected',
+          'WebSocket in wrong state', 
+          'JSON.stringify failed',
+          'socket.send() threw exception'
+        ]);
+        console.error('🌐 [CAMPAIGN-EXPLORER] WebSocket endpoint being used:', process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_ENDPOINT);
+        throw new Error('Failed to send message via WebSocket. Please check if the WebSocket endpoint is accessible.');
       }
 
-      if (!response.body) {
-        throw new Error('No response body received');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let botMessageId = '';
-      let finalResult: any = null;
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) {
-            console.log('🎯 [CAMPAIGN-EXPLORER] Stream ended');
-            break;
-          }
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.trim() && line.startsWith('data: ')) {
-              const dataStr = line.slice(6); // Remove "data: " prefix
-              
-              try {
-                const parsed = JSON.parse(dataStr);
-                console.log(`🎯 [CAMPAIGN-EXPLORER] Stream update: ${parsed.step} - ${parsed.message}`);
-                
-                // Update streaming status based on step
-                const statusMessages: Record<string, string> = {
-                  connected: '🔗 Connected to AI',
-                  start: '🚀 Starting content generation...',
-                  intent: '🎯 Analyzing your request...',
-                  examples: '📚 Researching examples...',
-                  trends: '📈 Finding trending topics...',
-                  ideation: '💡 Generating creative ideas...',
-                  selection: '✨ Selecting the best idea...',
-                  script: '📝 Creating your content...',
-                  critique: '🔍 Reviewing and improving...',
-                  packaging: '📦 Finalizing output...',
-                  complete: '✅ Content generation complete!',
-                  stored: '💾 Saved successfully!'
-                };
-
-                const statusMessage = statusMessages[parsed.step] || parsed.message || `Processing: ${parsed.step}`;
-                setStreamingStatus(statusMessage);
-
-                // Handle different steps
-                if (parsed.step === 'connected' && parsed.userMessageId) {
-                  console.log('🎯 [CAMPAIGN-EXPLORER] Connected, userMessageId:', parsed.userMessageId);
-                } else if (parsed.step === 'complete' && parsed.result) {
-                  console.log('🎯 [CAMPAIGN-EXPLORER] ✅ Final result received');
-                  finalResult = parsed.result;
-                  setCurrentApiResponse(parsed.result);
-                } else if (parsed.step === 'stored' && parsed.botMessageId) {
-                  console.log('🎯 [CAMPAIGN-EXPLORER] ✅ Response stored, botMessageId:', parsed.botMessageId);
-                  botMessageId = parsed.botMessageId;
-                } else if (parsed.step === 'error') {
-                  console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Stream error:', parsed.error);
-                  throw new Error(parsed.error || 'Unknown streaming error');
-                }
-              } catch (parseError) {
-                console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Error parsing streaming data:', parseError);
-                // Continue processing other lines
-              }
-            }
-          }
-        }
-
-        // Create the final bot message when streaming completes
-        if (finalResult) {
-          const botResponse: ChatMessage = {
-            id: botMessageId || (Date.now() + 1).toString(),
-            text: finalResult?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
-            sender: 'bot',
-            timestamp: new Date(),
-            apiResponse: { result: finalResult }
-          };
-
-          setMessages(prev => [...prev, botResponse]);
-          
-          // Show clarifying questions if any
-          if (finalResult?.chat?.clarifying_questions?.length > 0) {
-            setTimeout(() => {
-              const clarifyingMessage: ChatMessage = {
-                id: (Date.now() + 2).toString(),
-                text: `I have some clarifying questions: ${finalResult.chat.clarifying_questions.join('; ')}`,
-                sender: 'bot',
-                timestamp: new Date()
-              };
-              setMessages(prev => [...prev, clarifyingMessage]);
-              setTimeout(scrollToBottom, 100);
-            }, 1000);
-          }
-        }
-
-      } catch (streamError) {
-        console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Stream reading error:', streamError);
-        throw streamError;
-      }
-
+      console.log('✅ [CAMPAIGN-EXPLORER] WebSocket message sent successfully');
+      console.log('⏳ [CAMPAIGN-EXPLORER] Waiting for WebSocket response...');
+      
     } catch (error: any) {
-      console.error('🎯 [CAMPAIGN-EXPLORER] ❌ Error in streaming request:', error);
+      console.error('💥 [CAMPAIGN-EXPLORER] Exception in handleSendMessage:', error);
+      console.error('🔍 [CAMPAIGN-EXPLORER] Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      console.error('📊 [CAMPAIGN-EXPLORER] Context when error occurred:', {
+        wsStatus: wsStatus,
+        socket: !!socket,
+        socketReadyState: socket?.readyState,
+        campaignId: campaignId,
+        userMessageText: userMessage.text
+      });
+      
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: `Sorry, I encountered an error: ${error.message}. Please try again.`,
@@ -387,14 +559,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       };
       setMessages(prev => [...prev, errorMessage]);
       setStreamingStatus('❌ Error occurred');
-    } finally {
       setIsStreaming(false);
-      setStreamingStatus(null);
       setTimeout(scrollToBottom, 100);
     }
-  }, [inputMessage, campaignId]);
+  }, [inputMessage, campaignId, wsStatus, sendMessage]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.log('⌨️ Key pressed:', e.key);
     console.log('⌨️ Shift key:', e.shiftKey);
     
@@ -407,6 +577,62 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
 
   const handleScoreClick = (scoreKey: string) => {
     setActiveScoreReason(activeScoreReason === scoreKey ? null : scoreKey);
+  };
+
+  const getConnectionStatusInfo = (status: WebSocketStatus) => {
+    switch (status) {
+      case 'connecting':
+        return { text: 'Connecting...', color: '#FF9800', icon: '🔄' };
+      case 'connected':
+        return { text: 'Streaming...', color: '#4CAF50', icon: '🟢' };
+      case 'disconnected':
+        return { text: 'Ready', color: '#4CAF50', icon: '⚡' };
+      case 'reconnecting':
+        return { text: 'Reconnecting...', color: '#FF9800', icon: '🔄' };
+      case 'error':
+        return { text: 'Connection Error', color: '#f44336', icon: '🔴' };
+      default:
+        return { text: 'Ready', color: '#4CAF50', icon: '⚡' };
+    }
+  };
+
+  const ConnectionStatus: React.FC = () => {
+    const statusInfo = getConnectionStatusInfo(wsStatus);
+    
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '6px 12px',
+        backgroundColor: '#2a2a2a',
+        borderRadius: '20px',
+        border: '1px solid #444',
+        fontSize: '12px',
+        color: statusInfo.color,
+        fontWeight: '500'
+      }}>
+        <span style={{ fontSize: '10px' }}>{statusInfo.icon}</span>
+        <span>{statusInfo.text}</span>
+        {wsStatus === 'error' && (
+          <button
+            onClick={connect}
+            style={{
+              marginLeft: '8px',
+              padding: '2px 8px',
+              fontSize: '10px',
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        )}
+      </div>
+    );
   };
 
   const GaugeMeter: React.FC<{
@@ -742,8 +968,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         className="chat-box"
         style={{ height: `${100 - topPanesHeightPercent}%` }}
       >
-        <div className="pane-header">
+        <div className="pane-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>Chat Assistant</h3>
+          <ConnectionStatus />
         </div>
         <div className="chat-content">
           <div className="chat-messages">
@@ -795,7 +1022,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
             <div className="input-container">
               <textarea
                 value={inputMessage}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                   console.log('📝 Input changed:', e.target.value);
                   setInputMessage(e.target.value);
                 }}
