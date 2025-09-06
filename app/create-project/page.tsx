@@ -2,7 +2,7 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import NextImage from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -33,7 +33,7 @@ interface QuestionsData {
   questions: Question[];
 }
 
-export default function CreateProject() {
+function CreateProjectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -526,5 +526,13 @@ export default function CreateProject() {
       </div>
       </div>
     </>
+  );
+}
+
+export default function CreateProject() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CreateProjectContent />
+    </Suspense>
   );
 }
