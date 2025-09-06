@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
 import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
@@ -42,7 +42,7 @@ interface QuestionsData {
   questions: Question[];
 }
 
-export default function App() {
+function AppContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
@@ -531,5 +531,13 @@ export default function App() {
         </main>
       </div>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AppContent />
+    </Suspense>
   );
 }
