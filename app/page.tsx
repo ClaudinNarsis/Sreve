@@ -75,12 +75,12 @@ export default function HomePage() {
               },
               body: JSON.stringify({
                 answers: {
-                  1: "New Brand", // Brand Name - placeholder
-                  2: "", // Website - optional
-                  3: `Project created from prompt: ${pendingPrompt}`, // Description
-                  4: "conversational", // Brand Voice - default
+                  1: "New Brand", // Brand Name - only required field
+                  2: "", // Website - empty
+                  3: "", // Description - empty
+                  4: "", // Brand Voice - empty
                   5: [], // Brand Assets - empty
-                  6: `Initial prompt: ${pendingPrompt}` // Additional Info
+                  6: "" // Additional Info - empty
                 },
                 questions: [] // We'll load questions in the API if needed
               }),

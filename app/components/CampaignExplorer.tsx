@@ -755,11 +755,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
 
   return (
     <div className="campaign-explorer-layout">
-      {/* Top Row - Ideas and Details */}
-      <div 
-        className="top-row" 
-        style={{ height: `${topPanesHeightPercent}%` }}
-      >
+      {/* Top Row - Ideas and Details - Only show if there's content */}
+      {currentApiResponse?.ideas || currentApiResponse?.detials ? (
+        <div 
+          className="top-row" 
+          style={{ height: `${topPanesHeightPercent}%` }}
+        >
         {/* Idea View - Top Left */}
         <div 
           className="idea-view"
@@ -955,18 +956,23 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
             )}
           </div>
         </div>
+
+        {/* Horizontal Resize Handle */}
+        <div 
+          className="resize-handle resize-handle-horizontal"
+          onMouseDown={handleVerticalResize}
+        />
       </div>
+      ) : null}
 
-      {/* Horizontal Resize Handle */}
-      <div 
-        className="resize-handle resize-handle-horizontal"
-        onMouseDown={handleVerticalResize}
-      />
-
-      {/* Chat Box - Bottom */}
+      {/* Chat Box - Full height when no content, bottom when content exists */}
       <div 
         className="chat-box"
-        style={{ height: `${100 - topPanesHeightPercent}%` }}
+        style={{ 
+          height: currentApiResponse?.ideas || currentApiResponse?.detials 
+            ? `${100 - topPanesHeightPercent}%` 
+            : '100%' 
+        }}
       >
         <div className="pane-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>Chat Assistant</h3>

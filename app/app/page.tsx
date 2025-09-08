@@ -114,12 +114,12 @@ function AppContent() {
               },
               body: JSON.stringify({
                 answers: {
-                  1: "New Brand", // Brand Name - placeholder
-                  2: "", // Website - optional
-                  3: `Project created from prompt: ${pendingPrompt}`, // Description
-                  4: "conversational", // Brand Voice - default
+                  1: "New Brand", // Brand Name - only required field
+                  2: "", // Website - empty
+                  3: "", // Description - empty
+                  4: "", // Brand Voice - empty
                   5: [], // Brand Assets - empty
-                  6: `Initial prompt: ${pendingPrompt}` // Additional Info
+                  6: "" // Additional Info - empty
                 },
                 questions: [] // We'll load questions in the API if needed
               }),
@@ -604,7 +604,7 @@ function AppContent() {
           </SignedOut>
         </aside>
         <main className="main-content">
-          {viewMode === 'campaignExplorer' ? (
+          {viewMode === 'campaignExplorer' && selectedCampaignId ? (
             <CampaignExplorer campaignId={selectedCampaignId} />
           ) : viewMode === 'createProject' ? (
             <div className="overall">
@@ -664,8 +664,48 @@ function AppContent() {
                 </main>
               </div>
             </div>
-          ) : (
+          ) : viewMode === 'projectDetails' && selectedProjectId ? (
             <ProjectDetailsExplorer projectId={selectedProjectId} />
+          ) : (
+            // Default empty state when nothing is selected
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: '#ccc',
+              textAlign: 'center',
+              padding: '2rem'
+            }}>
+              <div style={{ maxWidth: '400px' }}>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  marginBottom: '1rem',
+                  color: '#fff'
+                }}>
+                  Welcome to Sreve
+                </h2>
+                <p style={{ 
+                  fontSize: '1rem',
+                  lineHeight: '1.5',
+                  marginBottom: '2rem',
+                  opacity: '0.8'
+                }}>
+                  Select a project from the sidebar to get started, or create a new project to begin generating creative content.
+                </p>
+                <button 
+                  className="cta-button"
+                  onClick={() => setViewMode('createProject')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Create New Project
+                </button>
+              </div>
+            </div>
           )}
         </main>
       </div>
