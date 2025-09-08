@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import './ProjectDetailsExplorer.css';
 
 interface Project {
@@ -39,6 +40,7 @@ interface ProjectDetailsExplorerProps {
 }
 
 const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ projectId }) => {
+  const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,8 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!projectId) {
@@ -214,6 +218,50 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
     }
   };
 
+  const handleDelete = async () => {
+    if (!project || !projectId) {
+      toast.error('Project data not available');
+      return;
+    }
+
+    setIsDeleting(true);
+    const loadingToast = toast.loading('Deleting project and all related data...');
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        const summary = data.summary;
+        toast.success(`Project deleted successfully! ${summary.campaignsDeleted} campaigns and their chat messages were also deleted.`, {
+          duration: 6000,
+        });
+        
+        // Navigate back to home/projects page
+        router.push('/');
+        
+      } else {
+        toast.error(`Failed to delete project: ${data.error || 'Unknown error'}`, {
+          duration: 4000,
+        });
+      }
+
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Network error. Please check your connection and try again.', {
+        duration: 4000,
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const getStepState = (question: Question) => {
     const answer = answers[question.step];
     const hasAnswer = answer !== undefined && answer !== null && answer !== '' && 
@@ -365,10 +413,31 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
   return (
     <div className="overall">
       <div className="create-project">
-        <h3>Edit Project: {getProjectName(project)}</h3>
-        <p style={{ fontSize: '0.9rem', color: '#999', marginBottom: '1rem' }}>
-          Project ID: {project.projectId}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+          <div>
+            <h3>Edit Project: {getProjectName(project)}</h3>
+            <p style={{ fontSize: '0.9rem', color: '#999', margin: 0 }}>
+              Project ID: {project.projectId}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}
+          >
+            🗑️ Delete Project
+          </button>
+        </div>
       </div>
       <div className="question-section">
         <aside className="question-sidebar">
@@ -422,6 +491,76 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>⚠️ Delete Project</h3>
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Are you sure you want to delete the project "<strong>{getProjectName(project)}</strong>"?
+            </p>
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.5', color: '#666' }}>
+              This will permanently delete:
+              <br />• The project and all its data
+              <br />• All campaigns associated with this project
+              <br />• All chat messages in those campaigns
+            </p>
+            <p style={{ marginBottom: '2rem', color: '#dc3545', fontWeight: 'bold' }}>
+              This action cannot be undone!
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold',
+                  opacity: isDeleting ? 0.6 : 1
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Project'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

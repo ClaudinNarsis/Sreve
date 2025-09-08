@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './CampaignExplorer.css';
 import { useWebSocket, WebSocketStatus, WebSocketMessage } from '../hooks/useWebSocket';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface CampaignExplorerProps {
   campaignId: string | null;
@@ -58,6 +60,7 @@ interface ApiResponse {
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   console.log('🎯 [CAMPAIGN-EXPLORER] Component rendered with campaignId:', campaignId);
   
+  const router = useRouter();
   const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(80);
   const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -76,6 +79,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { socket, status: wsStatus, sendMessage, connect, disconnect, lastMessage } = useWebSocket(
@@ -433,6 +438,50 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         break;
     }
   }, [lastMessage, currentApiResponse]);
+
+  const handleDeleteCampaign = async () => {
+    if (!campaignId) {
+      toast.error('Campaign ID not available');
+      return;
+    }
+
+    setIsDeleting(true);
+    const loadingToast = toast.loading('Deleting campaign and all chat messages...');
+
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        const summary = data.summary;
+        toast.success(`Campaign deleted successfully! ${summary.chatMessagesDeleted} chat messages were also deleted.`, {
+          duration: 5000,
+        });
+        
+        // Navigate back to home page
+        router.push('/');
+        
+      } else {
+        toast.error(`Failed to delete campaign: ${data.error || 'Unknown error'}`, {
+          duration: 4000,
+        });
+      }
+
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      toast.dismiss(loadingToast);
+      toast.error('Network error. Please check your connection and try again.', {
+        duration: 4000,
+      });
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleSendMessage = useCallback(async () => {
     console.log('🚀 [CAMPAIGN-EXPLORER] handleSendMessage called');
@@ -976,7 +1025,28 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       >
         <div className="pane-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>Chat Assistant</h3>
-          <ConnectionStatus />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {campaignId && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}
+              >
+                🗑️ Delete Campaign
+              </button>
+            )}
+            <ConnectionStatus />
+          </div>
         </div>
         <div className="chat-content">
           <div className="chat-messages">
@@ -1057,6 +1127,75 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>⚠️ Delete Campaign</h3>
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Are you sure you want to delete this campaign?
+            </p>
+            <p style={{ marginBottom: '1.5rem', lineHeight: '1.5', color: '#666' }}>
+              This will permanently delete:
+              <br />• The campaign and all its data
+              <br />• All chat messages in this campaign
+            </p>
+            <p style={{ marginBottom: '2rem', color: '#dc3545', fontWeight: 'bold' }}>
+              This action cannot be undone!
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCampaign}
+                disabled={isDeleting}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  cursor: isDeleting ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold',
+                  opacity: isDeleting ? 0.6 : 1
+                }}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Campaign'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
 console.log('🔧 Single Project API endpoint loaded');
 
@@ -14,7 +14,9 @@ const client = new DynamoDBClient({
 });
 
 const docClient = DynamoDBDocumentClient.from(client);
-const TABLE_NAME = `Projects_${process.env.ENVIRONMENT}`;
+const PROJECTS_TABLE = `Projects_${process.env.ENVIRONMENT}`;
+const CAMPAIGNS_TABLE = `Campaigns_${process.env.ENVIRONMENT}`;
+const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 export async function GET(
   request: NextRequest,
@@ -35,7 +37,7 @@ export async function GET(
     console.log('🔍 Fetching specific project:', projectId);
     
     const getCommand = new GetCommand({
-      TableName: TABLE_NAME,
+      TableName: PROJECTS_TABLE,
       Key: { projectId, userId },
     });
 
@@ -92,7 +94,7 @@ export async function PUT(
 
     // First verify the project exists and belongs to the user
     const getCommand = new GetCommand({
-      TableName: TABLE_NAME,
+      TableName: PROJECTS_TABLE,
       Key: { projectId, userId },
     });
 
@@ -110,7 +112,7 @@ export async function PUT(
 
     // Update the project
     const updateCommand = new UpdateCommand({
-      TableName: TABLE_NAME,
+      TableName: PROJECTS_TABLE,
       Key: { projectId, userId },
       UpdateExpression: 'SET answers = :answers, updatedAt = :updatedAt',
       ExpressionAttributeValues: {
@@ -131,6 +133,124 @@ export async function PUT(
 
   } catch (error) {
     console.error('❌ Error in PUT /api/projects/[projectId]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> }
+) {
+  console.log('🗑️ DELETE /api/projects/[projectId] - Project deletion request received');
+  
+  try {
+    const { userId } = await auth();
+    console.log('👤 Authenticated user ID:', userId);
+    
+    if (!userId) {
+      console.log('❌ User not authenticated');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { projectId } = await params;
+    console.log('🗑️ Deleting project:', projectId);
+
+    // First verify the project exists and belongs to the user
+    const getCommand = new GetCommand({
+      TableName: PROJECTS_TABLE,
+      Key: { projectId, userId },
+    });
+
+    const existingProject = await docClient.send(getCommand);
+    
+    if (!existingProject.Item) {
+      console.log('❌ Project not found for deletion:', projectId);
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    if (existingProject.Item.userId !== userId) {
+      console.log('❌ Unauthorized deletion attempt on project:', projectId);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Get all campaigns for this project
+    console.log('🔍 Finding campaigns for project:', projectId);
+    const campaignScanCommand = new ScanCommand({
+      TableName: CAMPAIGNS_TABLE,
+      FilterExpression: 'projectId = :projectId AND userId = :userId',
+      ExpressionAttributeValues: {
+        ':projectId': projectId,
+        ':userId': userId
+      }
+    });
+
+    const campaignResult = await docClient.send(campaignScanCommand);
+    const campaigns = campaignResult.Items || [];
+    console.log(`📋 Found ${campaigns.length} campaigns to delete`);
+
+    // Delete all chat messages for all campaigns
+    for (const campaign of campaigns) {
+      console.log('🔍 Finding chat messages for campaign:', campaign.campaignId);
+      const chatScanCommand = new ScanCommand({
+        TableName: CHAT_MESSAGES_TABLE,
+        FilterExpression: 'campaignId = :campaignId AND userId = :userId',
+        ExpressionAttributeValues: {
+          ':campaignId': campaign.campaignId,
+          ':userId': userId
+        }
+      });
+
+      const chatResult = await docClient.send(chatScanCommand);
+      const chatMessages = chatResult.Items || [];
+      console.log(`💬 Found ${chatMessages.length} chat messages to delete for campaign ${campaign.campaignId}`);
+
+      // Delete each chat message
+      for (const message of chatMessages) {
+        const deleteChatCommand = new DeleteCommand({
+          TableName: CHAT_MESSAGES_TABLE,
+          Key: { chatMessageId: message.chatMessageId }
+        });
+        await docClient.send(deleteChatCommand);
+        console.log('🗑️ Deleted chat message:', message.chatMessageId);
+      }
+    }
+
+    // Delete all campaigns
+    for (const campaign of campaigns) {
+      const deleteCampaignCommand = new DeleteCommand({
+        TableName: CAMPAIGNS_TABLE,
+        Key: { userId: campaign.userId, campaignId: campaign.campaignId }
+      });
+      await docClient.send(deleteCampaignCommand);
+      console.log('🗑️ Deleted campaign:', campaign.campaignId);
+    }
+
+    // Finally delete the project
+    const deleteProjectCommand = new DeleteCommand({
+      TableName: PROJECTS_TABLE,
+      Key: { projectId, userId },
+    });
+
+    await docClient.send(deleteProjectCommand);
+    console.log('✅ Project deleted successfully:', projectId);
+
+    const deletionSummary = {
+      projectDeleted: true,
+      campaignsDeleted: campaigns.length,
+      chatMessagesDeleted: campaigns.reduce((total, campaign) => {
+        // We'll approximate this since we don't track exact count during deletion
+        return total + (campaign.chatMessageCount || 0);
+      }, 0)
+    };
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Project and all related data deleted successfully`,
+      summary: deletionSummary
+    });
+
+  } catch (error) {
+    console.error('❌ Error in DELETE /api/projects/[projectId]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
