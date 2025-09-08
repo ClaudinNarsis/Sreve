@@ -11,6 +11,29 @@ interface Project {
   status: string;
 }
 
+interface QuestionOption {
+  value: string;
+  label: string;
+}
+
+interface Question {
+  step: number;
+  sidebarTitle: string;
+  question: string;
+  placeholder?: string;
+  answerType: 'text' | 'textarea' | 'select' | 'multiselect' | 'url' | 'file';
+  required: boolean;
+  options?: QuestionOption[];
+  acceptedTypes?: string[];
+  maxFiles?: number;
+  maxSize?: string;
+  validation?: {
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+  };
+}
+
 interface ProjectDetailsExplorerProps {
   projectId: string | null;
 }
@@ -19,6 +42,10 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [answers, setAnswers] = useState<Record<number, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!projectId) {
@@ -27,18 +54,29 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
       return;
     }
 
-    const fetchProjectDetails = async () => {
+    const fetchProjectDetailsAndQuestions = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/projects/${projectId}`);
-        const data = await response.json();
+        // Load questions first
+        const questionsResponse = await fetch('/create-project-questions.json');
+        if (!questionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${questionsResponse.status}`);
+        }
+        const questionsData = await questionsResponse.json();
+        setQuestions(questionsData.questions);
 
-        if (response.ok && data.project) {
-          setProject(data.project);
+        // Load project data
+        const projectResponse = await fetch(`/api/projects/${projectId}`);
+        const projectData = await projectResponse.json();
+
+        if (projectResponse.ok && projectData.project) {
+          setProject(projectData.project);
+          // Prefill answers from existing project data
+          setAnswers(projectData.project.answers || {});
         } else {
-          setError(data.error || 'Failed to fetch project details');
-          toast.error(data.error || 'Failed to fetch project details');
+          setError(projectData.error || 'Failed to fetch project details');
+          toast.error(projectData.error || 'Failed to fetch project details');
         }
       } catch (err) {
         setError('Error fetching project details');
@@ -48,12 +86,241 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
       }
     };
 
-    fetchProjectDetails();
+    fetchProjectDetailsAndQuestions();
   }, [projectId]);
 
   const getProjectName = (proj: Project) => {
     return proj.answers?.[1] || `Project ${proj.projectId.slice(0, 8)}`;
   };
+
+  const handleAnswerChange = (value: any) => {
+    setAnswers(prev => ({
+      ...prev,
+      [currentStep]: value
+    }));
+  };
+
+  const handleNext = () => {
+    if (currentStep < questions.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const validateRequiredFields = () => {
+    console.log('🔍 Validating all required fields...');
+    const missingRequired = [];
+    
+    for (const question of questions) {
+      if (question.required) {
+        const answer = answers[question.step];
+        const isEmpty = answer === undefined || answer === null || answer === '' || 
+                       (Array.isArray(answer) && answer.length === 0);
+        
+        if (isEmpty) {
+          missingRequired.push({
+            step: question.step,
+            title: question.sidebarTitle,
+            question: question.question
+          });
+          console.log(`❌ Missing required field - Step ${question.step}: ${question.sidebarTitle}`);
+        }
+      }
+    }
+
+    if (missingRequired.length > 0) {
+      console.log('❌ Validation failed:', missingRequired);
+      
+      // Show specific missing fields in toast
+      const firstMissing = missingRequired[0];
+      toast.error(`Please complete required field: "${firstMissing.title}"`, {
+        duration: 4000,
+      });
+      
+      // Navigate to first missing required field
+      setCurrentStep(firstMissing.step);
+      
+      return false;
+    }
+
+    console.log('✅ All required fields validated successfully');
+    return true;
+  };
+
+  const handleSave = async () => {
+    console.log('💾 Save Project button clicked');
+    console.log('💾 Current answers:', answers);
+    
+    if (!project || !projectId) {
+      toast.error('Project data not available');
+      return;
+    }
+    
+    // Validate required fields first
+    if (!validateRequiredFields()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    const loadingToast = toast.loading('Saving your project...');
+
+    try {
+      console.log('🚀 Updating project via API...');
+      
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answers
+        }),
+      });
+
+      const data = await response.json();
+      console.log('📥 API Response:', data);
+
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        console.log('✅ Project updated successfully:', data.project);
+        toast.success('🎉 Project saved successfully!', {
+          duration: 5000,
+        });
+        
+        // Update local project state
+        setProject(data.project);
+        
+      } else {
+        console.error('❌ Project update failed:', data);
+        toast.error(`❌ ${data.error || 'Failed to save project'}`, {
+          duration: 4000,
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Network error during project save:', error);
+      toast.dismiss(loadingToast);
+      toast.error('❌ Network error. Please check your connection and try again.', {
+        duration: 4000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getStepState = (question: Question) => {
+    const answer = answers[question.step];
+    const hasAnswer = answer !== undefined && answer !== null && answer !== '' && 
+                     (Array.isArray(answer) ? answer.length > 0 : true);
+    
+    if (question.step === currentStep) {
+      return 'active';
+    } else if (hasAnswer) {
+      return 'filled';
+    } else if (question.required) {
+      return 'required-unfilled';
+    } else {
+      return 'optional-unfilled';
+    }
+  };
+
+  const renderInput = (question: Question) => {
+    const currentAnswer = answers[currentStep] || '';
+
+    switch (question.answerType) {
+      case 'text':
+      case 'url':
+        return (
+          <input
+            type={question.answerType === 'url' ? 'url' : 'text'}
+            placeholder={question.placeholder}
+            value={currentAnswer}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            required={question.required}
+          />
+        );
+
+      case 'textarea':
+        return (
+          <textarea
+            placeholder={question.placeholder}
+            value={currentAnswer}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            required={question.required}
+            rows={4}
+          />
+        );
+
+      case 'select':
+        return (
+          <select
+            value={currentAnswer}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            required={question.required}
+          >
+            <option value="">Select an option...</option>
+            {question.options?.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        );
+
+      case 'multiselect':
+        return (
+          <div className="checkbox-group">
+            {question.options?.map((option) => (
+              <label key={option.value} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={currentAnswer?.includes(option.value) || false}
+                  onChange={(e) => {
+                    const newValue = currentAnswer || [];
+                    if (e.target.checked) {
+                      handleAnswerChange([...newValue, option.value]);
+                    } else {
+                      handleAnswerChange(newValue.filter((v: string) => v !== option.value));
+                    }
+                  }}
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+        );
+
+      case 'file':
+        return (
+          <div className="file-input-wrapper">
+            <input
+              type="file"
+              accept={question.acceptedTypes?.join(',')}
+              multiple={question.maxFiles ? question.maxFiles > 1 : false}
+              onChange={(e) => handleAnswerChange(Array.from(e.target.files || []))}
+            />
+            {question.acceptedTypes && (
+              <p className="file-info">
+                Accepted: {question.acceptedTypes.join(', ')} 
+                {question.maxSize && ` | Max size: ${question.maxSize}`}
+                {question.maxFiles && ` | Max files: ${question.maxFiles}`}
+              </p>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const currentQuestion = questions.find(q => q.step === currentStep);
 
   if (!projectId) {
     return (
@@ -85,29 +352,75 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
     );
   }
 
-  if (!project) {
+  if (!project || !currentQuestion) {
     return (
       <div className="project-details-explorer">
         <div className="empty-state">
-          <p>Project not found</p>
+          <p>Project not found or questions not loaded</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="project-details-explorer">
-      <div className="explorer-header">
-        <h3>Project Details: {getProjectName(project)}</h3>
+    <div className="overall">
+      <div className="create-project">
+        <h3>Edit Project: {getProjectName(project)}</h3>
+        <p style={{ fontSize: '0.9rem', color: '#999', marginBottom: '1rem' }}>
+          Project ID: {project.projectId}
+        </p>
       </div>
-      <div className="project-details">
-        <p><strong>Project ID:</strong> {project.projectId}</p>
-        <p><strong>User ID:</strong> {project.userId}</p>
-        <p><strong>Status:</strong> {project.status}</p>
-        <p><strong>Created At:</strong> {new Date(project.createdAt).toISOString()}</p>
-        <p><strong>Updated At:</strong> {new Date(project.updatedAt).toISOString()}</p>
-        <h4>Answers:</h4>
-        <pre>{JSON.stringify(project.answers, null, 2)}</pre>
+      <div className="question-section">
+        <aside className="question-sidebar">
+          <ul>
+            {questions.map((q) => (
+              <li
+                key={q.step}
+                className={getStepState(q)}
+                onClick={() => setCurrentStep(q.step)}
+              >
+                {q.step}. {q.sidebarTitle}
+              </li>
+            ))}
+          </ul>
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{ width: `${(currentStep / questions.length) * 100}%` }}
+            />
+          </div>
+          <p className="progress-text">
+            Step {currentStep} of {questions.length}
+          </p>
+        </aside>
+        <main className="question-main">
+          <h2>{currentQuestion.question}</h2>
+          {renderInput(currentQuestion)}
+          <div className="button-group">
+            {currentStep > 1 && (
+              <button className="prev-button" onClick={handlePrevious}>
+                Previous
+              </button>
+            )}
+            {currentStep < questions.length ? (
+              <button
+                className="next-button"
+                onClick={handleNext}
+                disabled={currentQuestion.required && !answers[currentStep]}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                className="submit-button"
+                onClick={handleSave}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving Project...' : 'Save Project'}
+              </button>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
