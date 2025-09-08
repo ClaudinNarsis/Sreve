@@ -229,6 +229,7 @@ function CreateProjectContent() {
               // Store initial prompt in sessionStorage for the campaign
               console.log('🎯 [CREATE-PROJECT] Storing initial prompt in sessionStorage...');
               sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, promptText);
+              sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}_timestamp`, Date.now().toString());
               
               // Clear the pending prompt since we've successfully processed it
               console.log('🎯 [CREATE-PROJECT] Clearing pendingPrompt from sessionStorage');
