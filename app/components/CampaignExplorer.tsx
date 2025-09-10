@@ -1042,8 +1042,98 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
           style={{ width: `${ideaPaneWidthPercent}%` }}
         >
           <div className="pane-content">
-            {/* Show completed streaming data with nice UI */}
-            {streamingData && streamingData.status === 'complete' && streamingData.data && !currentApiResponse?.ideas && (() => {
+            {/* Show streaming content: only quick_idea when complete, loading indicators otherwise */}
+            {isStreaming && !currentApiResponse?.ideas ? (() => {
+              // During streaming, only show quick_idea if available, otherwise show loading
+              const quickIdeaStep = allStreamingSteps.current?.quick_idea;
+              
+              if (quickIdeaStep && quickIdeaStep.data) {
+                // Show the quick_idea if it's completed
+                return (
+                  <div className="streaming-content">
+                    <div className="quick-idea-data" style={{ padding: '20px' }}>
+                      <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>💡 Quick Idea</h3>
+                      {quickIdeaStep.data.hook && (
+                        <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid #4CAF50' }}>
+                          <h4 style={{ color: '#4CAF50', fontSize: '18px', margin: '0 0 8px 0' }}>Hook</h4>
+                          <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>"{quickIdeaStep.data.hook}"</p>
+                        </div>
+                      )}
+                      {quickIdeaStep.data.angle && (
+                        <div style={{ marginBottom: '15px' }}>
+                          <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Angle</h4>
+                          <p style={{ color: '#e0e0e0', fontSize: '18px' }}>{quickIdeaStep.data.angle}</p>
+                        </div>
+                      )}
+                      {quickIdeaStep.data.description && (
+                        <div>
+                          <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Description</h4>
+                          <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{quickIdeaStep.data.description}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Loading indicator for current step */}
+                    <div style={{ padding: '20px', borderTop: '1px solid #333' }}>
+                      <div className="streaming-progress">
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
+                          <div className="loading-spinner" style={{
+                            width: '20px',
+                            height: '20px',
+                            border: '2px solid #333',
+                            borderTop: '2px solid #4CAF50',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite',
+                            marginRight: '10px'
+                          }}></div>
+                          <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
+                            {streamingStatus || 'Processing...'}
+                          </span>
+                        </div>
+                        <p style={{ color: '#999', fontSize: '14px' }}>
+                          {(() => {
+                            const status = streamingStatus || '';
+                            if (status.includes('Researching trends') || status.includes('trends')) return 'Researching current trends and viral content to enhance your idea...';
+                            if (status.includes('Researching examples') || status.includes('examples')) return 'Finding successful examples for inspiration...';
+                            if (status.includes('Enhancing ideas') || status.includes('ideation')) return 'Generating enhanced creative concepts...';
+                            if (status.includes('Selecting best') || status.includes('selection')) return 'Selecting the perfect approach for your brand...';
+                            if (status.includes('Generating script') || status.includes('script')) return 'Crafting the perfect script...';
+                            if (status.includes('Critiquing') || status.includes('critique')) return 'Reviewing and optimizing the content...';
+                            if (status.includes('Packaging') || status.includes('packaging')) return 'Finalizing your content...';
+                            return 'Refining this idea with trends and examples...';
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } else {
+                // Show loading state while waiting for quick_idea
+                return (
+                  <div className="streaming-loading" style={{ padding: '40px', textAlign: 'center' }}>
+                    <div className="loading-spinner" style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '4px solid #333',
+                      borderTop: '4px solid #4CAF50',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      margin: '0 auto 20px auto'
+                    }}></div>
+                    <h3 style={{ color: '#4CAF50', marginBottom: '10px' }}>Generating Ideas...</h3>
+                    <p style={{ color: '#999' }}>
+                      {(() => {
+                        const status = streamingStatus || '';
+                        if (status.includes('Classifying intent') || status.includes('intent')) return 'Understanding your request and determining the best approach...';
+                        if (status.includes('quick idea') || status.includes('quick')) return 'Creating your initial concept...';
+                        if (status.includes('Starting content') || status.includes('Starting')) return 'Setting up content generation pipeline...';
+                        return 'Analyzing your request and creating initial concepts...';
+                      })()}
+                    </p>
+                  </div>
+                );
+              }
+            })() : streamingData && streamingData.status === 'complete' && streamingData.data && !currentApiResponse?.ideas && (() => {
               console.log('🎨 [UI] Rendering completed streaming data:', streamingData);
               
               const renderDataUI = (data: any, step: string) => {
