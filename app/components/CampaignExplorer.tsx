@@ -143,6 +143,20 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   // Function to save chat messages to database
   const saveChatMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
     console.log('💾 [DATABASE] Saving chat message to database:', message);
+    console.log('💾 [DATABASE] ApiResponse being saved:', message.apiResponse);
+    
+    const payload = {
+      campaignId: campaignId,
+      message: {
+        id: message.id,
+        text: message.text,
+        sender: message.sender,
+        timestamp: message.timestamp,
+        apiResponse: message.apiResponse
+      }
+    };
+    
+    console.log('💾 [DATABASE] Full payload:', JSON.stringify(payload, null, 2));
     
     try {
       const response = await fetch('/api/chat/save-message', {
@@ -150,25 +164,20 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          campaignId: campaignId,
-          message: {
-            id: message.id,
-            text: message.text,
-            sender: message.sender,
-            timestamp: message.timestamp,
-            apiResponse: message.apiResponse
-          }
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      
+      console.log('📥 [DATABASE] Save response status:', response.status);
+      console.log('📥 [DATABASE] Save response data:', data);
       
       if (response.ok && data.success) {
         console.log('✅ [DATABASE] Chat message saved successfully');
         return true;
       } else {
         console.error('❌ [DATABASE] Failed to save chat message:', data);
+        console.error('❌ [DATABASE] Response status:', response.status);
         return false;
       }
     } catch (error) {
@@ -238,7 +247,14 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
     setLoadingMessages(true);
     
     try {
-      const response = await fetch(`/api/chat?campaignId=${campaignId}`);
+      // Add timestamp to prevent caching  
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/chat?campaignId=${campaignId}&t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       
       console.log('📋 Chat messages API response:', data);
@@ -248,22 +264,37 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         console.log('✅ Loaded messages from DB:', dbMessages.length, 'messages:', dbMessages);
         
         // Convert DB messages to ChatMessage format
-        const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: any) => ({
-          id: dbMsg.chatMessageId,
-          text: dbMsg.message,
-          sender: dbMsg.sender as 'user' | 'bot',
-          timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
-          apiResponse: dbMsg.apiResponse
-        }));
+        const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: any) => {
+          console.log('🔍 [DEBUG] Converting DB message:', dbMsg);
+          console.log('🔍 [DEBUG] DB message apiResponse:', dbMsg.apiResponse);
+          
+          return {
+            id: dbMsg.chatMessageId,
+            text: dbMsg.message,
+            sender: dbMsg.sender as 'user' | 'bot',
+            timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
+            apiResponse: dbMsg.apiResponse
+          };
+        });
         
         // Set the most recent API response if available
         const lastBotMessage = convertedMessages
           .filter(msg => msg.sender === 'bot' && msg.apiResponse)
           .pop();
           
+        console.log('🔍 [DEBUG] All bot messages with apiResponse:', convertedMessages.filter(msg => msg.sender === 'bot' && msg.apiResponse));
+        console.log('🔍 [DEBUG] Last bot message:', lastBotMessage);
+        console.log('🔍 [DEBUG] Last bot message apiResponse:', lastBotMessage?.apiResponse);
+        
         if (lastBotMessage?.apiResponse?.result) {
           console.log('🎯 Setting current API response from last bot message:', lastBotMessage.apiResponse.result);
           setCurrentApiResponse(lastBotMessage.apiResponse.result);
+        } else if (lastBotMessage?.apiResponse) {
+          // Handle case where apiResponse is stored directly (not wrapped in result)
+          console.log('🎯 Setting current API response directly from apiResponse:', lastBotMessage.apiResponse);
+          setCurrentApiResponse(lastBotMessage.apiResponse);
+        } else {
+          console.log('⚠️ [DEBUG] No valid apiResponse found in last bot message');
         }
         
         // Set messages (replacing the default welcome message)
@@ -450,6 +481,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
       case 'start':
         console.log('🎯 [WEBSOCKET] Generation started:', lastMessage.message);
         setStreamingStatus(lastMessage.message || 'Starting content generation...');
+        // Reset completion flag when new streaming starts
+        completionProcessed.current = false;
         break;
 
       case 'stream':
@@ -555,24 +588,54 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             apiResponse: { result: resultToUse }
           };
 
-          // Add bot message and avoid duplicates by checking if the last message is already a bot message with apiResponse
-          let shouldSaveMessage = false;
-          setMessages(prev => {
-            const lastMessage = prev[prev.length - 1];
-            if (lastMessage?.sender === 'bot' && lastMessage?.apiResponse) {
-              console.log('⚠️ [WEBSOCKET] Bot message with apiResponse already exists, not adding duplicate');
-              return prev;
-            }
-            shouldSaveMessage = true;
-            return [...prev, botResponse];
-          });
+          console.log('🔍 [DEBUG] Creating bot response with apiResponse:', botResponse.apiResponse);
+          console.log('🔍 [DEBUG] ResultToUse structure:', JSON.stringify(resultToUse, null, 2));
+
+          // Check for duplicates BEFORE updating messages
+          const currentMessages = messages;
+          const lastMessage = currentMessages[currentMessages.length - 1];
+          console.log('🔍 [DEBUG] Last message before adding bot response:', lastMessage);
+          console.log('🔍 [DEBUG] Last message has apiResponse?', !!lastMessage?.apiResponse);
           
-          // Save the bot message to database only if it was added
-          if (campaignId && shouldSaveMessage) {
-            console.log('💾 [WEBSOCKET] About to save bot message:', botResponse);
-            saveChatMessageToDatabase(campaignId, botResponse).catch(error => {
-              console.error('❌ [WEBSOCKET] Failed to save bot message:', error);
-            });
+          // More specific duplicate detection: only prevent if the last message is a bot message 
+          // created in the last 30 seconds (indicating it's from the current session)
+          const now = new Date().getTime();
+          const thirtySecondsAgo = now - 30000;
+          const lastMessageTime = lastMessage?.timestamp ? new Date(lastMessage.timestamp).getTime() : 0;
+          
+          const isDuplicate = lastMessage?.sender === 'bot' && 
+                             lastMessage?.apiResponse && 
+                             lastMessageTime > thirtySecondsAgo;
+          
+          if (isDuplicate) {
+            console.log('⚠️ [WEBSOCKET] Recent bot message with apiResponse already exists (from current session), not adding duplicate');
+            console.log('⚠️ [WEBSOCKET] Last message timestamp:', new Date(lastMessage.timestamp));
+            console.log('⚠️ [WEBSOCKET] This means the bot message will NOT be saved to database');
+          } else {
+            console.log('✅ [WEBSOCKET] No recent duplicate found, adding new bot message and will save to database');
+            
+            // Add the bot message to the chat
+            setMessages(prev => [...prev, botResponse]);
+            
+            // Save to database
+            if (campaignId) {
+              console.log('💾 [WEBSOCKET] About to save bot message:', botResponse);
+              console.log('💾 [WEBSOCKET] Bot message apiResponse:', botResponse.apiResponse);
+              saveChatMessageToDatabase(campaignId, botResponse)
+                .then(success => {
+                  if (success) {
+                    console.log('✅ [WEBSOCKET] Bot message saved successfully, refreshing messages to verify...');
+                    // Add a small delay and refresh messages to verify saving worked
+                    setTimeout(() => {
+                      console.log('🔄 [WEBSOCKET] Refreshing messages to verify save worked');
+                      fetchChatMessages(campaignId);
+                    }, 1000);
+                  }
+                })
+                .catch(error => {
+                  console.error('❌ [WEBSOCKET] Failed to save bot message:', error);
+                });
+            }
           }
           
           // Show clarifying questions if any

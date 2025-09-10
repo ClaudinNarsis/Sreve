@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     console.log('🆔 Using message ID:', messageId);
 
     // Store message in DynamoDB format
-    const messageData = {
+    const messageData: any = {
       chatMessageId: messageId, // Primary key expected by DynamoDB
       campaignId,
       userId,
@@ -61,15 +61,20 @@ export async function POST(request: NextRequest) {
 
     // Add apiResponse if it's a bot message with results
     if (message.sender === 'bot' && message.apiResponse) {
+      console.log('📊 Adding apiResponse to messageData:', message.apiResponse);
       messageData.apiResponse = message.apiResponse;
     }
+
+    console.log('📋 Final messageData to be stored:', JSON.stringify(messageData, null, 2));
 
     const putMessageCommand = new PutCommand({
       TableName: TABLE_NAME,
       Item: messageData,
     });
 
-    await docClient.send(putMessageCommand);
+    console.log('💾 Attempting to store in DynamoDB...');
+    const result = await docClient.send(putMessageCommand);
+    console.log('📥 DynamoDB put result:', result);
     console.log(`✅ ${message.sender} message stored in DynamoDB`);
 
     return NextResponse.json({ 
