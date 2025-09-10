@@ -3,6 +3,10 @@ import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
+// Force dynamic behavior to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 console.log('🔧 Single Campaign API endpoint loaded');
 
 const client = new DynamoDBClient({

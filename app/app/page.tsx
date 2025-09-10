@@ -3,14 +3,14 @@
 import Link from "next/link";
 import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import ProjectExplorer from "../components/ProjectExplorer";
+import ProjectExplorer, { ProjectExplorerRef } from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import toast from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
 import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
@@ -49,6 +49,7 @@ function AppContent() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isAutoCreating, setIsAutoCreating] = useState(false);
   const [creationProgress, setCreationProgress] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     if (selectedProjectId === null) {
@@ -216,6 +217,19 @@ function AppContent() {
   const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
   const { isCreating } = useAutoCreateUser();
   const [questions, setQuestions] = useState<Question[]>([]);
+  const projectExplorerRef = useRef<ProjectExplorerRef>(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+
+  // Refresh sidebar when switching back to campaignExplorer view
+  useEffect(() => {
+    if (viewMode === 'campaignExplorer') {
+      console.log('🔄 Switched to campaignExplorer view, refreshing sidebar...');
+      // Small delay to ensure component is mounted
+      setTimeout(() => {
+        projectExplorerRef.current?.refreshData();
+      }, 100);
+    }
+  }, [viewMode]);
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [loading, setLoading] = useState(true);
@@ -352,11 +366,17 @@ function AppContent() {
           });
         }, 1000);
 
-        // Navigate to app page after success
-        console.log('🔄 Redirecting to app page...');
+        // Clear states and navigate back to project list view
+        console.log('🔄 Returning to project list...');
+        setViewMode('campaignExplorer');
+        setAnswers({});
+        setCurrentStep(1);
+        
+        // Force sidebar re-mount and refresh
+        setSidebarRefreshKey(prev => prev + 1);
         setTimeout(() => {
-          router.push('/app');
-        }, 2000);
+          projectExplorerRef.current?.refreshData();
+        }, 500);
 
       } else {
         console.error('❌ Project creation failed:', data);
@@ -550,7 +570,8 @@ function AppContent() {
           <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button className="sidebar-toggle" onClick={() => {
+          {!isStreaming && (
+            <button className="sidebar-toggle" onClick={() => {
             const sidebar = document.querySelector('.file-sidebar');
             sidebar?.classList.toggle('open');
           }}>
@@ -560,6 +581,7 @@ function AppContent() {
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
+          )}
           <SignedOut>
             <SignInButton mode="modal">
               <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
@@ -571,17 +593,26 @@ function AppContent() {
         </div>
       </header>
       <div className="app-layout">
-        <aside className="file-sidebar" id="sidebar">
+        <aside 
+          className="file-sidebar" 
+          id="sidebar"
+          style={{ 
+            display: isStreaming ? 'none' : 'block',
+            transition: 'all 0.3s ease'
+          }}
+        >
           <button className="collapse-btn" onClick={() => {
             const sidebar = document.getElementById('sidebar');
             const layout = document.querySelector('.app-layout');
             sidebar?.classList.toggle('collapsed');
             layout?.classList.toggle('sidebar-collapsed');
           }}>
-            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
+            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
           </button>
           <SignedIn>
             <ProjectExplorer 
+              key={sidebarRefreshKey}
+              ref={projectExplorerRef}
               onCampaignSelect={(campaignId, projectId) => {
                 setSelectedCampaignId(campaignId);
                 setSelectedProjectId(projectId);
@@ -603,9 +634,25 @@ function AppContent() {
             </div>
           </SignedOut>
         </aside>
-        <main className="main-content">
+        <main 
+          className="main-content"
+          style={{
+            width: isStreaming ? '100%' : undefined,
+            transition: 'width 0.3s ease'
+          }}
+        >
           {viewMode === 'campaignExplorer' && selectedCampaignId ? (
-            <CampaignExplorer campaignId={selectedCampaignId} />
+            <CampaignExplorer 
+              campaignId={selectedCampaignId} 
+              onStreamingStateChange={setIsStreaming}
+              onDataChange={() => {
+                // Refresh sidebar when campaign data changes (delete/edit)
+                setSidebarRefreshKey(prev => prev + 1);
+                setTimeout(() => {
+                  projectExplorerRef.current?.refreshData();
+                }, 100);
+              }}
+            />
           ) : viewMode === 'createProject' ? (
             <div className="overall">
               <div className="create-project">
@@ -665,7 +712,16 @@ function AppContent() {
               </div>
             </div>
           ) : viewMode === 'projectDetails' && selectedProjectId ? (
-            <ProjectDetailsExplorer projectId={selectedProjectId} />
+            <ProjectDetailsExplorer 
+              projectId={selectedProjectId}
+              onDataChange={() => {
+                // Refresh sidebar when project data changes (delete/edit)
+                setSidebarRefreshKey(prev => prev + 1);
+                setTimeout(() => {
+                  projectExplorerRef.current?.refreshData();
+                }, 100);
+              }}
+            />
           ) : (
             // Default empty state when nothing is selected
             <div style={{

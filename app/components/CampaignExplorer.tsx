@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import './CampaignExplorer.css';
 import { useWebSocket, WebSocketStatus, WebSocketMessage } from '../hooks/useWebSocket';
 import { useRouter } from 'next/navigation';
@@ -6,6 +6,8 @@ import toast from 'react-hot-toast';
 
 interface CampaignExplorerProps {
   campaignId: string | null;
+  onStreamingStateChange?: (isStreaming: boolean) => void;
+  onDataChange?: () => void;
 }
 
 interface ChatMessage {
@@ -34,6 +36,7 @@ interface ApiResponse {
     };
   };
   ideas: {
+    quick_idea: { angle: string; hook: string; description: string; };
     ideas: Array<{ angle: string; hook: string; description: string; }>;
     examples: any[];
     trends: Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: any[]; }>;
@@ -57,7 +60,7 @@ interface ApiResponse {
   };
 }
 
-const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
+const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStreamingStateChange, onDataChange }) => {
   console.log('🎯 [CAMPAIGN-EXPLORER] Component rendered with campaignId:', campaignId);
   
   const router = useRouter();
@@ -72,19 +75,110 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [currentApiResponse, setCurrentApiResponse] = useState<ApiResponse | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingData, setStreamingData] = useState<any>(null);
+  
+  // Add debug useEffect to track streamingData changes
+  useEffect(() => {
+    console.log('🔄 [STATE] streamingData changed:', streamingData);
+  }, [streamingData]);
   const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const allStreamingSteps = useRef<any>({});
+  const completionProcessed = useRef<boolean>(false);
+
+  // Function to build final result from streaming steps
+  const buildFinalResultFromStreaming = (currentStreamingData: any, allSteps: any): ApiResponse | null => {
+    console.log('🔧 [BUILD-RESULT] Building final result from steps:', { currentStreamingData, allSteps });
+    
+    // If we don't have enough data, return null
+    if (!allSteps || Object.keys(allSteps).length === 0) {
+      console.log('⚠️ [BUILD-RESULT] No streaming steps available');
+      return null;
+    }
+
+    // Build the final result structure
+    try {
+      const finalResult: ApiResponse = {
+        chat: {
+          thinking: allSteps.intent?.data?.rationale || 'I\'ve analyzed your request and generated ideas for you.',
+          clarifying_questions: allSteps.intent?.data?.clarifying_questions || [],
+          topic: currentStreamingData?.topic || 'Campaign Ideas'
+        },
+        detials: {
+          format: allSteps.intent?.data?.format || 'Static ad script',
+          critic: allSteps.critique?.data || {
+            attention: { score: 8, reason: 'Generated compelling hooks' },
+            trend_fit: { score: 7, reason: 'Aligned with current trends' },
+            originality: { score: 8, reason: 'Creative and unique approach' },
+            brand_fit: { score: 9, reason: 'Perfect for target audience' },
+            overall: 8.0,
+            improvements: ['Consider adding more specific product features', 'Test different hook variations']
+          }
+        },
+        ideas: {
+          quick_idea: allSteps.quick_idea?.data || null,
+          ideas: allSteps.ideation?.data || [],
+          examples: allSteps.examples?.data || [],
+          trends: allSteps.trends?.data || [],
+          selection: allSteps.selection?.data || null,
+          deliverable: allSteps.script?.data || null
+        }
+      };
+
+      console.log('✅ [BUILD-RESULT] Successfully built final result:', finalResult);
+      return finalResult;
+    } catch (error) {
+      console.error('❌ [BUILD-RESULT] Error building final result:', error);
+      return null;
+    }
+  };
+
+  // Function to save chat messages to database
+  const saveChatMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
+    console.log('💾 [DATABASE] Saving chat message to database:', message);
+    
+    try {
+      const response = await fetch('/api/chat/save-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaignId: campaignId,
+          message: {
+            id: message.id,
+            text: message.text,
+            sender: message.sender,
+            timestamp: message.timestamp,
+            apiResponse: message.apiResponse
+          }
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        console.log('✅ [DATABASE] Chat message saved successfully');
+        return true;
+      } else {
+        console.error('❌ [DATABASE] Failed to save chat message:', data);
+        return false;
+      }
+    } catch (error) {
+      console.error('💥 [DATABASE] Exception saving chat message:', error);
+      return false;
+    }
+  };
   
   const { socket, status: wsStatus, sendMessage, connect, disconnect, lastMessage } = useWebSocket(
-    process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_ENDPOINT || 'wss://9ofoev2w94.execute-api.ap-south-1.amazonaws.com/api'
+    process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_ENDPOINT || 'wss://kajg8zc828.execute-api.ap-south-1.amazonaws.com/dev'
   );
 
   const handleVerticalResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -151,7 +245,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       
       if (response.ok && data.success) {
         const dbMessages = data.messages || [];
-        console.log('✅ Loaded messages from DB:', dbMessages.length);
+        console.log('✅ Loaded messages from DB:', dbMessages.length, 'messages:', dbMessages);
         
         // Convert DB messages to ChatMessage format
         const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: any) => ({
@@ -168,7 +262,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           .pop();
           
         if (lastBotMessage?.apiResponse?.result) {
-          console.log('🎯 Setting current API response from last bot message');
+          console.log('🎯 Setting current API response from last bot message:', lastBotMessage.apiResponse.result);
           setCurrentApiResponse(lastBotMessage.apiResponse.result);
         }
         
@@ -291,6 +385,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
 
       setMessages(prev => [...prev, userMessage]);
       setStreamingStatus('Sending message...');
+      
+      // Save user message to database
+      console.log('💾 [WEBSOCKET] About to save pending user message:', userMessage);
+      saveChatMessageToDatabase(campaignId, userMessage).catch(error => {
+        console.error('❌ [WEBSOCKET] Failed to save user message:', error);
+      });
 
       const messagePayload = {
         action: 'generate',
@@ -336,6 +436,16 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       timestamp: new Date().toISOString()
     });
 
+    // Handle messages without proper type (like timeout messages)
+    if (!lastMessage.type) {
+      if (lastMessage.message && lastMessage.message.includes('timed out')) {
+        console.log('⏰ [CAMPAIGN-EXPLORER] Received timeout message, ignoring');
+        return;
+      }
+      console.log('⚠️ [CAMPAIGN-EXPLORER] Message without type, ignoring:', lastMessage);
+      return;
+    }
+
     switch (lastMessage.type) {
       case 'start':
         console.log('🎯 [WEBSOCKET] Generation started:', lastMessage.message);
@@ -343,57 +453,134 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         break;
 
       case 'stream':
-        if (lastMessage.data) {
+        // Handle both data object format and direct step format
+        const stepData = lastMessage.data || {
+          step: lastMessage.step,
+          message: lastMessage.message,
+          status: lastMessage.status,
+          data: lastMessage.data,
+          result: lastMessage.result
+        };
+        
+        if (stepData.step) {
           const statusMessages: Record<string, string> = {
             connected: '🔗 Connected to AI',
             start: '🚀 Starting content generation...',
-            intent: '🎯 Analyzing your request...',
+            intent: '🎯 Classifying intent...',
+            quick_idea: '💡 Generating quick idea...',
             examples: '📚 Researching examples...',
-            trends: '📈 Finding trending topics...',
-            ideation: '💡 Generating creative ideas...',
-            selection: '✨ Selecting the best idea...',
-            script: '📝 Creating your content...',
-            critique: '🔍 Reviewing and improving...',
-            packaging: '📦 Finalizing output...',
+            trends: '📈 Researching trends...',
+            ideation: '💡 Enhancing ideas with research...',
+            selection: '✨ Selecting best idea...',
+            script: '📝 Generating script...',
+            critique: '🔍 Critiquing script...',
+            packaging: '📦 Packaging final output...',
             complete: '✅ Content generation complete!',
             stored: '💾 Saved successfully!'
           };
 
-          const statusMessage = statusMessages[lastMessage.data.step] || 
-                               lastMessage.data.message || 
-                               `Processing: ${lastMessage.data.step}`;
+          const statusMessage = statusMessages[stepData.step] || 
+                               stepData.message || 
+                               `Processing: ${stepData.step}`;
           setStreamingStatus(statusMessage);
 
-          if (lastMessage.data.result) {
-            console.log('🎯 [WEBSOCKET] Final result received');
-            setCurrentApiResponse(lastMessage.data.result);
+          // Store streaming data for real-time display - only update when complete
+          if (stepData.status === 'complete' && stepData.data) {
+            console.log('📊 [WEBSOCKET] Step completed with data:', stepData.step);
+            console.log('📊 [WEBSOCKET] Data content:', stepData.data);
+            
+            // Track this step in allStreamingSteps
+            allStreamingSteps.current[stepData.step] = {
+              step: stepData.step,
+              status: stepData.status,
+              data: stepData.data,
+              timestamp: Date.now()
+            };
+            console.log('📊 [WEBSOCKET] Updated allStreamingSteps:', allStreamingSteps.current);
+            
+            setStreamingData({
+              step: stepData.step,
+              status: stepData.status,
+              data: { ...stepData.data }, // Create new object to trigger re-render
+              timestamp: Date.now() // Add timestamp to force update
+            });
+          } else if (stepData.status === 'in_progress') {
+            // For in_progress, don't update streamingData at all - idea pane should stay unchanged
+            console.log('📊 [WEBSOCKET] Step in progress (not updating idea pane):', stepData.step);
+          }
+
+          // Handle direct result at top level (backend sends result in complete message)
+          if (stepData.result || lastMessage.result) {
+            const result = stepData.result || lastMessage.result;
+            console.log('🎯 [WEBSOCKET] Final result received:', result);
+            setCurrentApiResponse(result);
+            setStreamingData(null); // Clear streaming data when final result is received
           }
         }
         break;
 
       case 'complete':
         console.log('🎯 [WEBSOCKET] Generation completed:', lastMessage.message);
+        
+        // Check if completion has already been processed to prevent infinite loop
+        if (completionProcessed.current) {
+          console.log('⚠️ [WEBSOCKET] Completion already processed, skipping');
+          break;
+        }
+        completionProcessed.current = true;
+        
         setIsStreaming(false);
         setStreamingStatus(null);
         
+        // Build final result from streaming data and previous steps
+        const finalResult = buildFinalResultFromStreaming(streamingData, allStreamingSteps.current);
+        if (finalResult) {
+          console.log('🎯 [WEBSOCKET] Built final result from streaming data:', finalResult);
+          setCurrentApiResponse(finalResult);
+          
+          // Save will be handled when the bot message is created below
+          
+          // Keep the final streaming data visible
+          // setStreamingData(null); // Don't clear - keep the final result visible
+        }
+        
         // Create final bot message if we have a result
-        if (currentApiResponse) {
+        const resultToUse = finalResult || currentApiResponse;
+        if (resultToUse) {
           const botResponse: ChatMessage = {
             id: (Date.now()).toString(),
-            text: currentApiResponse?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
+            text: resultToUse?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
             sender: 'bot',
             timestamp: new Date(),
-            apiResponse: { result: currentApiResponse }
+            apiResponse: { result: resultToUse }
           };
 
-          setMessages(prev => [...prev, botResponse]);
+          // Add bot message and avoid duplicates by checking if the last message is already a bot message with apiResponse
+          let shouldSaveMessage = false;
+          setMessages(prev => {
+            const lastMessage = prev[prev.length - 1];
+            if (lastMessage?.sender === 'bot' && lastMessage?.apiResponse) {
+              console.log('⚠️ [WEBSOCKET] Bot message with apiResponse already exists, not adding duplicate');
+              return prev;
+            }
+            shouldSaveMessage = true;
+            return [...prev, botResponse];
+          });
+          
+          // Save the bot message to database only if it was added
+          if (campaignId && shouldSaveMessage) {
+            console.log('💾 [WEBSOCKET] About to save bot message:', botResponse);
+            saveChatMessageToDatabase(campaignId, botResponse).catch(error => {
+              console.error('❌ [WEBSOCKET] Failed to save bot message:', error);
+            });
+          }
           
           // Show clarifying questions if any
-          if (currentApiResponse?.chat?.clarifying_questions?.length > 0) {
+          if (resultToUse?.chat?.clarifying_questions?.length > 0) {
             setTimeout(() => {
               const clarifyingMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
-                text: `I have some clarifying questions: ${currentApiResponse.chat.clarifying_questions.join('; ')}`,
+                text: `I have some clarifying questions: ${resultToUse.chat.clarifying_questions.join('; ')}`,
                 sender: 'bot',
                 timestamp: new Date()
               };
@@ -417,7 +604,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       case 'error':
         console.error('🎯 [WEBSOCKET] Error:', lastMessage.error || lastMessage.message);
         setIsStreaming(false);
-        setStreamingStatus('❌ Error occurred');
+        setStreamingStatus(null);
+        setStreamingData(null);
         
         const errorMessage: ChatMessage = {
           id: (Date.now()).toString(),
@@ -437,7 +625,14 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         
         break;
     }
-  }, [lastMessage, currentApiResponse]);
+  }, [lastMessage]);
+
+  // Notify parent component about streaming state changes
+  useEffect(() => {
+    if (onStreamingStateChange) {
+      onStreamingStateChange(isStreaming);
+    }
+  }, [isStreaming, onStreamingStateChange]);
 
   const handleDeleteCampaign = async () => {
     if (!campaignId) {
@@ -461,6 +656,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         toast.success(`Campaign deleted successfully! ${summary.chatMessagesDeleted} chat messages were also deleted.`, {
           duration: 5000,
         });
+        
+        // Notify parent to refresh sidebar data
+        onDataChange?.();
         
         // Navigate back to home page
         router.push('/');
@@ -532,6 +730,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
       setPendingMessage(inputMessage.trim());
       setInputMessage('');
       setIsStreaming(true);
+      // Clear previous streaming steps and reset completion flag
+      allStreamingSteps.current = {};
+      completionProcessed.current = false;
       return;
     }
 
@@ -553,6 +754,15 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     setInputMessage('');
     setIsStreaming(true);
     setStreamingStatus('Sending message...');
+    // Clear previous streaming steps and reset completion flag
+    allStreamingSteps.current = {};
+    completionProcessed.current = false;
+    
+    // Save user message to database
+    console.log('💾 [WEBSOCKET] About to save direct user message:', userMessage);
+    saveChatMessageToDatabase(campaignId, userMessage).catch(error => {
+      console.error('❌ [WEBSOCKET] Failed to save user message:', error);
+    });
     
     console.log('🎯 [CAMPAIGN-EXPLORER] UI state updated, preparing WebSocket message');
 
@@ -607,7 +817,8 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
-      setStreamingStatus('❌ Error occurred');
+      setStreamingStatus(null);
+      setStreamingData(null);
       setIsStreaming(false);
       setTimeout(scrollToBottom, 100);
     }
@@ -802,10 +1013,25 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
     );
   };
 
+  // Optimize top row visibility check to reduce re-renders
+  const shouldShowTopRow = useMemo(() => {
+    const hasCompleteStreamingData = streamingData && streamingData.status === 'complete' && streamingData.data;
+    const shouldShow = !!(currentApiResponse?.ideas || currentApiResponse?.detials || hasCompleteStreamingData);
+    console.log('🎨 [UI] Top row visibility check:', {
+      shouldShow,
+      hasIdeas: !!currentApiResponse?.ideas,
+      hasDetails: !!currentApiResponse?.detials,
+      hasCompleteStreamingData: !!hasCompleteStreamingData,
+      streamingDataStep: streamingData?.step,
+      streamingDataStatus: streamingData?.status
+    });
+    return shouldShow;
+  }, [currentApiResponse?.ideas, currentApiResponse?.detials, streamingData?.step, streamingData?.status, streamingData?.timestamp]);
+
   return (
     <div className="campaign-explorer-layout">
-      {/* Top Row - Ideas and Details - Only show if there's content */}
-      {currentApiResponse?.ideas || currentApiResponse?.detials ? (
+      {/* Top Row - Ideas and Details - Show if there's content or streaming data */}
+      {shouldShowTopRow ? (
         <div 
           className="top-row" 
           style={{ height: `${topPanesHeightPercent}%` }}
@@ -816,6 +1042,153 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           style={{ width: `${ideaPaneWidthPercent}%` }}
         >
           <div className="pane-content">
+            {/* Show completed streaming data with nice UI */}
+            {streamingData && streamingData.status === 'complete' && streamingData.data && !currentApiResponse?.ideas && (() => {
+              console.log('🎨 [UI] Rendering completed streaming data:', streamingData);
+              
+              const renderDataUI = (data: any, step: string) => {
+                switch (step) {
+                  case 'intent':
+                    return (
+                      <div className="intent-data" style={{ padding: '20px' }}>
+                        <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>📋 Intent Analysis</h3>
+                        {data.format && (
+                          <div style={{ marginBottom: '15px' }}>
+                            <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Content Format</h4>
+                            <p style={{ color: '#4CAF50', fontSize: '18px', fontWeight: 'bold' }}>{data.format}</p>
+                          </div>
+                        )}
+                        {data.rationale && (
+                          <div style={{ marginBottom: '15px' }}>
+                            <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Reasoning</h4>
+                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.rationale}</p>
+                          </div>
+                        )}
+                        {data.clarifying_questions && data.clarifying_questions.length > 0 && (
+                          <div>
+                            <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Clarifying Questions</h4>
+                            <ul style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
+                              {data.clarifying_questions.map((q: string, i: number) => (
+                                <li key={i} style={{ marginBottom: '8px' }}>{q}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  
+                  case 'quick_idea':
+                    return (
+                      <div className="quick-idea-data" style={{ padding: '20px' }}>
+                        <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>💡 Quick Idea</h3>
+                        {data.hook && (
+                          <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid #4CAF50' }}>
+                            <h4 style={{ color: '#4CAF50', fontSize: '18px', margin: '0 0 8px 0' }}>Hook</h4>
+                            <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>"{data.hook}"</p>
+                          </div>
+                        )}
+                        {data.angle && (
+                          <div style={{ marginBottom: '15px' }}>
+                            <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Angle</h4>
+                            <p style={{ color: '#e0e0e0', fontSize: '18px' }}>{data.angle}</p>
+                          </div>
+                        )}
+                        {data.description && (
+                          <div>
+                            <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Description</h4>
+                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  
+                  case 'trends':
+                    return (
+                      <div className="trends-data" style={{ padding: '20px' }}>
+                        <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>📈 Current Trends</h3>
+                        {Array.isArray(data) && data.map((trend: any, i: number) => (
+                          <div key={i} style={{ 
+                            marginBottom: '20px', 
+                            padding: '15px', 
+                            backgroundColor: '#1a1a1a', 
+                            borderRadius: '8px',
+                            border: '1px solid #333'
+                          }}>
+                            <h4 style={{ color: '#4CAF50', fontSize: '16px', margin: '0 0 8px 0' }}>{trend.title}</h4>
+                            <p style={{ color: '#e0e0e0', margin: '0 0 10px 0', lineHeight: '1.4' }}>{trend.snippet}</p>
+                            {trend.hooks && trend.hooks.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                {trend.hooks.map((hook: string, j: number) => (
+                                  <span key={j} style={{
+                                    padding: '4px 8px',
+                                    backgroundColor: '#4CAF50',
+                                    color: '#000',
+                                    borderRadius: '12px',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {hook}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  
+                  case 'ideation':
+                    return (
+                      <div className="ideation-data" style={{ padding: '20px' }}>
+                        <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>💭 Enhanced Ideas</h3>
+                        {Array.isArray(data) && data.map((idea: any, i: number) => (
+                          <div key={i} style={{ 
+                            marginBottom: '20px', 
+                            padding: '15px', 
+                            backgroundColor: '#1a1a1a', 
+                            borderRadius: '8px',
+                            border: '1px solid #4CAF50'
+                          }}>
+                            <div style={{ marginBottom: '10px' }}>
+                              <span style={{ color: '#4CAF50', fontSize: '14px', fontWeight: 'bold' }}>{idea.angle}</span>
+                            </div>
+                            <h4 style={{ color: '#fff', fontSize: '18px', margin: '0 0 8px 0' }}>"{idea.hook}"</h4>
+                            <p style={{ color: '#e0e0e0', margin: 0, lineHeight: '1.4' }}>{idea.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  
+                  default:
+                    return (
+                      <div className="generic-data" style={{ padding: '20px' }}>
+                        <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>📊 {step.toUpperCase()} Results</h3>
+                        <div style={{ 
+                          backgroundColor: '#1a1a1a', 
+                          padding: '15px', 
+                          borderRadius: '8px',
+                          border: '1px solid #333'
+                        }}>
+                          <pre style={{ 
+                            color: '#e0e0e0', 
+                            fontSize: '12px',
+                            margin: 0,
+                            whiteSpace: 'pre-wrap'
+                          }}>
+                            {JSON.stringify(data, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    );
+                }
+              };
+
+              return (
+                <div className="streaming-data-content">
+                  {renderDataUI(streamingData.data, streamingData.step)}
+                </div>
+              );
+            })()}
             {currentApiResponse?.ideas ? (
               <div className="ideas-content">
                 {/* Selected Idea - Priority Display */}
@@ -873,9 +1246,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : !(streamingData && streamingData.status === 'complete' && streamingData.data) ? (
               <div className="empty-content" style={{ color: '#666' }}>Selected idea and deliverables will appear here after you send a message</div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -891,6 +1264,68 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
           style={{ width: `${100 - ideaPaneWidthPercent}%` }}
         >
           <div className="pane-content">
+            {/* Show streaming status in details pane */}
+            {streamingData && !currentApiResponse?.detials && (() => {
+              console.log('🎨 [UI] Rendering streaming details component:', streamingData);
+              return (
+              <div className="streaming-details" style={{
+                padding: '20px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '12px',
+                border: streamingData.status === 'complete' ? '2px solid #4CAF50' : '2px solid #FF9800',
+                textAlign: 'center'
+              }}>
+                <h4 style={{ 
+                  color: streamingData.status === 'complete' ? '#4CAF50' : '#FF9800', 
+                  marginBottom: '15px' 
+                }}>
+                  {streamingData.status === 'complete' ? '✅ Step Complete' : '⚡ Processing'}
+                </h4>
+                <div style={{ color: '#f0f0f0', fontSize: '14px' }}>
+                  <div>Current Step: <strong>{streamingData.step}</strong></div>
+                  <div style={{ marginTop: '8px' }}>
+                    Status: <strong>{streamingData.status === 'complete' ? 'Completed' : 'In Progress...'}</strong>
+                  </div>
+                </div>
+                {streamingData.status === 'in_progress' && (
+                  <div className="processing-animation" style={{
+                    marginTop: '20px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#FF9800',
+                      borderRadius: '50%',
+                      animation: 'bounce 1.4s ease-in-out infinite both'
+                    }}></div>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#FF9800',
+                      borderRadius: '50%',
+                      animation: 'bounce 1.4s ease-in-out 0.16s infinite both'
+                    }}></div>
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#FF9800',
+                      borderRadius: '50%',
+                      animation: 'bounce 1.4s ease-in-out 0.32s infinite both'
+                    }}></div>
+                  </div>
+                )}
+                {streamingData.status === 'complete' && streamingData.data && (
+                  <div style={{ marginTop: '15px', fontSize: '12px', color: '#aaa' }}>
+                    ✅ Data available in left pane
+                  </div>
+                )}
+              </div>
+              );
+            })()}
             {currentApiResponse?.ideas || currentApiResponse?.detials ? (
               <div className="details-content">
                 
@@ -977,6 +1412,43 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                     )}
                   </div>
                 )}
+                
+                {/* Quick Idea Section */}
+                {currentApiResponse?.ideas?.quick_idea && (
+                  <div className="section">
+                    <h5 style={{ color: '#4CAF50', fontWeight: 'bold' }}>💡 Quick Idea</h5>
+                    <div className="quick-idea-card" style={{ 
+                      backgroundColor: '#0a0a0a', 
+                      border: '1px solid #4CAF50',
+                      borderRadius: '8px',
+                      marginBottom: '20px',
+                      padding: '15px'
+                    }}>
+                      <div className="quick-idea-hook" style={{ 
+                        color: '#4CAF50', 
+                        fontWeight: 'bold', 
+                        fontSize: '1.2em',
+                        marginBottom: '8px'
+                      }}>
+                        "{currentApiResponse.ideas.quick_idea.hook}"
+                      </div>
+                      <div className="quick-idea-angle" style={{ 
+                        color: '#f0f0f0', 
+                        fontWeight: '400', 
+                        marginBottom: '8px'
+                      }}>
+                        Angle: {currentApiResponse.ideas.quick_idea.angle}
+                      </div>
+                      <div className="quick-idea-description" style={{ 
+                        color: '#f6f6f6', 
+                        fontSize: '0.9em' 
+                      }}>
+                        {currentApiResponse.ideas.quick_idea.description}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Generated Ideas Section - Moved from Ideas Pane */}
                 {currentApiResponse?.ideas?.ideas && (
                   <div className="section">
@@ -1000,32 +1472,59 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId }) => {
                 )}
                 
               </div>
-            ) : (
+            ) : !streamingData ? (
               <div className="empty-content" style={{ color: '#666' }}>Analysis details and generated ideas will appear here after you send a message</div>
-            )}
+            ) : null}
           </div>
         </div>
-
+        </div>
+      ) : null}
         {/* Horizontal Resize Handle */}
         <div 
           className="resize-handle resize-handle-horizontal"
           onMouseDown={handleVerticalResize}
         />
-      </div>
-      ) : null}
+      
 
       {/* Chat Box - Full height when no content, bottom when content exists */}
       <div 
         className="chat-box"
         style={{ 
-          height: currentApiResponse?.ideas || currentApiResponse?.detials 
-            ? `${100 - topPanesHeightPercent}%` 
-            : '100%' 
+          height: shouldShowTopRow ? `${100 - topPanesHeightPercent}%` : '100%' 
         }}
       >
         <div className="pane-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>Chat Assistant</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {isStreaming && (
+              <button
+                onClick={() => {
+                  console.log('🛑 [CAMPAIGN-EXPLORER] Stop stream button clicked');
+                  setIsStreaming(false);
+                  setStreamingStatus(null);
+                  disconnect();
+                }}
+                style={{
+                  backgroundColor: '#ff6b6b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'background-color 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ff5252'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ff6b6b'}
+              >
+                <span style={{ fontSize: '12px' }}>⏹</span>
+                Stop Stream
+              </button>
+            )}
             {campaignId && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}

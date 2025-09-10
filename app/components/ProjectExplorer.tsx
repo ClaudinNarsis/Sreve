@@ -1,8 +1,8 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface Project {
@@ -33,9 +33,14 @@ interface ProjectExplorerProps {
   onProjectSelect: (projectId: string | null) => void;
 }
 
-export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, onCreateProjectClick, selectedProjectId, onProjectSelect }: ProjectExplorerProps) {
+export interface ProjectExplorerRef {
+  refreshData: () => void;
+}
+
+const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ onCampaignSelect, selectedCampaignId, onCreateProjectClick, selectedProjectId, onProjectSelect }, ref) => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const [projects, setProjects] = useState<Project[]>([]);
   const [campaigns, setCampaigns] = useState<Record<string, Campaign[]>>({});
   const [loading, setLoading] = useState(true);
@@ -50,12 +55,62 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
     }
   }, [isLoaded, user]);
 
+  // Add effect to refresh data when component becomes visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isLoaded && user) {
+        console.log('🔄 Page became visible, refreshing projects...');
+        fetchProjects();
+      }
+    };
+
+    const handleFocus = () => {
+      if (isLoaded && user) {
+        console.log('🔄 Window focused, refreshing projects...');
+        fetchProjects();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isLoaded, user]);
+
+  // Listen to pathname changes to refresh data when navigating back to /app
+  useEffect(() => {
+    if (pathname === '/app' && isLoaded && user) {
+      console.log('🔄 Navigated to /app, refreshing projects...');
+      fetchProjects();
+    }
+  }, [pathname, isLoaded, user]);
+
+  // Expose refresh method to parent components
+  useImperativeHandle(ref, () => ({
+    refreshData: () => {
+      if (isLoaded && user) {
+        console.log('🔄 External refresh triggered...');
+        fetchProjects();
+      }
+    }
+  }), [isLoaded, user]);
+
   const fetchProjects = async () => {
     console.log('🔍 Fetching user projects...');
     setLoading(true);
 
     try {
-      const response = await fetch('/api/projects');
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/projects?t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       console.log('📋 Projects response:', data);
 
@@ -79,7 +134,14 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
     setLoadingCampaigns(prev => new Set([...prev, projectId]));
 
     try {
-      const response = await fetch(`/api/campaigns?projectId=${projectId}`);
+      // Add timestamp to prevent caching  
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/campaigns?projectId=${projectId}&t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await response.json();
       console.log('📋 Campaigns response:', data);
 
@@ -106,14 +168,25 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
   };
 
   const toggleProject = (projectId: string) => {
+    const wasExpanded = expandedProjects.has(projectId);
+    
     setExpandedProjects(prev => {
       const newSet = new Set(prev);
       if (newSet.has(projectId)) {
         newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+      }
+      return newSet;
+    });
+
+    // Handle state updates and callbacks after the main state update
+    // Use setTimeout to ensure these happen in the next tick
+    setTimeout(() => {
+      if (wasExpanded) {
         setSelectedProject(null);
         onProjectSelect(null); // Deselect project in parent
       } else {
-        newSet.add(projectId);
         setSelectedProject(projectId);
         onProjectSelect(projectId); // Select project in parent
         // Fetch campaigns when expanding
@@ -121,8 +194,7 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
           fetchCampaigns(projectId);
         }
       }
-      return newSet;
-    });
+    }, 0);
   };
 
   const getProjectName = (project: Project) => {
@@ -280,4 +352,8 @@ export default function ProjectExplorer({ onCampaignSelect, selectedCampaignId, 
       )}
     </div>
   );
-}
+});
+
+ProjectExplorer.displayName = 'ProjectExplorer';
+
+export default ProjectExplorer;

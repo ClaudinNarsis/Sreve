@@ -37,9 +37,10 @@ interface Question {
 
 interface ProjectDetailsExplorerProps {
   projectId: string | null;
+  onDataChange?: () => void;
 }
 
-const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ projectId }) => {
+const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ projectId, onDataChange }) => {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,6 +201,9 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
         // Update local project state
         setProject(data.project);
         
+        // Notify parent to refresh sidebar data (project name might have changed)
+        onDataChange?.();
+        
       } else {
         console.error('❌ Project update failed:', data);
         toast.error(`❌ ${data.error || 'Failed to save project'}`, {
@@ -240,6 +244,9 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
         toast.success(`Project deleted successfully! ${summary.campaignsDeleted} campaigns and their chat messages were also deleted.`, {
           duration: 6000,
         });
+        
+        // Notify parent to refresh sidebar data
+        onDataChange?.();
         
         // Navigate back to home/projects page
         router.push('/');

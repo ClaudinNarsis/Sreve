@@ -11,7 +11,7 @@ class WebSocketManager {
   private subscribers: Set<(status: WebSocketStatus, message?: WebSocketMessage) => void> = new Set();
   private reconnectTimeout: NodeJS.Timeout | undefined;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 0;
+  private maxReconnectAttempts = 3;
   private isConnecting = false;
 
   static getInstance(): WebSocketManager {
@@ -90,10 +90,12 @@ class WebSocketManager {
         
         if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
           this.notifySubscribers('reconnecting');
+          const delay = 1000 * (this.reconnectAttempts + 1);
           this.reconnectTimeout = setTimeout(() => {
             this.reconnectAttempts++;
+            console.log(`🔄 [WEBSOCKET-MANAGER] Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
             this.connect(url);
-          }, 1000);
+          }, delay);
         } else {
           const finalStatus = this.reconnectAttempts >= this.maxReconnectAttempts ? 'error' : 'disconnected';
           this.notifySubscribers(finalStatus);
@@ -162,13 +164,18 @@ export interface WebSocketMessage {
   type: 'start' | 'stream' | 'complete' | 'error';
   message?: string;
   query?: string;
+  step?: 'start' | 'intent' | 'quick_idea' | 'examples' | 'trends' | 'ideation' | 'selection' | 'script' | 'critique' | 'packaging' | 'complete';
+  status?: 'in_progress' | 'complete';
+  topic?: string;
   data?: {
-    step: string;
+    step: 'start' | 'intent' | 'quick_idea' | 'examples' | 'trends' | 'ideation' | 'selection' | 'script' | 'critique' | 'packaging' | 'complete';
     message: string;
-    status: string;
+    status: 'in_progress' | 'complete';
     data?: any;
     result?: any;
+    topic?: string;
   };
+  result?: any;
   error?: string;
 }
 
