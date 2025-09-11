@@ -11,7 +11,7 @@ export default function Onboarding() {
     Cookies.set("onboarding_complete", "true", { expires: 365 });
 
     const timer = setTimeout(() => {
-      router.push("/create-project");
+      router.push("/app");
     }, 3000);
 
     return () => clearTimeout(timer);

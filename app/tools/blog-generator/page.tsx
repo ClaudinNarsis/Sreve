@@ -18,7 +18,7 @@ export default function BlogGeneratorPage() {
         length: blogLength,
         tone: tone
       });
-      window.location.href = `/create-project?type=blog&${params.toString()}`;
+      window.location.href = `/app?type=blog&${params.toString()}`;
     }
   };
 
@@ -337,7 +337,7 @@ export default function BlogGeneratorPage() {
           </p>
           
           <SignedIn>
-            <Link href="/create-project?type=blog">
+            <Link href="/app?type=blog">
               <button style={{
                 backgroundColor: 'white',
                 color: '#ff6600',

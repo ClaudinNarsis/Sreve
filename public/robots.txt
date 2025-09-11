@@ -2,7 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /onboarding
-Disallow: /create-project
 Disallow: /app
 Disallow: /dev-test
 Disallow: /sample
