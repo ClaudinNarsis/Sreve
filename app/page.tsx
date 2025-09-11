@@ -212,7 +212,7 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [router, isLoaded, isSignedIn]);
 
-  const handleGenerateClick = () => {
+  const handleGenerateClick = async () => {
     console.log('🎯 [LANDING] Generate button clicked');
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
     const inputText = promptInput?.innerText?.trim() || '';
@@ -228,15 +228,113 @@ export default function HomePage() {
         console.log('🎯 [LANDING] Redirecting to sample page');
         router.push(`/sample?prompt=${encodeURIComponent(matchingResponse.prompt)}&answer=${encodeURIComponent(matchingResponse.answer)}`);
       } else {
-        console.log('🎯 [LANDING] Storing prompt in sessionStorage for post-auth processing');
-        // Store prompt in sessionStorage to survive auth redirects
-        sessionStorage.setItem('pendingPrompt', inputText);
-        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
-        
-        console.log('🎯 [LANDING] Triggering sign-in flow');
-        // Trigger sign-in - user will be redirected through auth flow and return to app
-        const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
-        signInButton?.click();
+        // Check if auth is loaded and user is signed in
+        if (isLoaded && isSignedIn) {
+          console.log('🎯 [LANDING] User is signed in, creating project and campaign directly');
+          
+          // Show loading state
+          setIsAutoCreating(true);
+          setCreationProgress('Setting up your project...');
+          
+          try {
+            // Create project with placeholder data
+            console.log('🎯 [LANDING] Creating project with placeholder data...');
+            
+            const projectResponse = await fetch('/api/projects', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                answers: {
+                  1: "New Brand", // Brand Name - only required field
+                  2: "", // Website - empty
+                  3: "", // Description - empty
+                  4: "", // Brand Voice - empty
+                  5: [], // Brand Assets - empty
+                  6: "" // Additional Info - empty
+                },
+                questions: [] // We'll load questions in the API if needed
+              }),
+            });
+
+            const projectData = await projectResponse.json();
+            console.log('🎯 [LANDING] Project creation response:', projectData);
+
+            if (projectResponse.ok && projectData.success) {
+              console.log('🎯 [LANDING] ✅ Project created successfully:', projectData.project);
+              setCreationProgress('Creating your campaign...');
+              
+              // Create campaign with the prompt
+              console.log('🎯 [LANDING] Creating campaign with prompt:', inputText);
+              
+              const campaignResponse = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  projectId: projectData.project.projectId,
+                  name: `Campaign from prompt`,
+                  description: `Auto-created campaign from: ${inputText.substring(0, 100)}...`
+                }),
+              });
+
+              const campaignData = await campaignResponse.json();
+              console.log('🎯 [LANDING] Campaign creation response:', campaignData);
+              
+              if (campaignResponse.ok && campaignData.success) {
+                console.log('🎯 [LANDING] ✅ Campaign created successfully:', campaignData.campaign);
+                setCreationProgress('Almost ready...');
+                
+                // Store initial prompt for the campaign
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, inputText);
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}_timestamp`, Date.now().toString());
+                
+                // Navigate to app with campaign selected
+                setTimeout(() => {
+                  setCreationProgress('Success! Opening your campaign...');
+                  const redirectUrl = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${projectData.project.projectId}`;
+                  console.log('🎯 [LANDING] Redirecting to:', redirectUrl);
+                  window.location.href = redirectUrl;
+                }, 1000);
+                
+              } else {
+                console.error('🎯 [LANDING] ❌ Failed to create campaign:', campaignData);
+                setCreationProgress('');
+                setIsAutoCreating(false);
+                // Redirect to app even if campaign creation fails
+                setTimeout(() => {
+                  router.push('/app');
+                }, 1000);
+              }
+              
+            } else {
+              console.error('🎯 [LANDING] ❌ Failed to create project:', projectData);
+              setCreationProgress('');
+              setIsAutoCreating(false);
+            }
+            
+          } catch (error) {
+            console.error('🎯 [LANDING] ❌ Error in creation flow:', error);
+            setCreationProgress('');
+            setIsAutoCreating(false);
+          }
+        } else if (isLoaded && !isSignedIn) {
+          console.log('🎯 [LANDING] User not signed in, storing prompt for post-auth processing');
+          // Store prompt in sessionStorage to survive auth redirects
+          sessionStorage.setItem('pendingPrompt', inputText);
+          sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+          
+          console.log('🎯 [LANDING] Triggering sign-in flow');
+          // Trigger sign-in - user will be redirected through auth flow and return to app
+          const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
+          signInButton?.click();
+        } else {
+          console.log('🎯 [LANDING] Auth not loaded yet, please wait');
+          // Auth not loaded yet - could show a loading indicator or just ignore the click
+          return;
+        }
       }
     } else {
       console.log('🎯 [LANDING] No input text provided');
