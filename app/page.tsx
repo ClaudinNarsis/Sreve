@@ -15,6 +15,8 @@ export default function HomePage() {
   const router = useRouter();
   console.log('🎯 [LANDING] HomePage component loaded');
   const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
+  const [creationProgress, setCreationProgress] = useState<string>('');
 
   const loadSampleResponses = useMemo(() => {
     let controller: AbortController | null = null;
@@ -40,7 +42,7 @@ export default function HomePage() {
   useEffect(() => {
     console.log('🎯 [LANDING] Checking for pending prompts after potential auth redirect');
     
-    const checkPendingPromptOnLanding = () => {
+    const checkPendingPromptOnLanding = async () => {
       const pendingPrompt = sessionStorage.getItem('pendingPrompt');
       const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
       
@@ -56,12 +58,108 @@ export default function HomePage() {
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
         
         if (timestamp > fiveMinutesAgo) {
-          console.log('🎯 [LANDING] Found valid pending prompt after auth, redirecting to create-project');
+          console.log('🎯 [LANDING] Found valid pending prompt after auth, auto-creating project');
           
-          // Small delay to ensure auth state is fully settled
-          setTimeout(() => {
-            router.push('/create-project');
-          }, 1000);
+          // Show loading state
+          setIsAutoCreating(true);
+          setCreationProgress('Setting up your project...');
+          
+          try {
+            // Create project with placeholder data
+            console.log('🎯 [LANDING] Creating project with placeholder data...');
+            
+            const projectResponse = await fetch('/api/projects', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                answers: {
+                  1: "New Brand", // Brand Name - only required field
+                  2: "", // Website - empty
+                  3: "", // Description - empty
+                  4: "", // Brand Voice - empty
+                  5: [], // Brand Assets - empty
+                  6: "" // Additional Info - empty
+                },
+                questions: [] // We'll load questions in the API if needed
+              }),
+            });
+
+            const projectData = await projectResponse.json();
+            console.log('🎯 [LANDING] Project creation response:', projectData);
+
+            if (projectResponse.ok && projectData.success) {
+              console.log('🎯 [LANDING] ✅ Project created successfully:', projectData.project);
+              setCreationProgress('Creating your campaign...');
+              
+              // Create campaign with the prompt
+              console.log('🎯 [LANDING] Creating campaign with prompt:', pendingPrompt);
+              
+              const campaignResponse = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  projectId: projectData.project.projectId,
+                  name: `Campaign from prompt`,
+                  description: `Auto-created campaign from: ${pendingPrompt.substring(0, 100)}...`
+                }),
+              });
+
+              const campaignData = await campaignResponse.json();
+              console.log('🎯 [LANDING] Campaign creation response:', campaignData);
+              
+              if (campaignResponse.ok && campaignData.success) {
+                console.log('🎯 [LANDING] ✅ Campaign created successfully:', campaignData.campaign);
+                setCreationProgress('Almost ready...');
+                
+                // Store initial prompt for the campaign
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, pendingPrompt);
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}_timestamp`, Date.now().toString());
+                
+                // Clear the pending prompt
+                sessionStorage.removeItem('pendingPrompt');
+                sessionStorage.removeItem('pendingPromptTimestamp');
+                
+                // Navigate to app with campaign selected
+                setTimeout(() => {
+                  setCreationProgress('Success! Opening your campaign...');
+                  const redirectUrl = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${projectData.project.projectId}`;
+                  console.log('🎯 [LANDING] Redirecting to:', redirectUrl);
+                  window.location.href = redirectUrl;
+                }, 1000);
+                
+              } else {
+                console.error('🎯 [LANDING] ❌ Failed to create campaign:', campaignData);
+                setCreationProgress('');
+                setIsAutoCreating(false);
+                // Clear pending prompt and redirect to app
+                sessionStorage.removeItem('pendingPrompt');
+                sessionStorage.removeItem('pendingPromptTimestamp');
+                setTimeout(() => {
+                  router.push('/app');
+                }, 1000);
+              }
+              
+            } else {
+              console.error('🎯 [LANDING] ❌ Failed to create project:', projectData);
+              setCreationProgress('');
+              setIsAutoCreating(false);
+              // Clear pending prompt on failure
+              sessionStorage.removeItem('pendingPrompt');
+              sessionStorage.removeItem('pendingPromptTimestamp');
+            }
+            
+          } catch (error) {
+            console.error('🎯 [LANDING] ❌ Error in auto-creation flow:', error);
+            setCreationProgress('');
+            setIsAutoCreating(false);
+            // Clear pending prompt on error
+            sessionStorage.removeItem('pendingPrompt');
+            sessionStorage.removeItem('pendingPromptTimestamp');
+          }
         } else {
           console.log('🎯 [LANDING] Pending prompt expired, clearing');
           sessionStorage.removeItem('pendingPrompt');
@@ -227,6 +325,53 @@ export default function HomePage() {
       setTimeout(() => { window.location.href = url; }, 20);
     }
   };
+
+  // Show loading screen when auto-creating project/campaign
+  if (isAutoCreating) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100vh', 
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            border: '4px solid #333', 
+            borderTop: '4px solid #ff6600', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 2rem auto'
+          }}></div>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>
+            Getting your campaign ready...
+          </h2>
+          <p style={{ 
+            fontSize: '1rem', 
+            color: '#ccc', 
+            marginBottom: '1rem',
+            opacity: '0.8'
+          }}>
+            {creationProgress}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#999' }}>
+            This will just take a moment
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <>
