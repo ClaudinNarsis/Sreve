@@ -8,11 +8,12 @@ const LazyTestimonials = dynamic(() => import('./components/LazyTestimonials'), 
   loading: () => <div style={{ height: '400px', backgroundColor: '#f8f8f8' }} />
 });
 import React, { useEffect, useState, useMemo } from 'react';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   console.log('🎯 [LANDING] HomePage component loaded');
   const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
   const [isAutoCreating, setIsAutoCreating] = useState(false);
@@ -38,9 +39,47 @@ export default function HomePage() {
     loadSampleResponses();
   }, [loadSampleResponses]);
 
+  // Clear any stale sessionStorage data on component mount (helps with production caching issues)
+  useEffect(() => {
+    // Clear any old create-project related data
+    const keysToCheck = ['pendingPrompt', 'pendingPromptTimestamp'];
+    keysToCheck.forEach(key => {
+      const value = sessionStorage.getItem(key);
+      if (value) {
+        console.log(`🧹 [LANDING] Found stale sessionStorage key: ${key}, checking if valid...`);
+        
+        // If it's a timestamp, check if it's expired (older than 5 minutes)
+        if (key.includes('Timestamp')) {
+          const timestamp = parseInt(value);
+          const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+          if (timestamp < fiveMinutesAgo) {
+            console.log(`🧹 [LANDING] Clearing expired ${key}`);
+            sessionStorage.removeItem(key);
+            // Also clear the corresponding prompt
+            sessionStorage.removeItem(key.replace('Timestamp', ''));
+          }
+        }
+      }
+    });
+  }, []);
+
   // Check for pending prompts after auth redirect to landing page
   useEffect(() => {
     console.log('🎯 [LANDING] Checking for pending prompts after potential auth redirect');
+    
+    // Only proceed if authentication is loaded and user is signed in
+    if (!isLoaded) {
+      console.log('🎯 [LANDING] Auth not loaded yet, skipping prompt check');
+      return;
+    }
+    
+    if (!isSignedIn) {
+      console.log('🎯 [LANDING] User not signed in, clearing any pending prompts and skipping redirect');
+      // Clear any stale prompts for unauthenticated users
+      sessionStorage.removeItem('pendingPrompt');
+      sessionStorage.removeItem('pendingPromptTimestamp');
+      return;
+    }
     
     const checkPendingPromptOnLanding = async () => {
       const pendingPrompt = sessionStorage.getItem('pendingPrompt');
@@ -171,7 +210,7 @@ export default function HomePage() {
     // Delay to ensure auth state is settled
     const timer = setTimeout(checkPendingPromptOnLanding, 2000);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, isLoaded, isSignedIn]);
 
   const handleGenerateClick = () => {
     console.log('🎯 [LANDING] Generate button clicked');
