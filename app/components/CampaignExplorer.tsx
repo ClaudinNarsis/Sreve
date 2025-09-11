@@ -87,6 +87,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   }, [streamingData]);
   const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -414,6 +415,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         timestamp: new Date()
       };
 
+      // Store the user message for potential restoration if webhook fails
+      setLastUserMessage(pendingMessage);
+
       setMessages(prev => [...prev, userMessage]);
       setStreamingStatus('Sending message...');
       
@@ -434,6 +438,14 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         console.error('❌ [CAMPAIGN-EXPLORER] Failed to send pending message');
         setStreamingStatus('❌ Failed to send message');
         setIsStreaming(false);
+        // If sending fails, restore the message in the textbox for user to retry
+        setInputMessage(pendingMessage);
+        // Remove the user message from chat since it failed to send
+        setMessages(prev => prev.slice(0, -1));
+        setLastUserMessage(null);
+      } else {
+        // Clear the input message when successfully sent
+        setInputMessage('');
       }
 
       // Clear pending message
@@ -565,6 +577,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         setIsStreaming(false);
         setStreamingStatus(null);
         
+        // Clear the stored user message since the generation completed successfully
+        setLastUserMessage(null);
+        
         // Build final result from streaming data and previous steps
         const finalResult = buildFinalResultFromStreaming(streamingData, allStreamingSteps.current);
         if (finalResult) {
@@ -669,6 +684,25 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         setIsStreaming(false);
         setStreamingStatus(null);
         setStreamingData(null);
+        
+        // Restore the last user message to the textbox for retry
+        if (lastUserMessage) {
+          console.log('🔄 [WEBSOCKET] Restoring user message to textbox after error:', lastUserMessage);
+          setInputMessage(lastUserMessage);
+          
+          // Remove the user message from chat history since it failed to process
+          setMessages(prev => {
+            const filteredMessages = prev.filter(msg => 
+              !(msg.sender === 'user' && msg.text === lastUserMessage && 
+                Math.abs(new Date(msg.timestamp).getTime() - Date.now()) < 60000) // Within last minute
+            );
+            console.log('🗑️ [WEBSOCKET] Removed failed user message from chat, remaining messages:', filteredMessages.length);
+            return filteredMessages;
+          });
+          
+          // Clear the stored message after restoration
+          setLastUserMessage(null);
+        }
         
         const errorMessage: ChatMessage = {
           id: (Date.now()).toString(),
@@ -810,6 +844,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
 
     console.log('🎯 [CAMPAIGN-EXPLORER] User message created:', userMessage);
     
+    // Store the user message for potential restoration if webhook fails
+    setLastUserMessage(userMessage.text);
+    
     setMessages(prev => {
       console.log('📝 [CAMPAIGN-EXPLORER] Adding user message to chat, current message count:', prev.length);
       return [...prev, userMessage];
@@ -852,6 +889,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
           'socket.send() threw exception'
         ]);
         console.error('🌐 [CAMPAIGN-EXPLORER] WebSocket endpoint being used:', process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_ENDPOINT);
+        
+        // Restore the message to textbox and remove from chat since it failed to send
+        setInputMessage(userMessage.text);
+        setMessages(prev => prev.slice(0, -1)); // Remove the last user message
+        setLastUserMessage(null); // Clear stored message
+        
         throw new Error('Failed to send message via WebSocket. Please check if the WebSocket endpoint is accessible.');
       }
 
@@ -872,6 +915,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         campaignId: campaignId,
         userMessageText: userMessage.text
       });
+      
+      // Restore the message to textbox since there was an error
+      setInputMessage(userMessage.text);
+      // Remove the user message from chat since it failed to process
+      setMessages(prev => prev.slice(0, -1));
+      setLastUserMessage(null);
       
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
