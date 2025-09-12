@@ -17,7 +17,7 @@ export default function ViralPostGeneratorPage() {
         style: postStyle,
         cta: callToAction
       }); 
-      window.location.href = `/create-project?type=viral-post&${params.toString()}`;
+      window.location.href = `/app?type=viral-post&${params.toString()}`;
     }
   };
 
@@ -388,7 +388,7 @@ export default function ViralPostGeneratorPage() {
           </p>
           
           <SignedIn>
-            <Link href="/create-project?type=viral-post">
+            <Link href="/app?type=viral-post">
               <button style={{
                 backgroundColor: 'white',
                 color: '#ff6600',

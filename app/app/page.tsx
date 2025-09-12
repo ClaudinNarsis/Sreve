@@ -3,14 +3,14 @@
 import Link from "next/link";
 import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import ProjectExplorer from "../components/ProjectExplorer";
+import ProjectExplorer, { ProjectExplorerRef } from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import CampaignExplorer from "../components/CampaignExplorer";
 import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
 
@@ -42,9 +42,14 @@ interface QuestionsData {
   questions: Question[];
 }
 
-export default function App() {
+function AppContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
+  const [creationProgress, setCreationProgress] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     if (selectedProjectId === null) {
@@ -52,10 +57,179 @@ export default function App() {
     }
   }, [selectedProjectId]);
 
+  // Handle URL parameters for auto-selecting campaign
+  useEffect(() => {
+    const campaignId = searchParams.get('campaignId');
+    const projectId = searchParams.get('projectId');
+    
+    console.log('🎯 [APP] URL parameters check:', { campaignId, projectId });
+    
+    if (campaignId && projectId) {
+      console.log('🎯 [APP] Auto-selecting campaign from URL:', { campaignId, projectId });
+      setSelectedCampaignId(campaignId);
+      setSelectedProjectId(projectId);
+      setViewMode('campaignExplorer');
+      
+      // Don't clear URL parameters immediately - let them persist for proper campaign selection
+      console.log('🎯 [APP] URL parameters processed, keeping them for campaign selection');
+    } else {
+      console.log('🎯 [APP] No URL parameters to process');
+    }
+  }, [searchParams]);
+
+  // Check for pending prompts after auth and auto-process them
+  useEffect(() => {
+    console.log('🎯 [APP] useEffect for pending prompt check triggered');
+    
+    const checkPendingPrompt = async () => {
+      console.log('🎯 [APP] checkPendingPrompt function called');
+      const pendingPrompt = sessionStorage.getItem('pendingPrompt');
+      const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
+      
+      console.log('🎯 [APP] Checking for pending prompt:', { 
+        hasPendingPrompt: !!pendingPrompt,
+        pendingPrompt: pendingPrompt,
+        timestamp: pendingTimestamp 
+      });
+      
+      if (pendingPrompt && pendingTimestamp) {
+        // Check if prompt is still fresh (5 minutes)
+        const timestamp = parseInt(pendingTimestamp);
+        const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+        
+        if (timestamp > fiveMinutesAgo) {
+          console.log('🎯 [APP] Found valid pending prompt, auto-creating project and campaign');
+          
+          // Show loading state
+          setIsAutoCreating(true);
+          setCreationProgress('Setting up your project...');
+          
+          try {
+            // Create project with placeholder data
+            console.log('🎯 [APP] Creating project with placeholder data...');
+            
+            const projectResponse = await fetch('/api/projects', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                answers: {
+                  1: "New Brand", // Brand Name - only required field
+                  2: "", // Website - empty
+                  3: "", // Description - empty
+                  4: "", // Brand Voice - empty
+                  5: [], // Brand Assets - empty
+                  6: "" // Additional Info - empty
+                },
+                questions: [] // We'll load questions in the API if needed
+              }),
+            });
+
+            const projectData = await projectResponse.json();
+            console.log('🎯 [APP] Project creation response:', projectData);
+
+            if (projectResponse.ok && projectData.success) {
+              console.log('🎯 [APP] ✅ Project created successfully:', projectData.project);
+              setCreationProgress('Creating your campaign...');
+              
+              // Create campaign with the prompt
+              console.log('🎯 [APP] Creating campaign with prompt:', pendingPrompt);
+              
+              const campaignResponse = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  projectId: projectData.project.projectId,
+                  name: `Campaign from prompt`,
+                  description: `Auto-created campaign from: ${pendingPrompt.substring(0, 100)}...`
+                }),
+              });
+
+              const campaignData = await campaignResponse.json();
+              console.log('🎯 [APP] Campaign creation response:', campaignData);
+              
+              if (campaignResponse.ok && campaignData.success) {
+                console.log('🎯 [APP] ✅ Campaign created successfully:', campaignData.campaign);
+                setCreationProgress('Almost ready...');
+                
+                // Store initial prompt for the campaign
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, pendingPrompt);
+                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}_timestamp`, Date.now().toString());
+                
+                // Clear the pending prompt
+                sessionStorage.removeItem('pendingPrompt');
+                sessionStorage.removeItem('pendingPromptTimestamp');
+                
+                // Show success message and refresh the page
+                setTimeout(() => {
+                  setCreationProgress('Success! Opening your campaign...');
+                  console.log('🎯 [APP] Refreshing page to open campaign:', campaignData.campaign.campaignId);
+                  
+                  // Refresh the page with the campaign selected
+                  window.location.href = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${projectData.project.projectId}`;
+                }, 1000);
+                
+              } else {
+                console.error('🎯 [APP] ❌ Failed to create campaign:', campaignData);
+                setCreationProgress('');
+                setIsAutoCreating(false);
+                toast.error('Failed to create campaign. Please try again.');
+                // Clear pending prompt on campaign creation failure
+                sessionStorage.removeItem('pendingPrompt');
+                sessionStorage.removeItem('pendingPromptTimestamp');
+              }
+              
+            } else {
+              console.error('🎯 [APP] ❌ Failed to create project:', projectData);
+              setCreationProgress('');
+              setIsAutoCreating(false);
+              toast.error('Failed to create project. Please try again.');
+              // Clear pending prompt on project creation failure
+              sessionStorage.removeItem('pendingPrompt');
+              sessionStorage.removeItem('pendingPromptTimestamp');
+            }
+            
+          } catch (error) {
+            console.error('🎯 [APP] ❌ Error in auto-creation flow:', error);
+            setCreationProgress('');
+            setIsAutoCreating(false);
+            toast.error('Something went wrong. Please try again.');
+            // Clear pending prompt on error
+            sessionStorage.removeItem('pendingPrompt');
+            sessionStorage.removeItem('pendingPromptTimestamp');
+          }
+        } else {
+          console.log('🎯 [APP] Pending prompt expired, clearing');
+          sessionStorage.removeItem('pendingPrompt');
+          sessionStorage.removeItem('pendingPromptTimestamp');
+        }
+      }
+    };
+
+    // Small delay to ensure auth state is settled
+    const timer = setTimeout(checkPendingPrompt, 1000);
+    return () => clearTimeout(timer);
+  }, [router]);
+
   const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
   const { isCreating } = useAutoCreateUser();
-  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
+  const projectExplorerRef = useRef<ProjectExplorerRef>(null);
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+
+  // Refresh sidebar when switching back to campaignExplorer view
+  useEffect(() => {
+    if (viewMode === 'campaignExplorer') {
+      console.log('🔄 Switched to campaignExplorer view, refreshing sidebar...');
+      // Small delay to ensure component is mounted
+      setTimeout(() => {
+        projectExplorerRef.current?.refreshData();
+      }, 100);
+    }
+  }, [viewMode]);
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [loading, setLoading] = useState(true);
@@ -192,11 +366,17 @@ export default function App() {
           });
         }, 1000);
 
-        // Navigate to app page after success
-        console.log('🔄 Redirecting to app page...');
+        // Clear states and navigate back to project list view
+        console.log('🔄 Returning to project list...');
+        setViewMode('campaignExplorer');
+        setAnswers({});
+        setCurrentStep(1);
+        
+        // Force sidebar re-mount and refresh
+        setSidebarRefreshKey(prev => prev + 1);
         setTimeout(() => {
-          router.push('/app');
-        }, 2000);
+          projectExplorerRef.current?.refreshData();
+        }, 500);
 
       } else {
         console.error('❌ Project creation failed:', data);
@@ -336,14 +516,62 @@ export default function App() {
     return <div>Question not found</div>;
   }
 
+  // Show loading screen when auto-creating project/campaign
+  if (isAutoCreating) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100vh', 
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
+          <div style={{ 
+            width: '60px', 
+            height: '60px', 
+            border: '4px solid #333', 
+            borderTop: '4px solid #ff6600', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 2rem auto'
+          }}></div>
+          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>
+            Getting your campaign ready...
+          </h2>
+          <p style={{ 
+            fontSize: '1rem', 
+            color: '#ccc', 
+            marginBottom: '1rem',
+            opacity: '0.8'
+          }}>
+            {creationProgress}
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#999' }}>
+            This will just take a moment
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <>
       <header className="header">
         <Link href="/" aria-label="Sreve home">
-          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
+          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button className="sidebar-toggle" onClick={() => {
+          {!isStreaming && (
+            <button className="sidebar-toggle" onClick={() => {
             const sidebar = document.querySelector('.file-sidebar');
             sidebar?.classList.toggle('open');
           }}>
@@ -353,6 +581,7 @@ export default function App() {
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
+          )}
           <SignedOut>
             <SignInButton mode="modal">
               <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
@@ -364,19 +593,26 @@ export default function App() {
         </div>
       </header>
       <div className="app-layout">
-        <aside className="file-sidebar" id="sidebar">
+        <aside 
+          className="file-sidebar" 
+          id="sidebar"
+          style={{ 
+            display: isStreaming ? 'none' : 'block',
+            transition: 'all 0.3s ease'
+          }}
+        >
           <button className="collapse-btn" onClick={() => {
             const sidebar = document.getElementById('sidebar');
             const layout = document.querySelector('.app-layout');
             sidebar?.classList.toggle('collapsed');
             layout?.classList.toggle('sidebar-collapsed');
           }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9,18 15,12 9,6"></polyline>
-            </svg>
+            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
           </button>
           <SignedIn>
             <ProjectExplorer 
+              key={sidebarRefreshKey}
+              ref={projectExplorerRef}
               onCampaignSelect={(campaignId, projectId) => {
                 setSelectedCampaignId(campaignId);
                 setSelectedProjectId(projectId);
@@ -398,9 +634,25 @@ export default function App() {
             </div>
           </SignedOut>
         </aside>
-        <main className="main-content">
-          {viewMode === 'campaignExplorer' ? (
-            <CampaignExplorer campaignId={selectedCampaignId} />
+        <main 
+          className="main-content"
+          style={{
+            width: isStreaming ? '100%' : undefined,
+            transition: 'width 0.3s ease'
+          }}
+        >
+          {viewMode === 'campaignExplorer' && selectedCampaignId ? (
+            <CampaignExplorer 
+              campaignId={selectedCampaignId} 
+              onStreamingStateChange={setIsStreaming}
+              onDataChange={() => {
+                // Refresh sidebar when campaign data changes (delete/edit)
+                setSidebarRefreshKey(prev => prev + 1);
+                setTimeout(() => {
+                  projectExplorerRef.current?.refreshData();
+                }, 100);
+              }}
+            />
           ) : viewMode === 'createProject' ? (
             <div className="overall">
               <div className="create-project">
@@ -459,11 +711,68 @@ export default function App() {
                 </main>
               </div>
             </div>
+          ) : viewMode === 'projectDetails' && selectedProjectId ? (
+            <ProjectDetailsExplorer 
+              projectId={selectedProjectId}
+              onDataChange={() => {
+                // Refresh sidebar when project data changes (delete/edit)
+                setSidebarRefreshKey(prev => prev + 1);
+                setTimeout(() => {
+                  projectExplorerRef.current?.refreshData();
+                }, 100);
+              }}
+            />
           ) : (
-            <ProjectDetailsExplorer projectId={selectedProjectId} />
+            // Default empty state when nothing is selected
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: '#ccc',
+              textAlign: 'center',
+              padding: '2rem'
+            }}>
+              <div style={{ maxWidth: '400px' }}>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  marginBottom: '1rem',
+                  color: '#fff'
+                }}>
+                  Welcome to Sreve
+                </h2>
+                <p style={{ 
+                  fontSize: '1rem',
+                  lineHeight: '1.5',
+                  marginBottom: '2rem',
+                  opacity: '0.8'
+                }}>
+                  Select a project from the sidebar to get started, or create a new project to begin generating creative content.
+                </p>
+                <button 
+                  className="cta-button"
+                  onClick={() => setViewMode('createProject')}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Create New Project
+                </button>
+              </div>
+            </div>
           )}
         </main>
       </div>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AppContent />
+    </Suspense>
   );
 }

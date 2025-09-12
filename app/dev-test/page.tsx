@@ -187,7 +187,7 @@ export default function DevTest() {
                 App Page
               </button>
             </Link>
-            <Link href="/create-project">
+            <Link href="/app">
               <button style={{
                 backgroundColor: '#444',
                 color: '#fff',

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, DeleteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+
+// Force dynamic behavior to prevent caching
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 console.log('🔧 Single Campaign API endpoint loaded');
 
@@ -14,7 +18,8 @@ const client = new DynamoDBClient({
 });
 
 const docClient = DynamoDBDocumentClient.from(client);
-const TABLE_NAME = `Campaigns_${process.env.ENVIRONMENT}`;
+const CAMPAIGNS_TABLE = `Campaigns_${process.env.ENVIRONMENT}`;
+const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 export async function GET(
   request: NextRequest,
@@ -35,7 +40,7 @@ export async function GET(
     console.log('🔍 Fetching specific campaign:', campaignId);
     
     const getCommand = new GetCommand({
-      TableName: TABLE_NAME,
+      TableName: CAMPAIGNS_TABLE,
       Key: { userId, campaignId },
     });
 
@@ -56,6 +61,91 @@ export async function GET(
 
   } catch (error) {
     console.error('❌ Error in GET /api/campaigns/[campaignId]:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ campaignId: string }> }
+) {
+  console.log('🗑️ DELETE /api/campaigns/[campaignId] - Campaign deletion request received');
+  
+  try {
+    const { userId } = await auth();
+    console.log('👤 Authenticated user ID:', userId);
+    
+    if (!userId) {
+      console.log('❌ User not authenticated');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { campaignId } = await params;
+    console.log('🗑️ Deleting campaign:', campaignId);
+
+    // First verify the campaign exists and belongs to the user
+    const getCommand = new GetCommand({
+      TableName: CAMPAIGNS_TABLE,
+      Key: { userId, campaignId },
+    });
+
+    const existingCampaign = await docClient.send(getCommand);
+    
+    if (!existingCampaign.Item) {
+      console.log('❌ Campaign not found for deletion:', campaignId);
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
+
+    if (existingCampaign.Item.userId !== userId) {
+      console.log('❌ Unauthorized deletion attempt on campaign:', campaignId);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Delete all chat messages for this campaign
+    console.log('🔍 Finding chat messages for campaign:', campaignId);
+    const chatScanCommand = new ScanCommand({
+      TableName: CHAT_MESSAGES_TABLE,
+      FilterExpression: 'campaignId = :campaignId AND userId = :userId',
+      ExpressionAttributeValues: {
+        ':campaignId': campaignId,
+        ':userId': userId
+      }
+    });
+
+    const chatResult = await docClient.send(chatScanCommand);
+    const chatMessages = chatResult.Items || [];
+    console.log(`💬 Found ${chatMessages.length} chat messages to delete`);
+
+    // Delete each chat message
+    for (const message of chatMessages) {
+      const deleteChatCommand = new DeleteCommand({
+        TableName: CHAT_MESSAGES_TABLE,
+        Key: { chatMessageId: message.chatMessageId }
+      });
+      await docClient.send(deleteChatCommand);
+      console.log('🗑️ Deleted chat message:', message.chatMessageId);
+    }
+
+    // Delete the campaign
+    const deleteCampaignCommand = new DeleteCommand({
+      TableName: CAMPAIGNS_TABLE,
+      Key: { userId, campaignId },
+    });
+
+    await docClient.send(deleteCampaignCommand);
+    console.log('✅ Campaign deleted successfully:', campaignId);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Campaign and all related chat messages deleted successfully`,
+      summary: {
+        campaignDeleted: true,
+        chatMessagesDeleted: chatMessages.length
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error in DELETE /api/campaigns/[campaignId]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
