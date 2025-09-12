@@ -18,7 +18,7 @@ export default function DevTest() {
           const data = await response.json();
           setIsDev(data.isDev);
         }
-      } catch (error) {
+      } catch {
         console.log('Environment check failed, assuming production');
         setIsDev(false);
       } finally {

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 
@@ -19,7 +19,7 @@ const LazyTestimonials = dynamic(() => Promise.resolve(() => {
               loading="lazy" 
               sizes="80px" 
             />
-            <blockquote>"Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It's now a core part of our workflow."</blockquote>
+            <blockquote>&ldquo;Honestly, it felt like having a junior creative who gets it. We plugged in our product link, and Sreve gave us 10 ad options that we could instantly launch. It&apos;s now a core part of our workflow.&rdquo;</blockquote>
             <cite>— Priya, Performance Marketer, Beauty Startup</cite>
           </article>
           <article className="card">
@@ -32,7 +32,7 @@ const LazyTestimonials = dynamic(() => Promise.resolve(() => {
               loading="lazy" 
               sizes="80px" 
             />
-            <blockquote>"I've tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives"</blockquote>
+            <blockquote>&ldquo;I&apos;ve tried countless AI ad tools, but Sreve is the first that actually feels like it understands our products. We launched ads in 15 minutes that outperformed our best manually designed creatives&rdquo;</blockquote>
             <cite>— Arjun, Growth Lead, DTC Apparel Brand</cite>
           </article>
           <article className="card">
@@ -45,7 +45,7 @@ const LazyTestimonials = dynamic(() => Promise.resolve(() => {
               loading="lazy" 
               sizes="80px" 
             />
-            <blockquote>"As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling."</blockquote>
+            <blockquote>&ldquo;As an agency owner, kickoff phases used to drain hours. With Sreve, we generate scroll-stopping ad variations in minutes, letting our designers focus on strategy and storytelling.&rdquo;</blockquote>
             <cite>— Lisa, Founder</cite>
           </article>
         </div>

@@ -49,7 +49,16 @@ export async function POST(request: NextRequest) {
     console.log('🆔 Using message ID:', messageId);
 
     // Store message in DynamoDB format
-    const messageData: any = {
+    const messageData: {
+      chatMessageId: string;
+      campaignId: string;
+      userId: string;
+      message: string;
+      sender: string;
+      timestamp: string;
+      createdAt: string;
+      apiResponse?: unknown;
+    } = {
       chatMessageId: messageId, // Primary key expected by DynamoDB
       campaignId,
       userId,
@@ -83,11 +92,11 @@ export async function POST(request: NextRequest) {
       success: true
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in POST /api/chat/save-message:', error);
     
     return NextResponse.json({ 
-      error: error.message || 'Failed to save message. Please try again.',
+      error: error instanceof Error ? error.message : 'Failed to save message. Please try again.',
       success: false 
     }, { status: 500 });
   }

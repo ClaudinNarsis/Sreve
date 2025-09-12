@@ -261,6 +261,70 @@ export default function AIContentGeneratorPage() {
         </div>
       </section>
 
+      <section className="related-tools" style={{ background: '#f8f9fa', padding: '4rem 0' }}>
+        <div className="container">
+          <h2 style={{ textAlign: 'center', marginBottom: '3rem' }}>Boost Your Content Strategy</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            <Link href="/tools/ai-caption-generator" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '12px', 
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                transition: 'transform 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <h3 style={{ color: '#ff6600', marginBottom: '1rem' }}>📱 AI Caption Generator</h3>
+                <p style={{ color: '#333', marginBottom: '1rem' }}>Create engaging captions to promote your content on social media</p>
+                <span style={{ color: '#ff6600', fontWeight: 'bold' }}>Try Now →</span>
+              </div>
+            </Link>
+            <Link href="/tools/blog-idea-generator" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '12px', 
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                transition: 'transform 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <h3 style={{ color: '#ff6600', marginBottom: '1rem' }}>💡 Blog Idea Generator</h3>
+                <p style={{ color: '#333', marginBottom: '1rem' }}>Never run out of content topics with endless blog post ideas</p>
+                <span style={{ color: '#ff6600', fontWeight: 'bold' }}>Try Now →</span>
+              </div>
+            </Link>
+            <Link href="/tools/ai-sentence-rewriter" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '12px', 
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                transition: 'transform 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <h3 style={{ color: '#ff6600', marginBottom: '1rem' }}>✏️ AI Sentence Rewriter</h3>
+                <p style={{ color: '#333', marginBottom: '1rem' }}>Perfect your content by rewriting and improving sentences</p>
+                <span style={{ color: '#ff6600', fontWeight: 'bold' }}>Try Now →</span>
+              </div>
+            </Link>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+            <p style={{ fontSize: '1rem', color: '#666', marginBottom: '1rem' }}>
+              Learn more about AI copywriting: <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: '#ff6600', textDecoration: 'underline' }}>Best Jasper AI alternatives for content creation</Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="cta-section" style={{ padding: '4rem 0', textAlign: 'center' }}>
         <div className="container">
           <h2 style={{ marginBottom: '1rem' }}>Ready to Transform Your Content Creation?</h2>

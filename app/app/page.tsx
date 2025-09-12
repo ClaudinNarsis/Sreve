@@ -215,7 +215,7 @@ function AppContent() {
   }, [router]);
 
   const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
-  const { isCreating } = useAutoCreateUser();
+  useAutoCreateUser();
   const [questions, setQuestions] = useState<Question[]>([]);
   const projectExplorerRef = useRef<ProjectExplorerRef>(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
@@ -231,8 +231,8 @@ function AppContent() {
     }
   }, [viewMode]);
   const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, any>>({});
-  const [loading, setLoading] = useState(true);
+  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
+  const [, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -256,7 +256,7 @@ function AppContent() {
 
   const currentQuestion = questions.find(q => q.step === currentStep);
 
-  const handleAnswerChange = (value: any) => {
+  const handleAnswerChange = (value: string | string[]) => {
     setAnswers(prev => ({
       ...prev,
       [currentStep]: value
@@ -478,7 +478,7 @@ function AppContent() {
                     if (e.target.checked) {
                       handleAnswerChange([...newValue, option.value]);
                     } else {
-                      handleAnswerChange(newValue.filter((v: string) => v !== option.value));
+                      handleAnswerChange(Array.isArray(newValue) ? newValue.filter((v: string) => v !== option.value) : []);
                     }
                   }}
                 />
@@ -495,7 +495,7 @@ function AppContent() {
               type="file"
               accept={question.acceptedTypes?.join(',')}
               multiple={question.maxFiles ? question.maxFiles > 1 : false}
-              onChange={(e) => handleAnswerChange(Array.from(e.target.files || []))}
+              onChange={(e) => handleAnswerChange(Array.from(e.target.files || []).map(f => f.name))}
             />
             {question.acceptedTypes && (
               <p className="file-info">

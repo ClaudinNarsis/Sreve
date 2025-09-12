@@ -3,7 +3,7 @@
 import './blog.css';
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 export default function BlogLayout({
@@ -39,9 +39,9 @@ export default function BlogLayout({
           <Image src="/assets/logo.png" alt="Sreve Logo" className="logo" width={120} height={40} priority />
         </Link>
         <nav className="nav-links" aria-label="Primary">
-          <a href="/#features">Product</a>
-          <a href="/#pricing">Pricing</a>
-          <a href="/#contact-us">Contact Us</a>
+          <Link href="/#features">Product</Link>
+          <Link href="/#pricing">Pricing</Link>
+          <Link href="/#contact-us">Contact Us</Link>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <SignedOut>

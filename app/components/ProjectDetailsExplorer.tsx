@@ -6,7 +6,7 @@ import './ProjectDetailsExplorer.css';
 interface Project {
   projectId: string;
   userId: string;
-  answers: Record<string, any>;
+  answers: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -47,7 +47,7 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, any>>({});
+  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -83,7 +83,7 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
           setError(projectData.error || 'Failed to fetch project details');
           toast.error(projectData.error || 'Failed to fetch project details');
         }
-      } catch (err) {
+      } catch {
         setError('Error fetching project details');
         toast.error('Error fetching project details');
       } finally {
@@ -98,7 +98,7 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
     return proj.answers?.[1] || `Project ${proj.projectId.slice(0, 8)}`;
   };
 
-  const handleAnswerChange = (value: any) => {
+  const handleAnswerChange = (value: string | string[]) => {
     setAnswers(prev => ({
       ...prev,
       [currentStep]: value
@@ -523,7 +523,7 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
           }}>
             <h3 style={{ color: '#dc3545', marginBottom: '1rem' }}>⚠️ Delete Project</h3>
             <p style={{ marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              Are you sure you want to delete the project "<strong>{getProjectName(project)}</strong>"?
+              Are you sure you want to delete the project &ldquo;<strong>{getProjectName(project)}</strong>&rdquo;?
             </p>
             <p style={{ marginBottom: '1.5rem', lineHeight: '1.5', color: '#666' }}>
               This will permanently delete:

@@ -36,7 +36,7 @@ export default async function BlogPage() {
   try {
     const postsDirectory = path.join(process.cwd(), 'public/blogs');
     filenames = await fs.readdir(postsDirectory);
-  } catch (error) {
+  } catch {
     console.log('No blogs directory found, showing only dynamic posts');
   }
 

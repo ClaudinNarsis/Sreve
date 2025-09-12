@@ -111,8 +111,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "Just discovered the secret to perfect morning coffee ☕✨ Who else can't function without their daily brew? 
-                  #MorningRitual #CoffeeLovers #LifeHacks"
+                  &ldquo;Just discovered the secret to perfect morning coffee ☕✨ Who else can&apos;t function without their daily brew? 
+                  #MorningRitual #CoffeeLovers #LifeHacks&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Engaging captions with trending hashtags and emojis</p>
@@ -125,8 +125,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "The future of remote work isn't just about flexibility—it's about building stronger, more inclusive teams. 
-                  What's your take on the evolution of workplace culture? 💭"
+                  &ldquo;The future of remote work isn&apos;t just about flexibility—it&apos;s about building stronger, more inclusive teams. 
+                  What&apos;s your take on the evolution of workplace culture? 💭&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Professional content that sparks meaningful conversations</p>
@@ -139,8 +139,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "POV: You finally found the perfect productivity hack 🎯 Try this 2-minute rule and thank me later! 
-                  #ProductivityTips #LifeHacks #Trending"
+                  &ldquo;POV: You finally found the perfect productivity hack 🎯 Try this 2-minute rule and thank me later! 
+                  #ProductivityTips #LifeHacks #Trending&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Viral-worthy content with trending hooks and CTAs</p>
@@ -157,7 +157,7 @@ export default function SocialMediaPostGeneratorPage() {
           <div className="features-grid">
             <article className="feature">
               <h3>🎯 Platform-Specific Optimization</h3>
-              <p>Each post is tailored for the specific platform's algorithm, format, and audience behavior.</p>
+              <p>Each post is tailored for the specific platform&apos;s algorithm, format, and audience behavior.</p>
             </article>
             <article className="feature">
               <h3>📈 Engagement-Driven Content</h3>
@@ -165,7 +165,7 @@ export default function SocialMediaPostGeneratorPage() {
             </article>
             <article className="feature">
               <h3>🔥 Trending Hashtags</h3>
-              <p>Automatically includes relevant trending hashtags to boost your post's discoverability and reach.</p>
+              <p>Automatically includes relevant trending hashtags to boost your post&apos;s discoverability and reach.</p>
             </article>
             <article className="feature">
               <h3>🎨 Visual Content Suggestions</h3>
@@ -245,7 +245,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Social Media Manager, FashionCo</p>
                 </div>
               </div>
-              <blockquote>"Our engagement rates increased by 250% after using this tool. It's like having a team of copywriters working 24/7!"</blockquote>
+              <blockquote>&ldquo;Our engagement rates increased by 250% after using this tool. It&apos;s like having a team of copywriters working 24/7!&rdquo;</blockquote>
             </article>
             <article className="card" style={{    padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
@@ -255,7 +255,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Digital Marketer, StartupX</p>
                 </div>
               </div>
-              <blockquote>"I create a month's worth of social media content in just 2 hours. The quality is incredible and perfectly matches our brand voice."</blockquote>
+              <blockquote>&ldquo;I create a month&apos;s worth of social media content in just 2 hours. The quality is incredible and perfectly matches our brand voice.&rdquo;</blockquote>
             </article>
             <article className="card" style={{    padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
@@ -265,7 +265,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Small Business Owner</p>
                 </div>
               </div>
-              <blockquote>"As a solo entrepreneur, this tool is a lifesaver. My social media presence has never been stronger, and I save 10+ hours per week."</blockquote>
+              <blockquote>&ldquo;As a solo entrepreneur, this tool is a lifesaver. My social media presence has never been stronger, and I save 10+ hours per week.&rdquo;</blockquote>
             </article>
           </div>
         </div>
