@@ -10,7 +10,6 @@ import { Resizable } from 'react-resizable';
 
 function SampleContent() {
   const searchParams = useSearchParams();
-  const prompt = searchParams.get('prompt') || '';
   const answer = searchParams.get('answer') || '';
   const [loading, setLoading] = useState(true);
   const [displayedAnswer, setDisplayedAnswer] = useState('');

@@ -49,9 +49,31 @@ app/
 
 ### Component Guidelines
 - Use **functional components with hooks**
-- **Inline styles** are acceptable and widely used in this codebase
+- **NO INLINE STYLES ALLOWED** - All styling must be in separate CSS files
 - **CSS classes** should be semantic and tool-specific
+- **CSS Modules or separate CSS files** for each page/component
 - **Responsive design** using CSS Grid and Flexbox
+
+### Styling Policy - STRICT REQUIREMENTS
+
+#### CSS File Organization
+- **Homepage**: `/app/globals.css` for global styles, `/app/page.css` for page-specific styles
+- **Tools pages**: `/app/tools/tools.css` for shared tool styles, individual tool CSS files when needed
+- **Blog pages**: `/app/blog/blog.css` for blog-specific styles
+- **Components**: Individual CSS files in `/app/components/` folder
+
+#### Prohibited Styling Practices
+- ❌ **NO inline styles** (`style={{}}` attributes)
+- ❌ **NO style props** on components
+- ❌ **NO CSS-in-JS** solutions
+- ❌ **NO dynamic style objects**
+
+#### Required Styling Practices  
+- ✅ **CSS classes only** for all styling
+- ✅ **Semantic class names** that describe purpose, not appearance
+- ✅ **CSS custom properties** for consistent theming
+- ✅ **Responsive design** with CSS media queries
+- ✅ **CSS Grid and Flexbox** for layouts
 
 ### Design System & Branding
 

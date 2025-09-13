@@ -2,10 +2,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import './page.css';
 
 const LazyTestimonials = dynamic(() => import('./components/LazyTestimonials'), {
   ssr: false,
-  loading: () => <div style={{ height: '400px', backgroundColor: '#f8f8f8' }} />
+  loading: () => <div className="lazy-testimonials-loading" />
 });
 import React, { useEffect, useState, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
@@ -363,7 +364,7 @@ export default function HomePage() {
       window.addEventListener('scroll', onScroll);
       return () => window.removeEventListener('scroll', onScroll);
     }
-  }, []);
+  }, [handleMobileMenu]);
 
   const setupIntersectionObserver = useMemo(() => {
     return (elementId: string, visibleClass: string, hiddenClass?: string) => {
@@ -466,46 +467,19 @@ export default function HomePage() {
   // Show loading screen when auto-creating project/campaign
   if (isAutoCreating) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        height: '100vh', 
-        backgroundColor: '#1a1a1a',
-        color: '#fff'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            border: '4px solid #333', 
-            borderTop: '4px solid #ff6600', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 2rem auto'
-          }}></div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <h2 className="loading-title">
             Getting your campaign ready...
           </h2>
-          <p style={{ 
-            fontSize: '1rem', 
-            color: '#ccc', 
-            marginBottom: '1rem',
-            opacity: '0.8'
-          }}>
+          <p className="loading-progress">
             {creationProgress}
           </p>
-          <p style={{ fontSize: '0.9rem', color: '#999' }}>
+          <p className="loading-subtitle">
             This will just take a moment
           </p>
         </div>
-        <style jsx>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -523,15 +497,15 @@ export default function HomePage() {
           <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
         </nav>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="header-auth-section">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
+              <button className="cta-button">Sign In</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
             <Link href="/app">
-              <button className="cta-button go-to-app-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
+              <button className="cta-button go-to-app-button">Go to App</button>
             </Link>
             <UserButton />
           </SignedIn>
@@ -543,9 +517,9 @@ export default function HomePage() {
 
       <section className="hero" id="hero">
         <div className="container">
-          <p style={{ marginBottom: 0 }}>AI Blog Generator & Viral Post Creator for marketers and founders. </p>
-          <h1>Boring AI writes meh copy. <span style={{fontWeight: 'bold', color: '#ff6600'}}>Sreve</span> writes scroll-stoppers.</h1>
-          <p> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
+          <p className="hero-intro">AI Blog Generator & Viral Post Creator for marketers and founders. </p>
+          <h1 className="hero-title">Boring AI writes meh copy. <span className="brand-name">Sreve</span> writes scroll-stoppers.</h1>
+          <p className="hero-subtitle"> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>
@@ -564,10 +538,10 @@ export default function HomePage() {
             </div>
             <button className="generate-button" onClick={handleGenerateClick}>Generate</button>
           </div>
-          <div style={{ marginTop: '1rem' }}>
+          <div className="hero-trust-link">
             <a href="#demo-video-section" className="theme-link">Trusted by 500+ brands and agencies</a>
-            <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-              <Link href="/blog" style={{ color: '#ff6600', textDecoration: 'underline' }}>
+            <p className="hero-blog-link">
+              <Link href="/blog">
                 Read our latest insights on AI copywriting and marketing automation →
               </Link>
             </p>
@@ -577,24 +551,24 @@ export default function HomePage() {
 
       <section className="features-section" id="features">
         <div className="container">
-          <h2 style={{textAlign: 'center', marginBottom: '3rem'}}>Why Agencies Choose Sreve Over Generic AI</h2>
+          <h2 className="features-title">Why Agencies Choose Sreve Over Generic AI</h2>
           <div className="features-grid">
             <article className="feature">
               <h3>Unhinged (In a Good Way)</h3>
-              <p>"No intern would dare write this."</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;No intern would dare write this.&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Thinks Like a Strategist</h3>
-              <p>"This feels like something my strategist would say."</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;This feels like something my strategist would say.&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Built for Creative Teams</h3>
-              <p>"Before Sreve, Everything needs rewriting or "seasoning" to work"</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;Before Sreve, Everything needs rewriting or &quot;seasoning&quot; to work&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABAAABAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAE/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
           </div>
@@ -613,7 +587,7 @@ export default function HomePage() {
                 <li>Generate up to 20 Ideas/month</li>
                 <li>1 Brand Guide</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
             <div className="pricing-card popular">
@@ -624,7 +598,7 @@ export default function HomePage() {
                 <li>Increased limit upto 200 Ideas/month</li>
                 <li>5 Brand Guides</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
           </div>
@@ -639,7 +613,7 @@ export default function HomePage() {
           <p className="cta-note">⚡ Limited spots available this month</p>
           <div className="container contact-box">
             <p className="contact-text">Have questions? Book a quick call with our team.</p>
-            <button className="cta-button" onClick={(e) => gtagClick(e as any, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
+            <button className="cta-button" onClick={(e) => gtagClick(e, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
           </div>
         </div>
       </section>

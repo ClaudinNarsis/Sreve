@@ -20,25 +20,6 @@ export default function AISentenceRewriterPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const gtagClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, url: string) => {
-    e.preventDefault();
-    const button = e.currentTarget as HTMLElement;
-
-    if (url.startsWith('#')) {
-      const targetId = url.substring(1);
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      if (!button.querySelector('.button-loader')) {
-        const loader = document.createElement('span');
-        loader.className = 'button-loader';
-        button.appendChild(loader);
-      }
-      setTimeout(() => { window.location.href = url; }, 20);
-    }
-  };
 
   return (
     <>
