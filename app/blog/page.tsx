@@ -57,6 +57,22 @@ export default async function BlogPage() {
       date: 'August 23, 2025',
       readTime: '5 min read',
       tags: ['AI Tools', 'Marketing Agencies', 'Performance Marketing']
+    },
+    {
+      slug: 'ai-tools-social-media-marketing-2025',
+      title: '10 Best AI Tools for Social Media Marketing in 2025',
+      description: 'Discover the top AI tools for social media marketing in 2025. Create viral content, optimize posting schedules, and boost engagement with these powerful AI solutions.',
+      date: 'February 15, 2025',
+      readTime: '12 min read',
+      tags: ['Social Media', 'AI Tools', 'Marketing Automation']
+    },
+    {
+      slug: 'best-ai-tools-content-marketing-2025',
+      title: 'Best AI Tools for Content Marketing 2025 - Complete Guide',
+      description: 'Transform your content strategy with the top AI tools of 2025. Comprehensive guide to AI content creation, automation, and marketing tools.',
+      date: 'March 5, 2025',
+      readTime: '15 min read',
+      tags: ['Content Marketing', 'AI Tools', 'Marketing Strategy']
     }
   ];
 
