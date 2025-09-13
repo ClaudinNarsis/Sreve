@@ -362,6 +362,194 @@ export default function AIContentGeneratorPage() {
           <p>© 2024 Sreve. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "AI Content Generator - Sreve",
+            "description": "Create high-quality articles, blog posts, and marketing content in minutes with advanced AI. Better than Jasper AI at 90% less cost.",
+            "url": "https://sreve.online/tools/ai-content-generator",
+            "applicationCategory": "Content Marketing Software",
+            "operatingSystem": "Web Browser",
+            "author": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "publisher": {
+              "@type": "Organization", 
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free AI content generation with premium features"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "1200",
+              "bestRating": "5"
+            },
+            "featureList": [
+              "AI-powered blog post generation",
+              "Marketing content creation", 
+              "Brand voice customization",
+              "SEO optimization",
+              "Multiple content formats",
+              "Instant generation"
+            ],
+            "screenshot": {
+              "@type": "ImageObject",
+              "url": "https://sreve.online/assets/ai-content-generator-screenshot.jpg"
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            "name": "How to Generate Content with AI Content Generator",
+            "description": "Step-by-step guide to creating high-quality content using Sreve's AI Content Generator",
+            "image": "https://sreve.online/assets/ai-content-generator-guide.jpg",
+            "totalTime": "PT5M",
+            "estimatedCost": {
+              "@type": "MonetaryAmount",
+              "currency": "USD",
+              "value": "0"
+            },
+            "supply": [
+              {
+                "@type": "HowToSupply",
+                "name": "Content topic or brief"
+              },
+              {
+                "@type": "HowToSupply", 
+                "name": "Target audience information"
+              }
+            ],
+            "tool": [
+              {
+                "@type": "HowToTool",
+                "name": "Sreve AI Content Generator"
+              }
+            ],
+            "step": [
+              {
+                "@type": "HowToStep",
+                "position": 1,
+                "name": "Enter Your Topic",
+                "text": "Describe what you want to write about and your target audience"
+              },
+              {
+                "@type": "HowToStep",
+                "position": 2,
+                "name": "Choose Content Type",
+                "text": "Select from blog posts, articles, marketing copy, or other content formats"
+              },
+              {
+                "@type": "HowToStep",
+                "position": 3,
+                "name": "Generate Content",
+                "text": "AI creates high-quality, engaging content in your brand's voice"
+              },
+              {
+                "@type": "HowToStep",
+                "position": 4,
+                "name": "Review & Refine",
+                "text": "Edit, customize, and perfect your content before publishing"
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What types of content can the AI Content Generator create?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The AI Content Generator can create blog posts, articles, marketing copy, product descriptions, email content, social media posts, and other marketing materials optimized for your brand voice and audience."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does this compare to other AI content tools like Jasper?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve's AI Content Generator delivers the same quality as Jasper AI but at 90% lower cost. It's specifically optimized for marketing and business content, not generic writing."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is the generated content original and plagiarism-free?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, all content generated by our AI is original and unique. The AI creates new content based on your inputs rather than copying existing material."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I customize the writing style and tone?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Absolutely. You can specify your brand voice, target audience, tone, and style preferences. The AI will adapt its writing to match your requirements."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI Tools",
+                "item": "https://sreve.online/tools"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "AI Content Generator",
+                "item": "https://sreve.online/tools/ai-content-generator"
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

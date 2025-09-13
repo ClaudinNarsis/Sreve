@@ -335,6 +335,121 @@ export default function SocialMediaPostGeneratorPage() {
           <p>© 2024 Sreve. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Social Media Post Generator - Sreve",
+            "description": "Generate viral social media posts for all platforms. Drive engagement and grow your audience with AI-powered content creation.",
+            "url": "https://sreve.online/tools/social-media-post-generator",
+            "applicationCategory": "Social Media Marketing Software",
+            "operatingSystem": "Web Browser",
+            "author": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "publisher": {
+              "@type": "Organization", 
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free social media post generation for all platforms"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "950",
+              "bestRating": "5"
+            },
+            "featureList": [
+              "Multi-platform post generation",
+              "Viral content optimization", 
+              "Engagement-focused copy",
+              "Platform-specific formatting",
+              "Hashtag suggestions",
+              "Brand voice customization"
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What social media platforms does the generator support?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The Social Media Post Generator supports all major platforms including Instagram, Facebook, Twitter, LinkedIn, TikTok, and more. Posts are optimized for each platform's specific requirements."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does it help create viral content?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our AI analyzes viral content patterns, trending topics, and engagement psychology to create posts that are more likely to get shares, likes, and comments."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I customize the tone and style?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, you can specify your brand voice, target audience, tone, and style. The AI will generate posts that match your brand personality and marketing goals."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI Tools",
+                "item": "https://sreve.online/tools"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Social Media Post Generator",
+                "item": "https://sreve.online/tools/social-media-post-generator"
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

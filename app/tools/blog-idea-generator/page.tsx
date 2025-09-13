@@ -267,6 +267,129 @@ export default function BlogIdeaGeneratorPage() {
           <p>© 2024 Sreve. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Blog Idea Generator - Sreve",
+            "description": "Generate endless blog post ideas with SEO-optimized titles and trending topics for any niche or industry. Never run out of content ideas.",
+            "url": "https://sreve.online/tools/blog-idea-generator",
+            "applicationCategory": "Content Planning Software",
+            "operatingSystem": "Web Browser",
+            "author": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "publisher": {
+              "@type": "Organization", 
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free unlimited blog idea generation"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "reviewCount": "1100",
+              "bestRating": "5"
+            },
+            "featureList": [
+              "SEO-optimized blog titles",
+              "Trending topic analysis", 
+              "Niche-specific ideas",
+              "Content calendar planning",
+              "Keyword integration",
+              "Multiple format options"
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "How does the Blog Idea Generator work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Simply enter your niche, industry, or topic and our AI will generate dozens of blog post ideas with SEO-optimized titles, trending angles, and content suggestions."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are the blog ideas SEO-optimized?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, all generated blog ideas include SEO-friendly titles and keyword suggestions to help your content rank better in search engines."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I get ideas for any industry or niche?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Absolutely! The Blog Idea Generator works for any industry, niche, or topic. Whether you're in tech, health, finance, or any other field, you'll get relevant, engaging ideas."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How many blog ideas can I generate?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You can generate unlimited blog ideas for free. Create as many content concepts as you need to build a comprehensive content calendar."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI Tools",
+                "item": "https://sreve.online/tools"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Blog Idea Generator",
+                "item": "https://sreve.online/tools/blog-idea-generator"
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

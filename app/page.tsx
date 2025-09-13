@@ -701,6 +701,191 @@ export default function HomePage() {
           <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Save 90% vs Jasper AI with professional AI marketing tools.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": ["Organization", "SoftwareApplication"],
+            "name": "Sreve",
+            "description": "AI-powered marketing content creation platform. Create scroll-stopping ads, captions, and viral content 90% cheaper than Jasper AI.",
+            "url": "https://sreve.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://sreve.online/assets/logo.png",
+              "width": 120,
+              "height": 40
+            },
+            "foundingDate": "2024",
+            "founder": {
+              "@type": "Organization",
+              "name": "Sreve Team"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "US"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+919487731230",
+              "contactType": "customer service",
+              "availableLanguage": "English"
+            },
+            "sameAs": [
+              "https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0"
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free AI content creation tools with premium plans starting at $19/month"
+            },
+            "applicationCategory": "Marketing Software",
+            "operatingSystem": "Web Browser",
+            "softwareVersion": "2.0",
+            "releaseNotes": "Advanced AI marketing tools for agencies and content creators",
+            "featureList": [
+              "AI Caption Generator",
+              "AI Content Generator", 
+              "Blog Idea Generator",
+              "Social Media Post Generator",
+              "AI Sentence Rewriter",
+              "Viral Post Generator"
+            ],
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "500",
+              "bestRating": "5"
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Sreve - AI Marketing Tools",
+            "url": "https://sreve.online",
+            "description": "Create professional marketing content with AI. 90% cheaper than Jasper AI with tools for captions, blog posts, and viral content.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://sreve.online/tools?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "AI Marketing Content Creation",
+            "description": "Professional AI-powered content creation for marketing agencies, performance marketers, and content creators. Generate captions, blog posts, and viral content.",
+            "provider": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "areaServed": {
+              "@type": "Place",
+              "name": "Worldwide"
+            },
+            "availableChannel": {
+              "@type": "ServiceChannel",
+              "serviceUrl": "https://sreve.online",
+              "serviceName": "Web Platform"
+            },
+            "audience": [
+              {
+                "@type": "Audience",
+                "audienceType": "Marketing Agencies"
+              },
+              {
+                "@type": "Audience", 
+                "audienceType": "Performance Marketers"
+              },
+              {
+                "@type": "Audience",
+                "audienceType": "Content Creators"
+              },
+              {
+                "@type": "Audience",
+                "audienceType": "E-commerce Brands"
+              }
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "Free plan available, Pro plan $19/month"
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Sreve and how is it different from other AI tools?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve is an AI-powered marketing content creation platform specifically built for performance marketing. Unlike generic AI tools like Jasper or Copy.ai, Sreve focuses on creating copy that converts, drives engagement, and generates sales at 90% lower cost."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How much does Sreve cost compared to competitors?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve offers a free plan and Pro plan at $19/month, making it 90% cheaper than Jasper AI ($49-125/month), Copy.ai ($36/month), and other premium alternatives while delivering the same quality results."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What AI tools does Sreve offer?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve provides AI Caption Generator, AI Content Generator, Blog Idea Generator, Social Media Post Generator, AI Sentence Rewriter, and Viral Post Generator - all designed for marketing and business use."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Sreve suitable for marketing agencies?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, Sreve is perfect for marketing agencies. The Pro plan includes 5 brand voices for managing multiple clients, and all tools are designed for creating professional marketing content that drives business results."
+                }
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

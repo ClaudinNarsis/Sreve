@@ -505,6 +505,7 @@ function AppContent() {
               </p>
             )}
           </div>
+          
         );
 
       default:

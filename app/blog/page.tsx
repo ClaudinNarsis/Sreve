@@ -214,6 +214,189 @@ export default async function BlogPage() {
         <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Your go-to resource for AI marketing insights and cost-effective alternatives.</p>
       </div>
     </footer>
+
+    {/* Schema.org Structured Data */}
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "Sreve AI Marketing Blog",
+          "description": "Expert insights on AI copywriting, marketing strategies, and performance marketing tools. Learn how to boost your marketing campaigns with AI.",
+          "url": "https://sreve.online/blog",
+          "publisher": {
+            "@type": "Organization",
+            "name": "Sreve",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://sreve.online/assets/logo.png",
+              "width": 120,
+              "height": 40
+            }
+          },
+          "blogPost": [
+            {
+              "@type": "BlogPosting",
+              "headline": "Best Cheaper Jasper AI Alternative in 2025 - Save 90% on AI Copywriting",
+              "description": "Discover why Sreve is the best affordable alternative to Jasper AI. Compare pricing, features, and see how agencies save $1,200+ yearly.",
+              "url": "https://sreve.online/blog/cheaper-jasper-alternative-2025",
+              "datePublished": "2025-01-27",
+              "author": {
+                "@type": "Organization",
+                "name": "Sreve"
+              },
+              "keywords": ["AI Writing", "Jasper Alternative", "Cost Comparison", "Marketing AI"]
+            },
+            {
+              "@type": "BlogPosting", 
+              "headline": "Top 5 AI Tools for Creative & Marketing Agencies",
+              "description": "Discover the top 5 AI tools for creative & marketing agencies. Learn how copy ai, ad copy tools, and agency ai platforms can boost performance marketing.",
+              "url": "https://sreve.online/blog/top-5-tools-for-creative-and-marketing-agencies",
+              "datePublished": "2025-08-23",
+              "author": {
+                "@type": "Organization",
+                "name": "Sreve"
+              },
+              "keywords": ["AI Tools", "Marketing Agencies", "Performance Marketing"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "10 Best AI Tools for Social Media Marketing in 2025",
+              "description": "Discover the top AI tools for social media marketing in 2025. Create viral content, optimize posting schedules, and boost engagement.",
+              "url": "https://sreve.online/blog/ai-tools-social-media-marketing-2025",
+              "datePublished": "2025-02-15",
+              "author": {
+                "@type": "Organization",
+                "name": "Sreve"
+              },
+              "keywords": ["Social Media", "AI Tools", "Marketing Automation"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Best AI Tools for Content Marketing 2025 - Complete Guide",
+              "description": "Transform your content strategy with the top AI tools of 2025. Comprehensive guide to AI content creation, automation, and marketing tools.",
+              "url": "https://sreve.online/blog/best-ai-tools-content-marketing-2025",
+              "datePublished": "2025-03-05",
+              "author": {
+                "@type": "Organization",
+                "name": "Sreve"
+              },
+              "keywords": ["Content Marketing", "AI Tools", "Marketing Strategy"]
+            }
+          ]
+        })
+      }}
+    />
+
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "AI Marketing Blog - Sreve",
+          "description": "Comprehensive guides on AI marketing tools, cost comparisons, and performance marketing strategies.",
+          "url": "https://sreve.online/blog",
+          "mainEntity": {
+            "@type": "ItemList",
+            "name": "Marketing Blog Posts",
+            "description": "Expert articles on AI tools, marketing automation, and business growth strategies",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "item": {
+                  "@type": "Article",
+                  "name": "Best Cheaper Jasper AI Alternative in 2025",
+                  "url": "https://sreve.online/blog/cheaper-jasper-alternative-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "item": {
+                  "@type": "Article",
+                  "name": "Top 5 AI Tools for Creative & Marketing Agencies",
+                  "url": "https://sreve.online/blog/top-5-tools-for-creative-and-marketing-agencies"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "item": {
+                  "@type": "Article",
+                  "name": "10 Best AI Tools for Social Media Marketing in 2025",
+                  "url": "https://sreve.online/blog/ai-tools-social-media-marketing-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "item": {
+                  "@type": "Article",
+                  "name": "Best AI Tools for Content Marketing 2025",
+                  "url": "https://sreve.online/blog/best-ai-tools-content-marketing-2025"
+                }
+              }
+            ]
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blog",
+                "item": "https://sreve.online/blog"
+              }
+            ]
+          }
+        })
+      }}
+    />
+
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What topics does the Sreve blog cover?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The Sreve blog covers AI marketing tools, cost comparisons with competitors like Jasper AI, social media marketing strategies, content marketing automation, and performance marketing tips for agencies and businesses."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can I save money on AI writing tools?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Read our detailed comparison guides showing how Sreve saves 90% compared to Jasper AI, Copy.ai, and other expensive alternatives while delivering the same quality results for marketing content creation."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are these blog articles helpful for marketing agencies?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, our blog specifically focuses on marketing agencies and performance marketers. We provide actionable insights, tool comparisons, and strategies that agencies use to scale their client work efficiently."
+              }
+            }
+          ]
+        })
+      }}
+    />
     </>
   );
 }
