@@ -22,34 +22,46 @@ export default function ToolsPage() {
 
   const tools = [
     {
-      title: 'AI Sentence Rewriter Tool',
-      description: 'Transform your sentences with advanced AI. Improve clarity, change tone, and enhance readability instantly.',
-      href: '/tools/ai-sentence-rewriter',
-      icon: '✏️'
-    },
-    {
       title: 'AI Caption Generator',
-      description: 'Create engaging captions for Instagram, TikTok, LinkedIn, and more. Perfect for social media managers.',
+      description: 'Create engaging captions for Instagram, TikTok, LinkedIn, and more. Used by 500+ agencies worldwide for social media marketing.',
       href: '/tools/ai-caption-generator',
       icon: '📱'
     },
     {
-      title: 'Blog Idea Generator',
-      description: 'Generate endless blog post ideas with SEO-optimized titles and trending topics for any niche.',
-      href: '/tools/blog-idea-generator',
-      icon: '💡'
-    },
-    {
       title: 'AI Content Generator',
-      description: 'Create high-quality articles, blog posts, and marketing content in minutes with our advanced AI.',
+      description: 'Create high-quality articles, blog posts, and marketing content in minutes. Better than Jasper AI at 90% less cost.',
       href: '/tools/ai-content-generator',
       icon: '📄'
     },
     {
       title: 'Social Media Post Generator',
-      description: 'Generate viral social media posts for all platforms. Drive engagement and grow your audience.',
+      description: 'Generate viral social media posts for all platforms. Drive engagement and grow your audience with AI-powered content.',
       href: '/tools/social-media-post-generator',
       icon: '🚀'
+    },
+    {
+      title: 'AI Sentence Rewriter Tool',
+      description: 'Transform your sentences with advanced AI. Improve clarity, change tone, and enhance readability for better conversions.',
+      href: '/tools/ai-sentence-rewriter',
+      icon: '✏️'
+    },
+    {
+      title: 'Blog Idea Generator',
+      description: 'Generate endless blog post ideas with SEO-optimized titles and trending topics for any niche or industry.',
+      href: '/tools/blog-idea-generator',
+      icon: '💡'
+    },
+    {
+      title: 'Viral Post Generator',
+      description: 'Create viral-worthy content that gets shared and drives massive engagement across social media platforms.',
+      href: '/tools/viral-post-generator',
+      icon: '🔥'
+    },
+    {
+      title: 'AI Blog Generator',
+      description: 'Generate complete blog posts with SEO optimization, compelling headlines, and engaging content that ranks and converts.',
+      href: '/tools/blog-generator',
+      icon: '📝'
     }
   ];
 
@@ -89,8 +101,9 @@ export default function ToolsPage() {
           </h1>
           <p style={{ fontSize: '1.2rem', marginBottom: '2rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto 2rem', color: 'var(--text-secondary)' }}>
             Transform your content strategy with our comprehensive suite of AI-powered marketing tools. 
-            Built for agencies, marketers, and content creators who demand professional results without the premium price tag.
+            Built for <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>agencies</Link>, marketers, and content creators who demand professional results without the premium price tag.
             Each tool is designed to save you hours while delivering scroll-stopping content that converts.
+            <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}> Save 90% vs Jasper AI</Link> with the same quality results.
           </p>
           
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
@@ -220,11 +233,17 @@ export default function ToolsPage() {
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'rgba(255,255,255,0.8)' }}>
-              Join agencies who've already made the switch from expensive alternatives like Jasper, Copy.ai, and Writesonic.
+              Join <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>500+ agencies</Link> who've already made the switch from expensive alternatives like Jasper, Copy.ai, and Writesonic.
+              Read our <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>social media AI tools guide</Link> for more insights.
             </p>
-            <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'white', textDecoration: 'underline', fontWeight: 'bold' }}>
-              See detailed comparison and savings breakdown →
-            </Link>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'white', textDecoration: 'underline', fontWeight: 'bold' }}>
+                Detailed Jasper AI Comparison →
+              </Link>
+              <Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'white', textDecoration: 'underline', fontWeight: 'bold' }}>
+                Content Marketing Guide →
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -446,18 +465,83 @@ export default function ToolsPage() {
         </div>
       </section>
 
-      <footer className="footer" style={{ background: 'var(--darkness-level-1)', padding: '3rem 0 1rem' }}>
+      <footer className="footer" style={{ background: 'var(--darkness-level-1)', padding: '4rem 0 1rem' }}>
         <div className="footer-content">
-          <div className="footer-section">
-            <ul className="footer-nav" style={{ listStyle: 'none', padding: 0, display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
-              <li><Link href="/blog" style={{ color: 'var(--text-secondary)' }}>Blog</Link></li>
-              <li><Link href="/privacy-policy" style={{ color: 'var(--text-secondary)' }}>Privacy Policy</Link></li>
-              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank" style={{ color: 'var(--text-secondary)' }}>Contact</a></li>
-            </ul>
+          <div className="container">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
+              
+              {/* AI Tools Section */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>AI Content Creation Tools</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Caption Generator</Link></li>
+                  <li><Link href="/tools/ai-content-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Content Generator</Link></li>
+                  <li><Link href="/tools/blog-idea-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Blog Idea Generator</Link></li>
+                  <li><Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media Post Generator</Link></li>
+                  <li><Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Sentence Rewriter</Link></li>
+                  <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Post Generator</Link></li>
+                  <li><Link href="/tools/blog-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Blog Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Marketing Resources */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Marketing Resources</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Blog</Link></li>
+                  <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Jasper AI Alternative</Link></li>
+                  <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Best AI Tools for Agencies</Link></li>
+                  <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media AI Tools</Link></li>
+                  <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing AI</Link></li>
+                  <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Pricing & Plans</a></li>
+                </ul>
+              </div>
+
+              {/* Use Cases */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Solutions by Industry</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><a href="#marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Agencies</a></li>
+                  <li><a href="#performance-marketers" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Performance Marketers</a></li>
+                  <li><a href="#ecommerce-brands" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>E-commerce Brands</a></li>
+                  <li><a href="#content-creators" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Creators</a></li>
+                  <li><a href="/#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Platform Features</a></li>
+                  <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All AI Tools</Link></li>
+                </ul>
+              </div>
+
+              {/* Company & Support */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Company & Support</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>About Sreve</Link></li>
+                  <li><a href="/#contact-us" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Contact Us</a></li>
+                  <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>WhatsApp Support</a></li>
+                  <li><Link href="/privacy-policy" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                  <li><a href="/#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Product Demo</a></li>
+                  <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Free Trial</a></li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Popular Comparisons Section */}
+            <div style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem' }}>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Popular AI Tool Comparisons</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem 2rem' }}>
+                <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Jasper AI</Link>
+                <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Copy.ai</Link>
+                <Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Writesonic</Link>
+                <Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Best Caption Generator</Link>
+                <Link href="/tools/ai-content-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Content vs Human Writing</Link>
+                <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media AI Tools</Link>
+              </div>
+            </div>
           </div>
         </div>
+        
         <div className="footer-bottom" style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved.</p>
+          <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Save 90% vs Jasper AI with professional AI marketing tools.</p>
         </div>
       </footer>
 

@@ -57,6 +57,9 @@ export default function AICaptionGeneratorPage() {
           <p style={{ fontSize: '1.2rem', marginBottom: '2rem', maxWidth: '800px' }}>
             Generate captivating captions for Instagram, TikTok, LinkedIn, and more. Our AI understands your brand voice 
             and creates scroll-stopping captions that drive engagement and boost your social media presence.
+            Combine with our <Link href="/tools/viral-post-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>Viral Post Generator</Link> and 
+            <Link href="/tools/social-media-post-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}> Social Media Post Generator</Link> for complete social media automation.
+            <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: '#ff6600', textDecoration: 'underline' }}> Learn more about AI social media tools →</Link>
           </p>
           
           <div className="features-highlight" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
@@ -272,18 +275,83 @@ export default function AICaptionGeneratorPage() {
         </div>
       </section>
 
-      <footer className="footer">
+      <footer className="footer" style={{ background: 'var(--darkness-level-1)', padding: '4rem 0 1rem' }}>
         <div className="footer-content">
-          <div className="footer-section">
-            <ul className="footer-nav">
-              <li><Link href="/blog">Blog</Link></li>
-              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
-              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank">Contact</a></li>
-            </ul>
+          <div className="container">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
+              
+              {/* AI Tools Section */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>AI Content Creation Tools</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--orange-primary)', textDecoration: 'none', fontWeight: 'bold' }}>AI Caption Generator</Link></li>
+                  <li><Link href="/tools/ai-content-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Content Generator</Link></li>
+                  <li><Link href="/tools/blog-idea-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Blog Idea Generator</Link></li>
+                  <li><Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media Post Generator</Link></li>
+                  <li><Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Sentence Rewriter</Link></li>
+                  <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Post Generator</Link></li>
+                  <li><Link href="/tools/blog-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Blog Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Marketing Resources */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Social Media Marketing</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media AI Tools Guide</Link></li>
+                  <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Best AI Tools for Agencies</Link></li>
+                  <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Caption Generator vs Jasper AI</Link></li>
+                  <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing AI</Link></li>
+                  <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Blog</Link></li>
+                  <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Pricing & Plans</a></li>
+                </ul>
+              </div>
+
+              {/* Platform-Specific */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Caption Templates</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Instagram Caption Templates</Link></li>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>TikTok Caption Ideas</Link></li>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>LinkedIn Post Captions</Link></li>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Twitter Thread Captions</Link></li>
+                  <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Caption Generator</Link></li>
+                  <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All AI Tools</Link></li>
+                </ul>
+              </div>
+
+              {/* Company & Support */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Company & Support</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>About Sreve</Link></li>
+                  <li><a href="/#contact-us" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Contact Us</a></li>
+                  <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>WhatsApp Support</a></li>
+                  <li><Link href="/privacy-policy" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                  <li><a href="/#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Product Demo</a></li>
+                  <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Free Trial</a></li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Related Tools Section */}
+            <div style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem' }}>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Related AI Tools for Social Media</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem 2rem' }}>
+                <Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media Post Generator</Link>
+                <Link href="/tools/viral-post-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Viral Post Generator</Link>
+                <Link href="/tools/ai-content-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Content Generator</Link>
+                <Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sentence Rewriter</Link>
+                <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media Marketing Guide</Link>
+                <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Caption AI vs Jasper AI</Link>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>© 2024 Sreve. All rights reserved.</p>
+        
+        <div className="footer-bottom" style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Generate captions 10x faster with AI - Save 90% vs Jasper AI.</p>
         </div>
       </footer>
 

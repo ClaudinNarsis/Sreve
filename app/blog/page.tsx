@@ -77,6 +77,7 @@ export default async function BlogPage() {
   ];
 
   return (
+    <>
     <main>
         <div className="container">
             <nav aria-label="Breadcrumb" style={{ marginBottom: '2rem' }}>
@@ -89,6 +90,8 @@ export default async function BlogPage() {
             <h1 className="blog-title">AI Copywriting Insights & Marketing Tips</h1>
             <p style={{ marginBottom: '2rem', color: '#ccc' }}>
               Discover expert strategies, tools, and insights to boost your creative marketing campaigns with AI.
+              Compare <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: '#ff6600', textDecoration: 'underline' }}>Sreve vs Jasper AI</Link> and 
+              explore our <Link href="/tools" style={{ color: '#ff6600', textDecoration: 'underline' }}>complete AI toolkit</Link> for marketers.
             </p>
             
             {/* Dynamic blog posts */}
@@ -134,5 +137,83 @@ export default async function BlogPage() {
             )}
         </div>
     </main>
+
+    <footer className="footer" style={{ background: 'var(--darkness-level-1)', padding: '4rem 0 1rem' }}>
+      <div className="footer-content">
+        <div className="container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
+            
+            {/* Latest Blog Posts */}
+            <div>
+              <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Latest Marketing Guides</h4>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Jasper AI Alternative Guide</Link></li>
+                <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Top 5 AI Tools for Agencies</Link></li>
+                <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media AI Tools 2025</Link></li>
+                <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing AI Guide</Link></li>
+                <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All Blog Posts</Link></li>
+              </ul>
+            </div>
+
+            {/* AI Tools Section */}
+            <div>
+              <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>AI Content Creation Tools</h4>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Caption Generator</Link></li>
+                <li><Link href="/tools/ai-content-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Content Generator</Link></li>
+                <li><Link href="/tools/blog-idea-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Blog Idea Generator</Link></li>
+                <li><Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media Post Generator</Link></li>
+                <li><Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Sentence Rewriter</Link></li>
+                <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All AI Tools</Link></li>
+              </ul>
+            </div>
+
+            {/* Marketing Topics */}
+            <div>
+              <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Marketing Topics</h4>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Tool Comparisons</Link></li>
+                <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media Marketing</Link></li>
+                <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing</Link></li>
+                <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Agency Tools</Link></li>
+                <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Pricing & Plans</a></li>
+              </ul>
+            </div>
+
+            {/* Company & Support */}
+            <div>
+              <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Company & Support</h4>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>About Sreve</Link></li>
+                <li><a href="/#contact-us" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Contact Us</a></li>
+                <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>WhatsApp Support</a></li>
+                <li><Link href="/privacy-policy" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                <li><a href="/#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Product Demo</a></li>
+                <li><a href="/#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Free Trial</a></li>
+              </ul>
+            </div>
+
+          </div>
+
+          {/* Popular Articles Section */}
+          <div style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem' }}>
+            <h4 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Most Popular Marketing Articles</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem 2rem' }}>
+              <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Save 90% vs Jasper AI</Link>
+              <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media AI Tools</Link>
+              <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Agency AI Tools Guide</Link>
+              <Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Content Marketing AI</Link>
+              <Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Caption Generator</Link>
+              <Link href="/tools/ai-content-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Content Generator</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="footer-bottom" style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
+        <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Your go-to resource for AI marketing insights and cost-effective alternatives.</p>
+      </div>
+    </footer>
+    </>
   );
 }
