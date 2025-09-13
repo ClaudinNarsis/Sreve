@@ -63,7 +63,7 @@ export default async function TwitterImage() {
               lineHeight: 1.3,
             }}
           >
-            Generate scroll-stopping UGC scripts & ad copy in your brand's voice
+            Generate scroll-stopping UGC scripts & ad copy in your brand&apos;s voice
           </div>
         </div>
       </div>

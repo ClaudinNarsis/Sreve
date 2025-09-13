@@ -60,7 +60,7 @@ class WebSocketManager {
       this.socket = new WebSocket(url);
       this.notifySubscribers('connecting');
 
-      this.socket.onopen = (event) => {
+      this.socket.onopen = (_event) => {
         console.log('✅ [WEBSOCKET-MANAGER] WebSocket opened successfully!');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
@@ -134,7 +134,7 @@ class WebSocketManager {
     this.notifySubscribers('disconnected');
   }
 
-  sendMessage(message: any): boolean {
+  sendMessage(message: WebSocketMessage | Record<string, unknown>): boolean {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       try {
         const messageStr = JSON.stringify(message);
@@ -171,18 +171,18 @@ export interface WebSocketMessage {
     step: 'start' | 'intent' | 'quick_idea' | 'examples' | 'trends' | 'ideation' | 'selection' | 'script' | 'critique' | 'packaging' | 'complete';
     message: string;
     status: 'in_progress' | 'complete';
-    data?: any;
-    result?: any;
+    data?: Record<string, unknown>;
+    result?: Record<string, unknown>;
     topic?: string;
   };
-  result?: any;
+  result?: Record<string, unknown>;
   error?: string;
 }
 
 export interface UseWebSocketReturn {
   socket: WebSocket | null;
   status: WebSocketStatus;
-  sendMessage: (message: any) => boolean;
+  sendMessage: (message: WebSocketMessage | Record<string, unknown>) => boolean;
   connect: () => void;
   disconnect: () => void;
   lastMessage: WebSocketMessage | null;
@@ -204,7 +204,7 @@ export const useWebSocket = (url: string): UseWebSocketReturn => {
     managerRef.current.disconnect();
   }, []);
 
-  const sendMessage = useCallback((message: any): boolean => {
+  const sendMessage = useCallback((message: WebSocketMessage | Record<string, unknown>): boolean => {
     console.log('📤 [WEBSOCKET-HOOK] sendMessage() called, delegating to WebSocketManager');
     return managerRef.current.sendMessage(message);
   }, []);

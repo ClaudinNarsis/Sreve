@@ -2,13 +2,13 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface Project {
   projectId: string;
   userId: string;
-  answers: Record<string, any>;
+  answers: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -39,7 +39,7 @@ export interface ProjectExplorerRef {
 
 const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ onCampaignSelect, selectedCampaignId, onCreateProjectClick, selectedProjectId, onProjectSelect }, ref) => {
   const { user, isLoaded } = useUser();
-  const router = useRouter();
+  // const router = useRouter(); // Currently unused
   const pathname = usePathname();
   const [projects, setProjects] = useState<Project[]>([]);
   const [campaigns, setCampaigns] = useState<Record<string, Campaign[]>>({});
@@ -47,7 +47,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [loadingCampaigns, setLoadingCampaigns] = useState<Set<string>>(new Set());
   const [creatingCampaign, setCreatingCampaign] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [, setSelectedProject] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && user) {

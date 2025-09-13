@@ -111,8 +111,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "Just discovered the secret to perfect morning coffee ☕✨ Who else can't function without their daily brew? 
-                  #MorningRitual #CoffeeLovers #LifeHacks"
+                  &ldquo;Just discovered the secret to perfect morning coffee ☕✨ Who else can&apos;t function without their daily brew? 
+                  #MorningRitual #CoffeeLovers #LifeHacks&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Engaging captions with trending hashtags and emojis</p>
@@ -125,8 +125,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "The future of remote work isn't just about flexibility—it's about building stronger, more inclusive teams. 
-                  What's your take on the evolution of workplace culture? 💭"
+                  &ldquo;The future of remote work isn&apos;t just about flexibility—it&apos;s about building stronger, more inclusive teams. 
+                  What&apos;s your take on the evolution of workplace culture? 💭&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Professional content that sparks meaningful conversations</p>
@@ -139,8 +139,8 @@ export default function SocialMediaPostGeneratorPage() {
               </div>
               <div style={{ background: '#  1e1e1e', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
                 <p style={{ fontStyle: 'italic', margin: 0, fontSize: '0.9rem' }}>
-                  "POV: You finally found the perfect productivity hack 🎯 Try this 2-minute rule and thank me later! 
-                  #ProductivityTips #LifeHacks #Trending"
+                  &ldquo;POV: You finally found the perfect productivity hack 🎯 Try this 2-minute rule and thank me later! 
+                  #ProductivityTips #LifeHacks #Trending&rdquo;
                 </p>
               </div>
               <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>Viral-worthy content with trending hooks and CTAs</p>
@@ -157,7 +157,7 @@ export default function SocialMediaPostGeneratorPage() {
           <div className="features-grid">
             <article className="feature">
               <h3>🎯 Platform-Specific Optimization</h3>
-              <p>Each post is tailored for the specific platform's algorithm, format, and audience behavior.</p>
+              <p>Each post is tailored for the specific platform&apos;s algorithm, format, and audience behavior.</p>
             </article>
             <article className="feature">
               <h3>📈 Engagement-Driven Content</h3>
@@ -165,7 +165,7 @@ export default function SocialMediaPostGeneratorPage() {
             </article>
             <article className="feature">
               <h3>🔥 Trending Hashtags</h3>
-              <p>Automatically includes relevant trending hashtags to boost your post's discoverability and reach.</p>
+              <p>Automatically includes relevant trending hashtags to boost your post&apos;s discoverability and reach.</p>
             </article>
             <article className="feature">
               <h3>🎨 Visual Content Suggestions</h3>
@@ -245,7 +245,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Social Media Manager, FashionCo</p>
                 </div>
               </div>
-              <blockquote>"Our engagement rates increased by 250% after using this tool. It's like having a team of copywriters working 24/7!"</blockquote>
+              <blockquote>&ldquo;Our engagement rates increased by 250% after using this tool. It&apos;s like having a team of copywriters working 24/7!&rdquo;</blockquote>
             </article>
             <article className="card" style={{    padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
@@ -255,7 +255,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Digital Marketer, StartupX</p>
                 </div>
               </div>
-              <blockquote>"I create a month's worth of social media content in just 2 hours. The quality is incredible and perfectly matches our brand voice."</blockquote>
+              <blockquote>&ldquo;I create a month&apos;s worth of social media content in just 2 hours. The quality is incredible and perfectly matches our brand voice.&rdquo;</blockquote>
             </article>
             <article className="card" style={{    padding: '2rem', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
@@ -265,7 +265,7 @@ export default function SocialMediaPostGeneratorPage() {
                   <p style={{ opacity: 0.7, margin: 0 }}>Small Business Owner</p>
                 </div>
               </div>
-              <blockquote>"As a solo entrepreneur, this tool is a lifesaver. My social media presence has never been stronger, and I save 10+ hours per week."</blockquote>
+              <blockquote>&ldquo;As a solo entrepreneur, this tool is a lifesaver. My social media presence has never been stronger, and I save 10+ hours per week.&rdquo;</blockquote>
             </article>
           </div>
         </div>
@@ -335,6 +335,121 @@ export default function SocialMediaPostGeneratorPage() {
           <p>© 2024 Sreve. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Social Media Post Generator - Sreve",
+            "description": "Generate viral social media posts for all platforms. Drive engagement and grow your audience with AI-powered content creation.",
+            "url": "https://sreve.online/tools/social-media-post-generator",
+            "applicationCategory": "Social Media Marketing Software",
+            "operatingSystem": "Web Browser",
+            "author": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "publisher": {
+              "@type": "Organization", 
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free social media post generation for all platforms"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "950",
+              "bestRating": "5"
+            },
+            "featureList": [
+              "Multi-platform post generation",
+              "Viral content optimization", 
+              "Engagement-focused copy",
+              "Platform-specific formatting",
+              "Hashtag suggestions",
+              "Brand voice customization"
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What social media platforms does the generator support?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The Social Media Post Generator supports all major platforms including Instagram, Facebook, Twitter, LinkedIn, TikTok, and more. Posts are optimized for each platform's specific requirements."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does it help create viral content?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our AI analyzes viral content patterns, trending topics, and engagement psychology to create posts that are more likely to get shares, likes, and comments."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I customize the tone and style?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, you can specify your brand voice, target audience, tone, and style. The AI will generate posts that match your brand personality and marketing goals."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI Tools",
+                "item": "https://sreve.online/tools"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Social Media Post Generator",
+                "item": "https://sreve.online/tools/social-media-post-generator"
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

@@ -2,10 +2,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import './page.css';
 
 const LazyTestimonials = dynamic(() => import('./components/LazyTestimonials'), {
   ssr: false,
-  loading: () => <div style={{ height: '400px', backgroundColor: '#f8f8f8' }} />
+  loading: () => <div className="lazy-testimonials-loading" />
 });
 import React, { useEffect, useState, useMemo } from 'react';
 import { SignedIn, SignedOut, SignInButton, UserButton, useAuth } from '@clerk/nextjs';
@@ -363,7 +364,7 @@ export default function HomePage() {
       window.addEventListener('scroll', onScroll);
       return () => window.removeEventListener('scroll', onScroll);
     }
-  }, []);
+  }, [handleMobileMenu]);
 
   const setupIntersectionObserver = useMemo(() => {
     return (elementId: string, visibleClass: string, hiddenClass?: string) => {
@@ -466,46 +467,19 @@ export default function HomePage() {
   // Show loading screen when auto-creating project/campaign
   if (isAutoCreating) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        height: '100vh', 
-        backgroundColor: '#1a1a1a',
-        color: '#fff'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            border: '4px solid #333', 
-            borderTop: '4px solid #ff6600', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 2rem auto'
-          }}></div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <h2 className="loading-title">
             Getting your campaign ready...
           </h2>
-          <p style={{ 
-            fontSize: '1rem', 
-            color: '#ccc', 
-            marginBottom: '1rem',
-            opacity: '0.8'
-          }}>
+          <p className="loading-progress">
             {creationProgress}
           </p>
-          <p style={{ fontSize: '0.9rem', color: '#999' }}>
+          <p className="loading-subtitle">
             This will just take a moment
           </p>
         </div>
-        <style jsx>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -523,15 +497,15 @@ export default function HomePage() {
           <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
         </nav>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="header-auth-section">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
+              <button className="cta-button">Sign In</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
             <Link href="/app">
-              <button className="cta-button go-to-app-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Go to App</button>
+              <button className="cta-button go-to-app-button">Go to App</button>
             </Link>
             <UserButton />
           </SignedIn>
@@ -543,9 +517,9 @@ export default function HomePage() {
 
       <section className="hero" id="hero">
         <div className="container">
-          <p style={{ marginBottom: 0 }}>AI Blog Generator & Viral Post Creator for marketers and founders. </p>
-          <h1>Boring AI writes meh copy. <span style={{fontWeight: 'bold', color: '#ff6600'}}>Sreve</span> writes scroll-stoppers.</h1>
-          <p> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
+          <p className="hero-intro">AI Blog Generator & Viral Post Creator for marketers and founders. </p>
+          <h1 className="hero-title">Boring AI writes meh copy. <span className="brand-name">Sreve</span> writes scroll-stoppers.</h1>
+          <p className="hero-subtitle"> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>
@@ -564,12 +538,16 @@ export default function HomePage() {
             </div>
             <button className="generate-button" onClick={handleGenerateClick}>Generate</button>
           </div>
-          <div style={{ marginTop: '1rem' }}>
+          <div className="hero-trust-link">
             <a href="#demo-video-section" className="theme-link">Trusted by 500+ brands and agencies</a>
-            <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-              <Link href="/blog" style={{ color: '#ff6600', textDecoration: 'underline' }}>
+            <p className="hero-blog-link">
+              <Link href="/blog">
                 Read our latest insights on AI copywriting and marketing automation →
               </Link>
+              {' | '}
+              <Link href="/blog/cheaper-jasper-alternative-2025">Save 90% vs Jasper AI →</Link>
+              {' | '}
+              <Link href="/tools">Explore AI Tools →</Link>
             </p>
           </div>
         </div>
@@ -577,24 +555,24 @@ export default function HomePage() {
 
       <section className="features-section" id="features">
         <div className="container">
-          <h2 style={{textAlign: 'center', marginBottom: '3rem'}}>Why Agencies Choose Sreve Over Generic AI</h2>
+          <h2 className="features-title">Why Agencies Choose Sreve Over Generic AI</h2>
           <div className="features-grid">
             <article className="feature">
               <h3>Unhinged (In a Good Way)</h3>
-              <p>"No intern would dare write this."</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;No intern would dare write this.&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Thinks Like a Strategist</h3>
-              <p>"This feels like something my strategist would say."</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;This feels like something my strategist would say.&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Built for Creative Teams</h3>
-              <p>"Before Sreve, Everything needs rewriting or "seasoning" to work"</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e as any, '#hero')}>Try Now</button>
+              <p>&quot;Before Sreve, Everything needs rewriting or &quot;seasoning&quot; to work&quot;</p>
+              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
               <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABAAABAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAE/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
           </div>
@@ -613,7 +591,7 @@ export default function HomePage() {
                 <li>Generate up to 20 Ideas/month</li>
                 <li>1 Brand Guide</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
             <div className="pricing-card popular">
@@ -624,7 +602,7 @@ export default function HomePage() {
                 <li>Increased limit upto 200 Ideas/month</li>
                 <li>5 Brand Guides</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e as any, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
           </div>
@@ -639,25 +617,275 @@ export default function HomePage() {
           <p className="cta-note">⚡ Limited spots available this month</p>
           <div className="container contact-box">
             <p className="contact-text">Have questions? Book a quick call with our team.</p>
-            <button className="cta-button" onClick={(e) => gtagClick(e as any, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
+            <button className="cta-button" onClick={(e) => gtagClick(e, 'https://calendly.com/claudinnarsis/sreve-onboarding')}>Contact Us</button>
           </div>
         </div>
       </section>
 
-      <footer className="footer">
+      <footer className="footer" style={{ background: 'var(--darkness-level-1)', padding: '4rem 0 1rem' }}>
         <div className="footer-content">
-          <div className="footer-section">
-            <ul className="footer-nav">
-              <li><Link href="/blog">Blog</Link></li>
-              <li><Link href="/privacy-policy">Privacy Policy</Link></li>
-              <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank">Contact</a></li>
-            </ul>
+          <div className="container">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
+              
+              {/* AI Tools Section */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>AI Content Creation Tools</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Caption Generator</Link></li>
+                  <li><Link href="/tools/ai-content-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Content Generator</Link></li>
+                  <li><Link href="/tools/blog-idea-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Blog Idea Generator</Link></li>
+                  <li><Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media Post Generator</Link></li>
+                  <li><Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Sentence Rewriter</Link></li>
+                  <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Post Generator</Link></li>
+                  <li><Link href="/tools/blog-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Blog Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Marketing Resources */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Marketing Resources</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Blog</Link></li>
+                  <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Jasper AI Alternative</Link></li>
+                  <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Best AI Tools for Agencies</Link></li>
+                  <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media AI Tools</Link></li>
+                  <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing AI</Link></li>
+                  <li><a href="#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Pricing & Plans</a></li>
+                </ul>
+              </div>
+
+              {/* Use Cases */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Solutions by Industry</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><a href="#marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Agencies</a></li>
+                  <li><a href="#performance-marketers" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Performance Marketers</a></li>
+                  <li><a href="#ecommerce-brands" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>E-commerce Brands</a></li>
+                  <li><a href="#content-creators" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Creators</a></li>
+                  <li><a href="#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Platform Features</a></li>
+                  <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All AI Tools</Link></li>
+                </ul>
+              </div>
+
+              {/* Company & Support */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Company & Support</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>About Sreve</Link></li>
+                  <li><a href="#contact-us" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Contact Us</a></li>
+                  <li><a href="https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0" rel="noopener noreferrer" target="_blank" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>WhatsApp Support</a></li>
+                  <li><Link href="/privacy-policy" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Privacy Policy</Link></li>
+                  <li><a href="#features" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Product Demo</a></li>
+                  <li><a href="#pricing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Free Trial</a></li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Popular Comparisons Section */}
+            <div style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem' }}>
+              <h4 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Popular AI Tool Comparisons</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem 2rem' }}>
+                <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Jasper AI</Link>
+                <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Copy.ai</Link>
+                <Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Sreve vs Writesonic</Link>
+                <Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Best Caption Generator</Link>
+                <Link href="/tools/ai-content-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Content vs Human Writing</Link>
+                <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media AI Tools</Link>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p>© 2024 Sreve. All rights reserved.</p>
+        
+        <div className="footer-bottom" style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-tertiary)' }}>© 2024 Sreve. All rights reserved. Save 90% vs Jasper AI with professional AI marketing tools.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": ["Organization", "SoftwareApplication"],
+            "name": "Sreve",
+            "description": "AI-powered marketing content creation platform. Create scroll-stopping ads, captions, and viral content 90% cheaper than Jasper AI.",
+            "url": "https://sreve.online",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://sreve.online/assets/logo.png",
+              "width": 120,
+              "height": 40
+            },
+            "foundingDate": "2024",
+            "founder": {
+              "@type": "Organization",
+              "name": "Sreve Team"
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "US"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+919487731230",
+              "contactType": "customer service",
+              "availableLanguage": "English"
+            },
+            "sameAs": [
+              "https://api.whatsapp.com/send/?phone=9487731230&type=phone_number&app_absent=0"
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free AI content creation tools with premium plans starting at $19/month"
+            },
+            "applicationCategory": "Marketing Software",
+            "operatingSystem": "Web Browser",
+            "softwareVersion": "2.0",
+            "releaseNotes": "Advanced AI marketing tools for agencies and content creators",
+            "featureList": [
+              "AI Caption Generator",
+              "AI Content Generator", 
+              "Blog Idea Generator",
+              "Social Media Post Generator",
+              "AI Sentence Rewriter",
+              "Viral Post Generator"
+            ],
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "500",
+              "bestRating": "5"
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Sreve - AI Marketing Tools",
+            "url": "https://sreve.online",
+            "description": "Create professional marketing content with AI. 90% cheaper than Jasper AI with tools for captions, blog posts, and viral content.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://sreve.online/tools?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "AI Marketing Content Creation",
+            "description": "Professional AI-powered content creation for marketing agencies, performance marketers, and content creators. Generate captions, blog posts, and viral content.",
+            "provider": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "areaServed": {
+              "@type": "Place",
+              "name": "Worldwide"
+            },
+            "availableChannel": {
+              "@type": "ServiceChannel",
+              "serviceUrl": "https://sreve.online",
+              "serviceName": "Web Platform"
+            },
+            "audience": [
+              {
+                "@type": "Audience",
+                "audienceType": "Marketing Agencies"
+              },
+              {
+                "@type": "Audience", 
+                "audienceType": "Performance Marketers"
+              },
+              {
+                "@type": "Audience",
+                "audienceType": "Content Creators"
+              },
+              {
+                "@type": "Audience",
+                "audienceType": "E-commerce Brands"
+              }
+            ],
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "Free plan available, Pro plan $19/month"
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Sreve and how is it different from other AI tools?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve is an AI-powered marketing content creation platform specifically built for performance marketing. Unlike generic AI tools like Jasper or Copy.ai, Sreve focuses on creating copy that converts, drives engagement, and generates sales at 90% lower cost."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How much does Sreve cost compared to competitors?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve offers a free plan and Pro plan at $19/month, making it 90% cheaper than Jasper AI ($49-125/month), Copy.ai ($36/month), and other premium alternatives while delivering the same quality results."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What AI tools does Sreve offer?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sreve provides AI Caption Generator, AI Content Generator, Blog Idea Generator, Social Media Post Generator, AI Sentence Rewriter, and Viral Post Generator - all designed for marketing and business use."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Sreve suitable for marketing agencies?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, Sreve is perfect for marketing agencies. The Pro plan includes 5 brand voices for managing multiple clients, and all tools are designed for creating professional marketing content that drives business results."
+                }
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }

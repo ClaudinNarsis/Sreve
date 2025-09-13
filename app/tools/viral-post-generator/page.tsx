@@ -190,7 +190,7 @@ export default function ViralPostGeneratorPage() {
             <div style={{ padding: '2rem', border: '1px solid #eee', borderRadius: '12px', textAlign: 'center' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📱</div>
               <h3>Platform Optimization</h3>
-              <p>Content tailored to each platform's unique audience and algorithms performs significantly better.</p>
+              <p>Content tailored to each platform&apos;s unique audience and algorithms performs significantly better.</p>
             </div>
 
             <div style={{ padding: '2rem', border: '1px solid #eee', borderRadius: '12px', textAlign: 'center' }}>
@@ -229,7 +229,7 @@ export default function ViralPostGeneratorPage() {
                 <li style={{ marginBottom: '0.5rem' }}>❌ 30+ minutes per post</li>
                 <li style={{ marginBottom: '0.5rem' }}>❌ Hit-or-miss engagement</li>
                 <li style={{ marginBottom: '0.5rem' }}>❌ Platform knowledge needed</li>
-                <li style={{ marginBottom: '0.5rem' }}>❌ Writer's block issues</li>
+                <li style={{ marginBottom: '0.5rem' }}>❌ Writer&apos;s block issues</li>
                 <li style={{ marginBottom: '0.5rem' }}>❌ Manual trend research</li>
                 <li style={{ marginBottom: '0.5rem' }}>❌ Inconsistent performance</li>
               </ul>
@@ -313,30 +313,30 @@ export default function ViralPostGeneratorPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
             <div style={{ padding: '2rem', backgroundColor: '#18191a', borderRadius: '12px', borderLeft: '4px solid #ff6600' }}>
               <div style={{ marginBottom: '1rem' }}>
-                <strong>"10x Engagement Increase"</strong>
+                <strong>&ldquo;10x Engagement Increase&rdquo;</strong>
               </div>
               <p style={{ marginBottom: '1rem' }}>
-                "Using Sreve's viral post generator, my LinkedIn engagement went from 50 likes per post to 500+ likes consistently. The AI knows exactly what hooks work."
+                &ldquo;Using Sreve&apos;s viral post generator, my LinkedIn engagement went from 50 likes per post to 500+ likes consistently. The AI knows exactly what hooks work.&rdquo;
               </p>
               <small>- Sarah M., Marketing Manager</small>
             </div>
 
             <div style={{ padding: '2rem', backgroundColor: '#18191a', borderRadius: '12px', borderLeft: '4px solid #ff6600' }}>
               <div style={{ marginBottom: '1rem' }}>
-                <strong>"50K+ Views in 24 Hours"</strong>
+                <strong>&ldquo;50K+ Views in 24 Hours&rdquo;</strong>
               </div>
               <p style={{ marginBottom: '1rem' }}>
-                "My first viral post generated with Sreve got 50,000+ views and 200+ comments. It brought me 500 new followers and 3 new clients."
+                &ldquo;My first viral post generated with Sreve got 50,000+ views and 200+ comments. It brought me 500 new followers and 3 new clients.&rdquo;
               </p>
               <small>- Mike R., Business Coach</small>
             </div>
 
             <div style={{ padding: '2rem', backgroundColor: '#18191a', borderRadius: '12px', borderLeft: '4px solid #ff6600' }}>
               <div style={{ marginBottom: '1rem' }}>
-                <strong>"Time Savings: 5 Hours Daily"</strong>
+                <strong>&ldquo;Time Savings: 5 Hours Daily&rdquo;</strong>
               </div>
               <p style={{ marginBottom: '1rem' }}>
-                "I used to spend 5+ hours daily creating social content. Now I generate 10 high-quality posts in 15 minutes. Game changer for my agency."
+                &ldquo;I used to spend 5+ hours daily creating social content. Now I generate 10 high-quality posts in 15 minutes. Game changer for my agency.&rdquo;
               </p>
               <small>- Lisa K., Agency Owner</small>
             </div>
@@ -354,7 +354,7 @@ export default function ViralPostGeneratorPage() {
 
             <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px' }}>
               <h3 style={{ marginBottom: '1rem' }}>Can I use the same post across multiple platforms?</h3>
-              <p>While the core message can be similar, each platform has unique audiences and algorithms. Our generator optimizes content specifically for each platform's best practices.</p>
+              <p>While the core message can be similar, each platform has unique audiences and algorithms. Our generator optimizes content specifically for each platform&apos;s best practices.</p>
             </div>
 
             <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px' }}>
@@ -364,11 +364,11 @@ export default function ViralPostGeneratorPage() {
 
             <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px' }}>
               <h3 style={{ marginBottom: '1rem' }}>Will my content look authentic?</h3>
-              <p>Absolutely! Our AI is trained to create authentic, human-like content that reflects your brand voice and personality. The content doesn't look or feel robotic.</p>
+              <p>Absolutely! Our AI is trained to create authentic, human-like content that reflects your brand voice and personality. The content doesn&apos;t look or feel robotic.</p>
             </div>
 
             <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '8px' }}>
-              <h3 style={{ marginBottom: '1rem' }}>What if my post doesn't go viral?</h3>
+              <h3 style={{ marginBottom: '1rem' }}>What if my post doesn&apos;t go viral?</h3>
               <p>While we optimize for viral potential, virality depends on many factors including timing, audience, and luck. Our generator significantly increases your chances of high engagement.</p>
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function ViralPostGeneratorPage() {
         }}>
           <h2 style={{ marginBottom: '1rem', fontSize: '2.5rem' }}>Start Creating Viral Content Today</h2>
           <p style={{ marginBottom: '2rem', fontSize: '1.2rem', opacity: 0.9 }}>
-            Join thousands of creators who've increased their social media engagement by 10x with our viral post generator.
+            Join thousands of creators who&apos;ve increased their social media engagement by 10x with our viral post generator.
           </p>
           
           <SignedIn>
@@ -416,7 +416,7 @@ export default function ViralPostGeneratorPage() {
                 fontWeight: 'bold',
                 cursor: 'pointer'
               }}>
-                Get Started - It's Free!
+                Get Started - It&apos;s Free!
               </button>
             </SignInButton>
           </SignedOut>

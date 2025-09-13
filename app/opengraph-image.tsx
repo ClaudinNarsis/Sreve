@@ -63,7 +63,7 @@ export default async function Image() {
               lineHeight: 1.3,
             }}
           >
-            Generate scroll-stopping UGC scripts, hooks, ad copy, and fresh creative ideas — all in your brand's voice
+            Generate scroll-stopping UGC scripts, hooks, ad copy, and fresh creative ideas — all in your brand&apos;s voice
           </div>
         </div>
       </div>
