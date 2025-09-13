@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 // Force dynamic behavior to prevent caching
@@ -132,13 +132,15 @@ export async function POST(request: NextRequest) {
       success: true
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in POST /api/projects:', error);
-    console.error('❌ Error name:', error.name);
-    console.error('❌ Error message:', error.message);
-    console.error('❌ Full error:', JSON.stringify(error, null, 2));
     
-    if (error.name === 'ConditionalCheckFailedException') {
+    if (error instanceof Error) {
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+    }
+    
+    if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
       console.log('ℹ️ Project already exists (duplicate projectId - should be rare with UUID)');
       return NextResponse.json({ 
         error: 'Project creation conflict. Please try again.',
@@ -153,7 +155,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   console.log('📥 GET /api/projects - Project fetch request received');
   
   try {
@@ -164,8 +166,6 @@ export async function GET(request: NextRequest) {
       console.log('❌ User not authenticated');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { searchParams } = new URL(request.url);
 
     // Get all projects for user
     console.log('🔍 Fetching all projects for user:', userId);

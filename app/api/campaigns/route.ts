@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
 // Force dynamic behavior to prevent caching
@@ -101,10 +101,10 @@ export async function POST(request: NextRequest) {
       success: true
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in POST /api/campaigns:', error);
     
-    if (error.name === 'ConditionalCheckFailedException') {
+    if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
       console.log('ℹ️ Campaign already exists (duplicate campaignId)');
       return NextResponse.json({ 
         error: 'Campaign creation conflict. Please try again.',

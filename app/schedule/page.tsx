@@ -52,7 +52,7 @@ export default function SchedulePage() {
         if (footer) (footer as HTMLElement).style.display = 'none';
       };
       document.body.appendChild(script);
-    } catch (e) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     } finally {

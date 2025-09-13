@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import './CampaignExplorer.css';
-import { useWebSocket, WebSocketStatus, WebSocketMessage } from '../hooks/useWebSocket';
+import { useWebSocket, WebSocketStatus } from '../hooks/useWebSocket';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -15,8 +15,18 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  apiResponse?: any;
+  apiResponse?: ApiResponse;
 }
+
+interface DbMessage {
+  chatMessageId: string;
+  message: string;
+  sender: 'user' | 'bot';
+  timestamp: string;
+  createdAt?: string;
+  apiResponse?: ApiResponse;
+}
+
 
 interface ApiResponse {
   chat: {
@@ -38,8 +48,8 @@ interface ApiResponse {
   ideas: {
     quick_idea: { angle: string; hook: string; description: string; };
     ideas: Array<{ angle: string; hook: string; description: string; }>;
-    examples: any[];
-    trends: Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: any[]; }>;
+    examples: unknown[];
+    trends: Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: unknown[]; }>;
     selection: {
       selected: {
         angle: string;
@@ -48,7 +58,7 @@ interface ApiResponse {
         scores: { [key: string]: number };
         rationale: string;
       };
-      rejected: Array<{ idea: any; reason: string; }>;
+      rejected: Array<{ idea: { angle: string; hook: string; description: string; }; reason: string; }>;
     };
     deliverable: {
       title: string;
@@ -58,6 +68,7 @@ interface ApiResponse {
       platform_tips: string[];
     };
   };
+  result?: ApiResponse;
 }
 
 const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStreamingStateChange, onDataChange }) => {
@@ -79,7 +90,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [streamingStatus, setStreamingStatus] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingData, setStreamingData] = useState<any>(null);
+  const [streamingData, setStreamingData] = useState<Record<string, unknown> | null>(null);
   
   // Add debug useEffect to track streamingData changes
   useEffect(() => {
@@ -91,11 +102,11 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const allStreamingSteps = useRef<any>({});
+  const allStreamingSteps = useRef<Record<string, unknown>>({});
   const completionProcessed = useRef<boolean>(false);
 
   // Function to build final result from streaming steps
-  const buildFinalResultFromStreaming = (currentStreamingData: any, allSteps: any): ApiResponse | null => {
+  const buildFinalResultFromStreaming = (currentStreamingData: unknown, allSteps: Record<string, unknown>): ApiResponse | null => {
     console.log('🔧 [BUILD-RESULT] Building final result from steps:', { currentStreamingData, allSteps });
     
     // If we don't have enough data, return null
@@ -106,15 +117,18 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
 
     // Build the final result structure
     try {
+      const streamingData = currentStreamingData as { topic?: string };
+      const steps = allSteps as Record<string, { data?: Record<string, unknown> }>;
+      
       const finalResult: ApiResponse = {
         chat: {
-          thinking: allSteps.intent?.data?.rationale || 'I\'ve analyzed your request and generated ideas for you.',
-          clarifying_questions: allSteps.intent?.data?.clarifying_questions || [],
-          topic: currentStreamingData?.topic || 'Campaign Ideas'
+          thinking: (steps.intent?.data?.rationale as string) || 'I\'ve analyzed your request and generated ideas for you.',
+          clarifying_questions: (steps.intent?.data?.clarifying_questions as string[]) || [],
+          topic: streamingData?.topic || 'Campaign Ideas'
         },
         detials: {
-          format: allSteps.intent?.data?.format || 'Static ad script',
-          critic: allSteps.critique?.data || {
+          format: (steps.intent?.data?.format as string) || 'Static ad script',
+          critic: (steps.critique?.data as ApiResponse['detials']['critic']) || {
             attention: { score: 8, reason: 'Generated compelling hooks' },
             trend_fit: { score: 7, reason: 'Aligned with current trends' },
             originality: { score: 8, reason: 'Creative and unique approach' },
@@ -124,12 +138,21 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
           }
         },
         ideas: {
-          quick_idea: allSteps.quick_idea?.data || null,
-          ideas: allSteps.ideation?.data || [],
-          examples: allSteps.examples?.data || [],
-          trends: allSteps.trends?.data || [],
-          selection: allSteps.selection?.data || null,
-          deliverable: allSteps.script?.data || null
+          quick_idea: (steps.quick_idea?.data as { angle: string; hook: string; description: string; }) || { angle: '', hook: '', description: '' },
+          ideas: (Array.isArray(steps.ideation?.data) ? steps.ideation.data : []) as Array<{ angle: string; hook: string; description: string; }>,
+          examples: (Array.isArray(steps.examples?.data) ? steps.examples.data : []) as unknown[],
+          trends: (Array.isArray(steps.trends?.data) ? steps.trends.data : []) as Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: unknown[]; }>,
+          selection: (steps.selection?.data as ApiResponse['ideas']['selection']) || {
+            selected: { angle: '', hook: '', description: '', scores: {}, rationale: '' },
+            rejected: []
+          },
+          deliverable: (steps.script?.data as ApiResponse['ideas']['deliverable']) || {
+            title: '',
+            hook: '',
+            visual_concepts: [],
+            copy_variants: [],
+            platform_tips: []
+          }
         }
       };
 
@@ -265,7 +288,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         console.log('✅ Loaded messages from DB:', dbMessages.length, 'messages:', dbMessages);
         
         // Convert DB messages to ChatMessage format
-        const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: any) => {
+        const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: DbMessage) => {
           console.log('🔍 [DEBUG] Converting DB message:', dbMsg);
           console.log('🔍 [DEBUG] DB message apiResponse:', dbMsg.apiResponse);
           
@@ -558,7 +581,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
           if (stepData.result || lastMessage.result) {
             const result = stepData.result || lastMessage.result;
             console.log('🎯 [WEBSOCKET] Final result received:', result);
-            setCurrentApiResponse(result);
+            setCurrentApiResponse(result as unknown as ApiResponse);
             setStreamingData(null); // Clear streaming data when final result is received
           }
         }
@@ -600,7 +623,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             text: resultToUse?.chat?.thinking || 'I\'ve analyzed your request and generated ideas for you.',
             sender: 'bot',
             timestamp: new Date(),
-            apiResponse: { result: resultToUse }
+            apiResponse: resultToUse
           };
 
           console.log('🔍 [DEBUG] Creating bot response with apiResponse:', botResponse.apiResponse);
@@ -901,12 +924,12 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
       console.log('✅ [CAMPAIGN-EXPLORER] WebSocket message sent successfully');
       console.log('⏳ [CAMPAIGN-EXPLORER] Waiting for WebSocket response...');
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('💥 [CAMPAIGN-EXPLORER] Exception in handleSendMessage:', error);
       console.error('🔍 [CAMPAIGN-EXPLORER] Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       });
       console.error('📊 [CAMPAIGN-EXPLORER] Context when error occurred:', {
         wsStatus: wsStatus,
@@ -924,7 +947,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
       
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: `Sorry, I encountered an error: ${error.message}. Please try again.`,
+        text: `Sorry, I encountered an error: ${error instanceof Error ? error.message : String(error)}. Please try again.`,
         sender: 'bot',
         timestamp: new Date()
       };
@@ -1157,7 +1180,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             {/* Show streaming content: only quick_idea when complete, loading indicators otherwise */}
             {isStreaming && !currentApiResponse?.ideas ? (() => {
               // During streaming, only show quick_idea if available, otherwise show loading
-              const quickIdeaStep = allStreamingSteps.current?.quick_idea;
+              const quickIdeaStep = allStreamingSteps.current?.quick_idea as { data?: { hook?: string; angle?: string; description?: string } } | undefined;
               
               if (quickIdeaStep && quickIdeaStep.data) {
                 // Show the quick_idea if it's completed
@@ -1168,7 +1191,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                       {quickIdeaStep.data.hook && (
                         <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid #4CAF50' }}>
                           <h4 style={{ color: '#4CAF50', fontSize: '18px', margin: '0 0 8px 0' }}>Hook</h4>
-                          <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>"{quickIdeaStep.data.hook}"</p>
+                          <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>&ldquo;{quickIdeaStep.data.hook}&rdquo;</p>
                         </div>
                       )}
                       {quickIdeaStep.data.angle && (
@@ -1248,7 +1271,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             })() : streamingData && streamingData.status === 'complete' && streamingData.data && !currentApiResponse?.ideas && (() => {
               console.log('🎨 [UI] Rendering completed streaming data:', streamingData);
               
-              const renderDataUI = (data: any, step: string) => {
+              const renderDataUI = (data: Record<string, unknown>, step: string) => {
                 switch (step) {
                   case 'intent':
                     return (
@@ -1257,16 +1280,16 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         {data.format && (
                           <div style={{ marginBottom: '15px' }}>
                             <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Content Format</h4>
-                            <p style={{ color: '#4CAF50', fontSize: '18px', fontWeight: 'bold' }}>{data.format}</p>
+                            <p style={{ color: '#4CAF50', fontSize: '18px', fontWeight: 'bold' }}>{data.format as string}</p>
                           </div>
                         )}
                         {data.rationale && (
                           <div style={{ marginBottom: '15px' }}>
                             <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Reasoning</h4>
-                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.rationale}</p>
+                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.rationale as string}</p>
                           </div>
                         )}
-                        {data.clarifying_questions && data.clarifying_questions.length > 0 && (
+                        {data.clarifying_questions && Array.isArray(data.clarifying_questions) && data.clarifying_questions.length > 0 && (
                           <div>
                             <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Clarifying Questions</h4>
                             <ul style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
@@ -1286,19 +1309,19 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         {data.hook && (
                           <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid #4CAF50' }}>
                             <h4 style={{ color: '#4CAF50', fontSize: '18px', margin: '0 0 8px 0' }}>Hook</h4>
-                            <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>"{data.hook}"</p>
+                            <p style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>&ldquo;{data.hook as string}&rdquo;</p>
                           </div>
                         )}
                         {data.angle && (
                           <div style={{ marginBottom: '15px' }}>
                             <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Angle</h4>
-                            <p style={{ color: '#e0e0e0', fontSize: '18px' }}>{data.angle}</p>
+                            <p style={{ color: '#e0e0e0', fontSize: '18px' }}>{data.angle as string}</p>
                           </div>
                         )}
                         {data.description && (
                           <div>
                             <h4 style={{ color: '#f0f0f0', fontSize: '16px' }}>Description</h4>
-                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.description}</p>
+                            <p style={{ color: '#e0e0e0', lineHeight: '1.5' }}>{data.description as string}</p>
                           </div>
                         )}
                       </div>
@@ -1308,7 +1331,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                     return (
                       <div className="trends-data" style={{ padding: '20px' }}>
                         <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>📈 Current Trends</h3>
-                        {Array.isArray(data) && data.map((trend: any, i: number) => (
+                        {Array.isArray(data) && data.map((trend: unknown, i: number) => (
                           <div key={i} style={{ 
                             marginBottom: '20px', 
                             padding: '15px', 
@@ -1343,7 +1366,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                     return (
                       <div className="ideation-data" style={{ padding: '20px' }}>
                         <h3 style={{ color: '#4CAF50', marginBottom: '15px' }}>💭 Enhanced Ideas</h3>
-                        {Array.isArray(data) && data.map((idea: any, i: number) => (
+                        {Array.isArray(data) && data.map((idea: unknown, i: number) => (
                           <div key={i} style={{ 
                             marginBottom: '20px', 
                             padding: '15px', 
@@ -1354,7 +1377,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                             <div style={{ marginBottom: '10px' }}>
                               <span style={{ color: '#4CAF50', fontSize: '14px', fontWeight: 'bold' }}>{idea.angle}</span>
                             </div>
-                            <h4 style={{ color: '#fff', fontSize: '18px', margin: '0 0 8px 0' }}>"{idea.hook}"</h4>
+                            <h4 style={{ color: '#fff', fontSize: '18px', margin: '0 0 8px 0' }}>&ldquo;{idea.hook}&rdquo;</h4>
                             <p style={{ color: '#e0e0e0', margin: 0, lineHeight: '1.4' }}>{idea.description}</p>
                           </div>
                         ))}
@@ -1402,7 +1425,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         {currentApiResponse.ideas.selection.selected.angle}
                       </div>
                       <div className="idea-hook" style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.6em' }}>
-                        "{currentApiResponse.ideas.selection.selected.hook}"
+                        &ldquo;{currentApiResponse.ideas.selection.selected.hook}&rdquo;
                       </div>
                       <div className="idea-description" style={{ color: '#a6a6a6', marginTop: '8px' , fontSize: '1.2em' }}>
                         {currentApiResponse.ideas.selection.selected.description}
@@ -1424,7 +1447,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         {currentApiResponse.ideas.deliverable.title}
                       </div>
                       <div className="deliverable-hook" style={{ color: '#f3f3f3', marginTop: '8px' }}>
-                        Hook: "{currentApiResponse.ideas.deliverable.hook}"
+                        Hook: &ldquo;{currentApiResponse.ideas.deliverable.hook}&rdquo;
                       </div>
                       
                       <div className="subsection">
@@ -1440,7 +1463,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Copy Variants</h5>
                         <ul style={{ color: '#f5f5f5' }}>
                           {currentApiResponse.ideas.deliverable.copy_variants?.map((copy, index) => (
-                            <li key={index}>"{copy}"</li>
+                            <li key={index}>&ldquo;{copy}&rdquo;</li>
                           ))}
                         </ul>
                       </div>
@@ -1632,7 +1655,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                         fontSize: '1.2em',
                         marginBottom: '8px'
                       }}>
-                        "{currentApiResponse.ideas.quick_idea.hook}"
+                        &ldquo;{currentApiResponse.ideas.quick_idea.hook}&rdquo;
                       </div>
                       <div className="quick-idea-angle" style={{ 
                         color: '#f0f0f0', 
@@ -1665,7 +1688,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
                           padding: '12px'
                         }}>
                           <div className="idea-angle" style={{ color: '#f0f0f0', fontWeight: '400', fontSize: '1em' }}>{idea.angle}</div>
-                          <div className="idea-hook" style={{ color: '#f3f3f3', fontStyle: 'italic', marginTop: '4px', fontSize: '1.3em' }}>"{idea.hook}"</div>
+                          <div className="idea-hook" style={{ color: '#f3f3f3', fontStyle: 'italic', marginTop: '4px', fontSize: '1.3em' }}>&ldquo;{idea.hook}&rdquo;</div>
                           <div className="idea-description" style={{ color: '#f6f6f6', marginTop: '6px', fontSize: '0.9em' }}>{idea.description}</div>
                         </div>
                       ))}

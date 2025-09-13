@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -96,13 +96,13 @@ export async function POST(req: NextRequest) {
       console.log('✅ User created in DynamoDB successfully:', result);
       console.log('✅ User ID:', id);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error creating user in DynamoDB:', error);
-      console.error('❌ Error name:', error.name);
-      console.error('❌ Error message:', error.message);
+      console.error('❌ Error name:', error instanceof Error ? error.name : "Unknown");
+      console.error('❌ Error message:', error instanceof Error ? error.message : "Unknown error");
       console.error('❌ Full error:', JSON.stringify(error, null, 2));
       
-      if (error.name !== 'ConditionalCheckFailedException') {
+      if (!(error instanceof Error && error.name === 'ConditionalCheckFailedException')) {
         return new Response('Error creating user', { status: 500 });
       }
       console.log('ℹ️ User already exists in DynamoDB:', id);

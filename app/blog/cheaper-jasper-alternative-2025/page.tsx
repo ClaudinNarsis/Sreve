@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -47,7 +48,7 @@ export default function CheaperJasperAlternative() {
       <header className="blog-header">
         <nav className="blog-nav">
           <Link href="/" className="logo-link">
-            <img src="/assets/logo.png" alt="Sreve Logo" className="nav-logo" />
+            <Image src="/assets/logo.png" alt="Sreve Logo" className="nav-logo" width={120} height={40} />
           </Link>
           <Link href="/blog" className="back-link">← Back to Blog</Link>
         </nav>

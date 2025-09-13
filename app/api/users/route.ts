@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
       success: true
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error in POST /api/users:', error);
-    console.error('❌ Error name:', error.name);
-    console.error('❌ Error message:', error.message);
+    console.error('❌ Error name:', error instanceof Error ? error.name : "Unknown");
+    console.error('❌ Error message:', error instanceof Error ? error.message : "Unknown error");
     console.error('❌ Full error:', JSON.stringify(error, null, 2));
     
-    if (error.name === 'ConditionalCheckFailedException') {
+    if (error instanceof Error && error.name === 'ConditionalCheckFailedException') {
       console.log('ℹ️ User already exists');
       return NextResponse.json({ 
         error: 'User already exists',
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   console.log('📥 GET /api/users - User fetch request received');
   
   try {
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error in GET /api/users:', error);
-    console.error('❌ Error message:', error.message);
+    console.error('❌ Error message:', error instanceof Error ? error.message : "Unknown error");
     console.error('❌ Full error:', JSON.stringify(error, null, 2));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

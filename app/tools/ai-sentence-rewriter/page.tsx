@@ -20,25 +20,6 @@ export default function AISentenceRewriterPage() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const gtagClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, url: string) => {
-    e.preventDefault();
-    const button = e.currentTarget as HTMLElement;
-
-    if (url.startsWith('#')) {
-      const targetId = url.substring(1);
-      const targetElement = document.getElementById(targetId);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      if (!button.querySelector('.button-loader')) {
-        const loader = document.createElement('span');
-        loader.className = 'button-loader';
-        button.appendChild(loader);
-      }
-      setTimeout(() => { window.location.href = url; }, 20);
-    }
-  };
 
   return (
     <>
@@ -211,6 +192,129 @@ export default function AISentenceRewriterPage() {
           <p>© 2024 Sreve. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "AI Sentence Rewriter - Sreve",
+            "description": "Transform your sentences with advanced AI. Improve clarity, change tone, and enhance readability for better conversions instantly.",
+            "url": "https://sreve.online/tools/ai-sentence-rewriter",
+            "applicationCategory": "Writing Software",
+            "operatingSystem": "Web Browser",
+            "author": {
+              "@type": "Organization",
+              "name": "Sreve"
+            },
+            "publisher": {
+              "@type": "Organization", 
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "description": "Free AI sentence rewriting with unlimited usage"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.7",
+              "reviewCount": "850",
+              "bestRating": "5"
+            },
+            "featureList": [
+              "AI-powered sentence rewriting",
+              "Multiple tone options", 
+              "Clarity improvement",
+              "Grammar correction",
+              "Style enhancement",
+              "Instant results"
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What does the AI Sentence Rewriter do?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The AI Sentence Rewriter transforms your sentences to improve clarity, change tone, fix grammar, and enhance readability while preserving the original meaning."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is the AI Sentence Rewriter free to use?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, the AI Sentence Rewriter is completely free to use with unlimited sentence rewrites. No credit card required."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I choose different writing tones?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, you can select from multiple tones including professional, casual, formal, friendly, and more to match your specific needs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How accurate is the AI rewriting?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Our AI sentence rewriter uses advanced language models to ensure high accuracy while preserving meaning and improving readability. It's trusted by thousands of users daily."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "AI Tools",
+                "item": "https://sreve.online/tools"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "AI Sentence Rewriter",
+                "item": "https://sreve.online/tools/ai-sentence-rewriter"
+              }
+            ]
+          })
+        }}
+      />
     </>
   );
 }
