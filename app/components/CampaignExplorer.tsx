@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './CampaignExplorer.css';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  apiResponse?: ApiResponse;
+  apiResponse?: Record<string, unknown>;
 }
 
 interface DbMessage {
@@ -23,59 +23,13 @@ interface DbMessage {
   sender: 'user' | 'bot';
   timestamp: string;
   createdAt?: string;
-  apiResponse?: ApiResponse;
+  apiResponse?: Record<string, unknown>;
 }
 
-
-interface ApiResponse {
-  chat: {
-    thinking: string;
-    clarifying_questions: string[];
-    topic: string;
-  };
-  detials: {
-    format: string;
-    critic: {
-      attention: { score: number; reason: string; };
-      trend_fit: { score: number; reason: string; };
-      originality: { score: number; reason: string; };
-      brand_fit: { score: number; reason: string; };
-      overall: number;
-      improvements: string[];
-    };
-  };
-  ideas: {
-    quick_idea: { angle: string; hook: string; description: string; };
-    ideas: Array<{ angle: string; hook: string; description: string; }>;
-    examples: unknown[];
-    trends: Array<{ title: string; url: string; snippet: string; hooks: string[]; hashtags: string[]; audios: unknown[]; }>;
-    selection: {
-      selected: {
-        angle: string;
-        hook: string;
-        description: string;
-        scores: { [key: string]: number };
-        rationale: string;
-      };
-      rejected: Array<{ idea: { angle: string; hook: string; description: string; }; reason: string; }>;
-    };
-    deliverable: {
-      title: string;
-      hook: string;
-      visual_concepts: string[];
-      copy_variants: string[];
-      platform_tips: string[];
-    };
-  };
-  result?: ApiResponse;
-}
-
-const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStreamingStateChange, onDataChange }) => {
+const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onDataChange }) => {
   console.log('🎯 [CAMPAIGN-EXPLORER] Component rendered with campaignId:', campaignId);
-  
+
   const router = useRouter();
-  const [ideaPaneWidthPercent, setIdeaPaneWidthPercent] = useState(80);
-  const [topPanesHeightPercent, setTopPanesHeightPercent] = useState(70);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -85,19 +39,15 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [currentApiResponse, setCurrentApiResponse] = useState<ApiResponse | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
-  const [activeScoreReason, setActiveScoreReason] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-
   // Function to save chat messages to database
   const saveChatMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
     console.log('💾 [DATABASE] Saving chat message to database:', message);
-    console.log('💾 [DATABASE] ApiResponse being saved:', message.apiResponse);
-    
+
     const payload = {
       campaignId: campaignId,
       message: {
@@ -108,9 +58,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         apiResponse: message.apiResponse
       }
     };
-    
-    console.log('💾 [DATABASE] Full payload:', JSON.stringify(payload, null, 2));
-    
+
     try {
       const response = await fetch('/api/chat/save-message', {
         method: 'POST',
@@ -121,16 +69,15 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
       });
 
       const data = await response.json();
-      
+
       console.log('📥 [DATABASE] Save response status:', response.status);
       console.log('📥 [DATABASE] Save response data:', data);
-      
+
       if (response.ok && data.success) {
         console.log('✅ [DATABASE] Chat message saved successfully');
         return true;
       } else {
         console.error('❌ [DATABASE] Failed to save chat message:', data);
-        console.error('❌ [DATABASE] Response status:', response.status);
         return false;
       }
     } catch (error) {
@@ -139,54 +86,6 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
     }
   };
 
-  const handleVerticalResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
-    if (!containerRect) return;
-
-    const startY = e.clientY;
-    const startHeightPercent = topPanesHeightPercent;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaY = e.clientY - startY;
-      const deltaPercent = (deltaY / containerRect.height) * 100;
-      const newHeightPercent = Math.max(20, Math.min(80, startHeightPercent + deltaPercent));
-      setTopPanesHeightPercent(newHeightPercent);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [topPanesHeightPercent]);
-
-  const handleHorizontalResize = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const containerRect = e.currentTarget.parentElement?.getBoundingClientRect();
-    if (!containerRect) return;
-
-    const startX = e.clientX;
-    const startWidthPercent = ideaPaneWidthPercent;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startX;
-      const deltaPercent = (deltaX / containerRect.width) * 100;
-      const newWidthPercent = Math.max(20, Math.min(80, startWidthPercent + deltaPercent));
-      setIdeaPaneWidthPercent(newWidthPercent);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, [ideaPaneWidthPercent]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -194,9 +93,9 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   const fetchChatMessages = useCallback(async (campaignId: string) => {
     console.log('📥 Fetching chat messages for campaign:', campaignId);
     setLoadingMessages(true);
-    
+
     try {
-      // Add timestamp to prevent caching  
+      // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
       const response = await fetch(`/api/chat?campaignId=${campaignId}&t=${timestamp}`, {
         headers: {
@@ -205,18 +104,15 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         }
       });
       const data = await response.json();
-      
+
       console.log('📋 Chat messages API response:', data);
-      
+
       if (response.ok && data.success) {
         const dbMessages = data.messages || [];
         console.log('✅ Loaded messages from DB:', dbMessages.length, 'messages:', dbMessages);
-        
+
         // Convert DB messages to ChatMessage format
         const convertedMessages: ChatMessage[] = dbMessages.map((dbMsg: DbMessage) => {
-          console.log('🔍 [DEBUG] Converting DB message:', dbMsg);
-          console.log('🔍 [DEBUG] DB message apiResponse:', dbMsg.apiResponse);
-          
           return {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
@@ -225,27 +121,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             apiResponse: dbMsg.apiResponse
           };
         });
-        
-        // Set the most recent API response if available
-        const lastBotMessage = convertedMessages
-          .filter(msg => msg.sender === 'bot' && msg.apiResponse)
-          .pop();
-          
-        console.log('🔍 [DEBUG] All bot messages with apiResponse:', convertedMessages.filter(msg => msg.sender === 'bot' && msg.apiResponse));
-        console.log('🔍 [DEBUG] Last bot message:', lastBotMessage);
-        console.log('🔍 [DEBUG] Last bot message apiResponse:', lastBotMessage?.apiResponse);
-        
-        if (lastBotMessage?.apiResponse?.result) {
-          console.log('🎯 Setting current API response from last bot message:', lastBotMessage.apiResponse.result);
-          setCurrentApiResponse(lastBotMessage.apiResponse.result);
-        } else if (lastBotMessage?.apiResponse) {
-          // Handle case where apiResponse is stored directly (not wrapped in result)
-          console.log('🎯 Setting current API response directly from apiResponse:', lastBotMessage.apiResponse);
-          setCurrentApiResponse(lastBotMessage.apiResponse);
-        } else {
-          console.log('⚠️ [DEBUG] No valid apiResponse found in last bot message');
-        }
-        
+
         // Set messages (replacing the default welcome message)
         setMessages(convertedMessages.length > 0 ? convertedMessages : [
           {
@@ -255,7 +131,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
             timestamp: new Date()
           }
         ]);
-        
+
         setTimeout(scrollToBottom, 100);
       } else {
         console.error('❌ Failed to load chat messages:', data.error);
@@ -288,7 +164,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   // Load chat messages when campaign changes
   useEffect(() => {
     console.log('🎯 [CAMPAIGN-EXPLORER] Campaign ID changed:', campaignId);
-    
+
     if (campaignId) {
       console.log('🎯 [CAMPAIGN-EXPLORER] Fetching messages for campaign:', campaignId);
       fetchChatMessages(campaignId);
@@ -303,7 +179,6 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
           timestamp: new Date()
         }
       ]);
-      setCurrentApiResponse(null);
     }
   }, [campaignId, fetchChatMessages]);
 
@@ -339,8 +214,6 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
     }
   }, [campaignId]);
 
-
-
   const handleDeleteCampaign = async () => {
     if (!campaignId) {
       toast.error('Campaign ID not available');
@@ -363,13 +236,13 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
         toast.success(`Campaign deleted successfully! ${summary.chatMessagesDeleted} chat messages were also deleted.`, {
           duration: 5000,
         });
-        
+
         // Notify parent to refresh sidebar data
         onDataChange?.();
-        
+
         // Navigate back to home page
         router.push('/');
-        
+
       } else {
         toast.error(`Failed to delete campaign: ${data.error || 'Unknown error'}`, {
           duration: 4000,
@@ -448,7 +321,7 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     console.log('⌨️ Key pressed:', e.key);
     console.log('⌨️ Shift key:', e.shiftKey);
-    
+
     if (e.key === 'Enter' && !e.shiftKey) {
       console.log('✅ Enter key without shift - calling handleSendMessage');
       e.preventDefault();
@@ -456,394 +329,13 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onStrea
     }
   };
 
-  const handleScoreClick = (scoreKey: string) => {
-    setActiveScoreReason(activeScoreReason === scoreKey ? null : scoreKey);
-  };
-
-
-  const GaugeMeter: React.FC<{
-    label: string;
-    score: number;
-    reason: string;
-    scoreKey: string;
-  }> = ({ label, score, reason, scoreKey }) => {
-    const percentage = (score / 10) * 100;
-    const isActive = activeScoreReason === scoreKey;
-    const strokeDasharray = `${percentage * 1.57} 157`;
-    
-    return (
-      <div className="gauge-card" style={{ 
-        maxWidth: '200px',
-        minWidth: '180px',
-        flex: '1',
-        
-        borderRadius: '12px',
-        padding: '20px',
-        border: isActive ? '2px solid #4CAF50' : '0.3px solid #444',
-        boxShadow: isActive ? 
-          '0 8px 25px rgba(76, 175, 80, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4)' :
-          '0 4px 15px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        position: 'relative'
-      }}>
-        <div 
-          className="gauge-wrapper"
-          onClick={() => handleScoreClick(scoreKey)}
-        >
-          <div className="gauge-label" style={{ 
-            color: '#f0f0f0', 
-            fontWeight: 'bold', 
-            marginBottom: '15px',
-            fontSize: '14px',
-            textAlign: 'center'
-          }}>
-            {label}
-          </div>
-          
-          <div className="semi-circular-gauge" style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            position: 'relative'
-          }}>
-            <svg width="120" height="65" style={{ marginBottom: '10px' }}>
-              <defs>
-                <linearGradient id={`gradient-${scoreKey}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={score >= 8 ? '#4CAF50' : score >= 6 ? '#FF9800' : '#f44336'} />
-                  <stop offset="100%" stopColor={score >= 8 ? '#66BB6A' : score >= 6 ? '#FFB74D' : '#EF5350'} />
-                </linearGradient>
-              </defs>
-              
-              <path
-                d="M 10 55 A 50 50 0 0 1 110 55"
-                fill="none"
-                stroke="#333"
-                strokeWidth="8"
-                strokeLinecap="round"
-              />
-              
-              <path
-                d="M 10 55 A 50 50 0 0 1 110 55"
-                fill="none"
-                stroke={`url(#gradient-${scoreKey})`}
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={strokeDasharray}
-                strokeDashoffset="0"
-                style={{
-                  transition: 'stroke-dasharray 0.8s ease-in-out'
-                }}
-              />
-            </svg>
-            
-            <div className="gauge-score" style={{
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: '28px',
-              position: 'absolute',
-              bottom: '15px',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
-            }}>
-              {score}
-            </div>
-            
-            <div style={{
-              color: '#aaa',
-              fontSize: '12px',
-              fontWeight: 'normal',
-              marginTop: '5px'
-            }}>
-              / 10
-            </div>
-          </div>
-        </div>
-        
-        {isActive && (
-          <div className="gauge-reason" style={{
-            marginTop: '15px',
-            padding: '12px',
-            backgroundColor: '#1a1a1a',
-            borderRadius: '8px',
-            color: '#e0e0e0',
-            fontSize: '13px',
-            lineHeight: '1.4',
-            border: '1px solid #555',
-            animation: 'fadeIn 0.3s ease-in-out',
-            boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)'
-          }}>
-            {reason}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Check if we should show the top row with ideas and details
-  const shouldShowTopRow = useMemo(() => {
-    const shouldShow = !!(currentApiResponse?.ideas || currentApiResponse?.detials);
-    console.log('🎨 [UI] Top row visibility check:', {
-      shouldShow,
-      hasIdeas: !!currentApiResponse?.ideas,
-      hasDetails: !!currentApiResponse?.detials
-    });
-    return shouldShow;
-  }, [currentApiResponse?.ideas, currentApiResponse?.detials]);
-
   return (
     <div className="campaign-explorer-layout">
-      {/* Top Row - Ideas and Details - Show if there's content or streaming data */}
-      {shouldShowTopRow ? (
-        <div 
-          className="top-row" 
-          style={{ height: `${topPanesHeightPercent}%` }}
-        >
-        {/* Idea View - Top Left */}
-        <div 
-          className="idea-view"
-          style={{ width: `${ideaPaneWidthPercent}%` }}
-        >
-          <div className="pane-content">
-            {currentApiResponse?.ideas ? (
-              <div className="ideas-content">
-                {/* Selected Idea - Priority Display */}
-                {currentApiResponse.ideas.selection?.selected && (
-                  <div className="section selected-idea-priority">
-                    
-                    <div className="selected-idea-card">
-                      <div className="idea-angle" style={{ fontWeight: 'bold', color: '#a1a1a1', fontSize: '1.3em', marginTop: '10px' }}>
-                        {currentApiResponse.ideas.selection.selected.angle}
-                      </div>
-                      <div className="idea-hook" style={{ fontWeight: 'bold', color: '#fff', fontSize: '1.6em' }}>
-                        &ldquo;{currentApiResponse.ideas.selection.selected.hook}&rdquo;
-                      </div>
-                      <div className="idea-description" style={{ color: '#a6a6a6', marginTop: '8px' , fontSize: '1.2em' }}>
-                        {currentApiResponse.ideas.selection.selected.description}
-                      </div>
-                      <div className="rationale" style={{ color: '#a5a5a5', marginTop: '15px', fontStyle: 'italic', fontSize: '1em' }}>
-                        {currentApiResponse.ideas.selection.selected.rationale}
-                      </div>
-                      
-                    </div>
-                  </div>
-                )}
-
-                {/* Deliverables Section */}
-                {currentApiResponse.ideas.deliverable && (
-                  <div className="section deliverable-section">
-                    
-                    <div className="deliverable">
-                      <div className="deliverable-title" style={{ fontWeight: 'bold', color: '#f0f0f0', fontSize: '1.1em' }}>
-                        {currentApiResponse.ideas.deliverable.title}
-                      </div>
-                      <div className="deliverable-hook" style={{ color: '#f3f3f3', marginTop: '8px' }}>
-                        Hook: &ldquo;{currentApiResponse.ideas.deliverable.hook}&rdquo;
-                      </div>
-                      
-                      <div className="subsection">
-                        <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Visual Concepts</h5>
-                        <ul style={{ color: '#f5f5f5' }}>
-                          {currentApiResponse.ideas.deliverable.visual_concepts?.map((concept, index) => (
-                            <li key={index}>{concept}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      <div className="subsection">
-                        <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Copy Variants</h5>
-                        <ul style={{ color: '#f5f5f5' }}>
-                          {currentApiResponse.ideas.deliverable.copy_variants?.map((copy, index) => (
-                            <li key={index}>&ldquo;{copy}&rdquo;</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="empty-content" style={{ color: '#666' }}>Selected idea and deliverables will appear here after you send a message</div>
-            )}
-          </div>
-        </div>
-
-        {/* Vertical Resize Handle */}
-        <div 
-          className="resize-handle resize-handle-vertical"
-          onMouseDown={handleHorizontalResize}
-        />
-
-        {/* Details Pane - Top Right */}
-        <div 
-          className="details-pane"
-          style={{ width: `${100 - ideaPaneWidthPercent}%` }}
-        >
-          <div className="pane-content">
-            {currentApiResponse?.ideas || currentApiResponse?.detials ? (
-              <div className="details-content">
-                
-                
-                {currentApiResponse?.detials && (
-                  <div className="section">
-                    
-                    <div className="format-info" style={{ color: '#f5f5f5' }}>{currentApiResponse.detials.format}</div>
-                  </div>
-                )}
-
-                {currentApiResponse?.detials?.critic && (
-                  <div className="section">
-                    
-                    <div className="overall-score" style={{
-                      marginBottom: '30px',
-                      padding: '20px',
-                      backgroundColor: '#000',
-                      
-                      borderRadius: '12px',
-                      textAlign: 'center',
-                      border: '2px solid #000',
-                      boxShadow: currentApiResponse.detials.critic.overall >= 8 ? '0px -1px 1px #4CAF50' : 
-                               currentApiResponse.detials.critic.overall >= 6 ? '0px -1px 1px #FF9800' : '0px -1px 1px #f44336',
-                    }}>
-                      <div style={{ color: '#f0f0f0', fontWeight: 'bold', marginBottom: '8px', fontSize: '16px' }}>Overall Score</div>
-                      <div style={{ 
-                        color: currentApiResponse.detials.critic.overall >= 8 ? '#4CAF50' : 
-                               currentApiResponse.detials.critic.overall >= 6 ? '#FF9800' : '#f44336',
-                        fontWeight: '900', 
-                        
-                        fontSize: '48px',
-                        textShadow: '0 4px 8px rgba(0, 0, 0, 0.6)',
-                        letterSpacing: '2px'
-                      }}>
-                        {currentApiResponse.detials.critic.overall}/10
-                      </div>
-                    </div>
-                    
-                    <div className="critic-scores" style={{ 
-                      display: 'flex', 
-                      flexWrap: 'wrap', 
-                      gap: '16px',
-                      justifyContent: 'center'
-                    }}>
-                      <GaugeMeter 
-                        label="Attention"
-                        score={currentApiResponse.detials.critic.attention?.score || 0}
-                        reason={currentApiResponse.detials.critic.attention?.reason || ''}
-                        scoreKey="attention"
-                      />
-                      
-                      <GaugeMeter 
-                        label="Trend Fit"
-                        score={currentApiResponse.detials.critic.trend_fit?.score || 0}
-                        reason={currentApiResponse.detials.critic.trend_fit?.reason || ''}
-                        scoreKey="trend_fit"
-                      />
-                      
-                      <GaugeMeter 
-                        label="Originality"
-                        score={currentApiResponse.detials.critic.originality?.score || 0}
-                        reason={currentApiResponse.detials.critic.originality?.reason || ''}
-                        scoreKey="originality"
-                      />
-                      
-                      <GaugeMeter 
-                        label="Brand Fit"
-                        score={currentApiResponse.detials.critic.brand_fit?.score || 0}
-                        reason={currentApiResponse.detials.critic.brand_fit?.reason || ''}
-                        scoreKey="brand_fit"
-                      />
-                    </div>
-                    
-                    {currentApiResponse.detials.critic.improvements?.length > 0 && (
-                      <div className="improvements">
-                        <h5 style={{ color: '#000', fontWeight: 'bold' }}>Suggested Improvements</h5>
-                        <ul style={{ color: '#555' }}>
-                          {currentApiResponse.detials.critic.improvements.map((improvement, index) => (
-                            <li key={index}>{improvement}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Quick Idea Section */}
-                {currentApiResponse?.ideas?.quick_idea && (
-                  <div className="section">
-                    <h5 style={{ color: '#4CAF50', fontWeight: 'bold' }}>💡 Quick Idea</h5>
-                    <div className="quick-idea-card" style={{ 
-                      backgroundColor: '#0a0a0a', 
-                      border: '1px solid #4CAF50',
-                      borderRadius: '8px',
-                      marginBottom: '20px',
-                      padding: '15px'
-                    }}>
-                      <div className="quick-idea-hook" style={{ 
-                        color: '#4CAF50', 
-                        fontWeight: 'bold', 
-                        fontSize: '1.2em',
-                        marginBottom: '8px'
-                      }}>
-                        &ldquo;{currentApiResponse.ideas.quick_idea.hook}&rdquo;
-                      </div>
-                      <div className="quick-idea-angle" style={{ 
-                        color: '#f0f0f0', 
-                        fontWeight: '400', 
-                        marginBottom: '8px'
-                      }}>
-                        Angle: {currentApiResponse.ideas.quick_idea.angle}
-                      </div>
-                      <div className="quick-idea-description" style={{ 
-                        color: '#f6f6f6', 
-                        fontSize: '0.9em' 
-                      }}>
-                        {currentApiResponse.ideas.quick_idea.description}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Generated Ideas Section - Moved from Ideas Pane */}
-                {currentApiResponse?.ideas?.ideas && (
-                  <div className="section">
-                    <h5 style={{ color: '#f0f0f0', fontWeight: 'bold' }}>Other Directions</h5>
-
-                    <div className="generated-ideas-list">
-                      {currentApiResponse.ideas.ideas.map((idea, index) => (
-                        <div key={index} className="idea-card" style={{ 
-                          backgroundColor: '#080808', 
-                          
-                          marginBottom: '12px',
-                          padding: '12px'
-                        }}>
-                          <div className="idea-angle" style={{ color: '#f0f0f0', fontWeight: '400', fontSize: '1em' }}>{idea.angle}</div>
-                          <div className="idea-hook" style={{ color: '#f3f3f3', fontStyle: 'italic', marginTop: '4px', fontSize: '1.3em' }}>&ldquo;{idea.hook}&rdquo;</div>
-                          <div className="idea-description" style={{ color: '#f6f6f6', marginTop: '6px', fontSize: '0.9em' }}>{idea.description}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-              </div>
-            ) : (
-              <div className="empty-content" style={{ color: '#666' }}>Analysis details and generated ideas will appear here after you send a message</div>
-            )}
-          </div>
-        </div>
-        </div>
-      ) : null}
-        {/* Horizontal Resize Handle */}
-        <div 
-          className="resize-handle resize-handle-horizontal"
-          onMouseDown={handleVerticalResize}
-        />
-      
-
-      {/* Chat Box - Full height when no content, bottom when content exists */}
-      <div 
+      {/* Chat Box - Full height for simplified interface */}
+      <div
         className="chat-box"
-        style={{ 
-          height: shouldShowTopRow ? `${100 - topPanesHeightPercent}%` : '100%' 
+        style={{
+          height: '100%'
         }}
       >
         <div className="pane-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

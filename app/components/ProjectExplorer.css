@@ -1,14 +1,16 @@
 .project-explorer {
-  width: 200px;
+  width: 100%;
   /* background-color: #282c34; */
   color: #abb2bf;
   padding: 24px 8px;
   font-family: 'Arial', sans-serif;
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
   box-sizing: border-box;
   text-align: left;
   /* border-right: 1px solid #3e4451; */
+  display: flex;
+  flex-direction: column;
 }
 
 .explorer-header {
@@ -82,6 +84,8 @@
 
 .project-tree {
   margin-top: 10px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .project-item {
