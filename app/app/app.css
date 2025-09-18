@@ -398,10 +398,58 @@
   display: flex;
   flex-direction: column;
   background:
-    linear-gradient(240deg, #1515153b 50%, #4c00af3b 100%),
-    linear-gradient(20deg, #1515153b 50%, #a92d003b 100%);
+    linear-gradient(240deg, #0000003b 50%, #4000943b 100%),
+    linear-gradient(20deg, #0000003b 50%, #9221013b 100%);
   margin: 2rem 2rem 0rem 2rem;
   border-radius: 1rem 1rem 0rem 0rem;
+}
+
+.chat-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 2rem;
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  backdrop-filter: var(--glass-backdrop, blur(10px));
+  border-radius: 1rem 1rem 0 0;
+  flex-shrink: 0;
+}
+
+.project-name {
+  color: var(--text-primary, #ffffff);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.edit-button {
+  background: transparent;
+  border: 0px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+  border-radius: 0.5rem;
+  color: var(--text-secondary, #cccccc);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+
+}
+
+.edit-button:hover {
+  background: var(--glass-background, rgba(255, 255, 255, 0.1));
+  border-color: var(--orange-primary, #ff6600);
+  color: var(--orange-primary, #ff6600);
+}
+
+.edit-button:focus {
+  outline: 2px solid var(--orange-primary, #ff6600);
+  outline-offset: 2px;
 }
 
 .chat-interface {
@@ -411,7 +459,7 @@
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
-  padding: 1rem;
+  padding: 0.25rem;
 }
 
 .chat-messages {
@@ -441,6 +489,7 @@
   border-radius: 1rem;
   line-height: 1.5;
   font-size: 0.95rem;
+  text-align: left;
 }
 
 .assistant-message .message-content {
@@ -513,6 +562,22 @@
 
 /* Responsive chat UI */
 @media (max-width: 768px) {
+  .chat-ui-container {
+    margin: 1rem 1rem 0rem 1rem;
+  }
+
+  .chat-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .project-name {
+    font-size: 1.1rem;
+  }
+
+  .edit-button {
+    padding: 0.4rem;
+  }
+
   .chat-interface {
     padding: 0.75rem;
   }
@@ -528,5 +593,19 @@
 
   .chat-input-wrapper {
     padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-ui-container {
+    margin: 0.5rem 0.5rem 0rem 0.5rem;
+  }
+
+  .chat-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .project-name {
+    font-size: 1rem;
   }
 }
