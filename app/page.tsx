@@ -114,15 +114,13 @@ export default function HomePage() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                answers: {
-                  1: "New Brand", // Brand Name - only required field
-                  2: "", // Website - empty
-                  3: "", // Description - empty
-                  4: "", // Brand Voice - empty
-                  5: [], // Brand Assets - empty
-                  6: "" // Additional Info - empty
-                },
-                questions: [] // We'll load questions in the API if needed
+                brand_name: "New Brand",
+                offering: "",
+                usp: "",
+                icp: "",
+                brand_voice: "",
+                competitors: "",
+                additional_information: ""
               }),
             });
 
@@ -247,15 +245,13 @@ export default function HomePage() {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                answers: {
-                  1: "New Brand", // Brand Name - only required field
-                  2: "", // Website - empty
-                  3: "", // Description - empty
-                  4: "", // Brand Voice - empty
-                  5: [], // Brand Assets - empty
-                  6: "" // Additional Info - empty
-                },
-                questions: [] // We'll load questions in the API if needed
+                brand_name: "New Brand",
+                offering: "",
+                usp: "",
+                icp: "",
+                brand_voice: "",
+                competitors: "",
+                additional_information: ""
               }),
             });
 

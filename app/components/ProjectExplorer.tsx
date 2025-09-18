@@ -8,7 +8,13 @@ import toast from 'react-hot-toast';
 interface Project {
   projectId: string;
   userId: string;
-  answers: Record<string, unknown>;
+  brand_name: string;
+  offering: string;
+  usp: string;
+  icp: string;
+  brand_voice: string;
+  competitors: string;
+  additional_information: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -20,6 +26,8 @@ interface Campaign {
   userId: string;
   name: string;
   description: string;
+  goal: string;
+  platform: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -199,7 +207,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   const getProjectName = (project: Project) => {
     // Get project name from answers (step 1 is usually project name)
-    return project.answers?.[1] || `Project ${project.projectId.slice(0, 8)}`;
+    return project.brand_name || `Project ${project.projectId.slice(0, 8)}`;
   };
 
   const handleCreateProject = () => {

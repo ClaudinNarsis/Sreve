@@ -6,7 +6,13 @@ import './ProjectDetailsExplorer.css';
 interface Project {
   projectId: string;
   userId: string;
-  answers: Record<string, unknown>;
+  brand_name: string;
+  offering: string;
+  usp: string;
+  icp: string;
+  brand_voice: string;
+  competitors: string;
+  additional_information: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -78,7 +84,16 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
         if (projectResponse.ok && projectData.project) {
           setProject(projectData.project);
           // Prefill answers from existing project data
-          setAnswers(projectData.project.answers || {});
+          // Initialize answers from project fields for compatibility with existing form logic
+          setAnswers({
+            1: projectData.project.brand_name || '',
+            2: projectData.project.offering || '',
+            3: projectData.project.usp || '',
+            4: projectData.project.brand_voice || '',
+            5: projectData.project.icp || '',
+            6: projectData.project.competitors || '',
+            7: projectData.project.additional_information || ''
+          });
         } else {
           setError(projectData.error || 'Failed to fetch project details');
           toast.error(projectData.error || 'Failed to fetch project details');
@@ -95,7 +110,7 @@ const ProjectDetailsExplorer: React.FC<ProjectDetailsExplorerProps> = ({ project
   }, [projectId]);
 
   const getProjectName = (proj: Project) => {
-    return proj.answers?.[1] || `Project ${proj.projectId.slice(0, 8)}`;
+    return proj.brand_name || `Project ${proj.projectId.slice(0, 8)}`;
   };
 
   const handleAnswerChange = (value: string | string[]) => {
