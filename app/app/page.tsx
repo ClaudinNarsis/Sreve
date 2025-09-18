@@ -3,53 +3,19 @@
 import Link from "next/link";
 import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import ProjectExplorer, { ProjectExplorerRef } from "../components/ProjectExplorer";
+import ProjectExplorer from "../components/ProjectExplorer";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
-import { useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import CampaignExplorer from "../components/CampaignExplorer";
+import React, { Suspense } from "react";
 
 
 
 function AppContent() {
-  const searchParams = useSearchParams();
   const { user } = useUser();
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-
-  useEffect(() => {
-    if (selectedProjectId === null) {
-      setSelectedCampaignId(null);
-    }
-  }, [selectedProjectId]);
-
-  // Handle URL parameters for auto-selecting campaign
-  useEffect(() => {
-    const campaignId = searchParams.get('campaignId');
-    const projectId = searchParams.get('projectId');
-
-    console.log('🎯 [APP] URL parameters check:', { campaignId, projectId });
-
-    if (campaignId && projectId) {
-      console.log('🎯 [APP] Auto-selecting campaign from URL:', { campaignId, projectId });
-      setSelectedCampaignId(campaignId);
-      setSelectedProjectId(projectId);
-
-      // Don't clear URL parameters immediately - let them persist for proper campaign selection
-      console.log('🎯 [APP] URL parameters processed, keeping them for campaign selection');
-    } else {
-      console.log('🎯 [APP] No URL parameters to process');
-    }
-  }, [searchParams]);
-
 
   useAutoCreateUser();
-  const projectExplorerRef = useRef<ProjectExplorerRef>(null);
-  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
 
 
 
@@ -61,7 +27,7 @@ function AppContent() {
           className="file-sidebar"
           id="sidebar"
           style={{
-            display: isStreaming ? 'none' : 'flex',
+            display: 'flex',
             flexDirection: 'column',
             transition: 'all 0.3s ease'
           }}
@@ -71,8 +37,7 @@ function AppContent() {
             <Link href="/" aria-label="Sreve home">
               <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
             </Link>
-            {!isStreaming && (
-              <button className="sidebar-toggle" onClick={() => {
+            <button className="sidebar-toggle" onClick={() => {
               const sidebar = document.querySelector('.file-sidebar');
               sidebar?.classList.toggle('open');
             }}>
@@ -82,7 +47,6 @@ function AppContent() {
                 <line x1="3" y1="18" x2="21" y2="18"></line>
               </svg>
             </button>
-            )}
           </div>
 
 
@@ -90,22 +54,17 @@ function AppContent() {
           <div className="sidebar-content">
             <SignedIn>
               <ProjectExplorer
-                key={sidebarRefreshKey}
-                ref={projectExplorerRef}
                 onCampaignSelect={(campaignId, projectId) => {
-                  setSelectedCampaignId(campaignId);
-                  setSelectedProjectId(projectId);
+                  console.log('Campaign selected:', campaignId, projectId);
                 }}
                 onProjectSelect={(projectId) => {
-                  setSelectedProjectId(projectId);
-                  setSelectedCampaignId(null); // Clear selected campaign when a project is selected
+                  console.log('Project selected:', projectId);
                 }}
                 onCreateProjectClick={() => {
-                  // For now, just show a message that project creation is not available
                   console.log('Project creation not available in simplified interface');
                 }}
-                selectedProjectId={selectedProjectId}
-                selectedCampaignId={selectedCampaignId}
+                selectedCampaignId={null}
+                selectedProjectId={null}
               />
             </SignedIn>
             <SignedOut>
@@ -141,53 +100,35 @@ function AppContent() {
         <main
           className="main-content"
           style={{
-            width: isStreaming ? '100%' : undefined,
             transition: 'width 0.3s ease'
           }}
         >
-          {selectedCampaignId ? (
-            <CampaignExplorer
-              campaignId={selectedCampaignId}
-              onStreamingStateChange={setIsStreaming}
-              onDataChange={() => {
-                // Refresh sidebar when campaign data changes (delete/edit)
-                setSidebarRefreshKey(prev => prev + 1);
-                setTimeout(() => {
-                  projectExplorerRef.current?.refreshData();
-                }, 100);
-              }}
-            />
-          ) : (
-            // Default empty state when nothing is selected
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: '#ccc',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <div style={{ maxWidth: '400px' }}>
-                <h2 style={{
-                  fontSize: '1.5rem',
-                  marginBottom: '1rem',
-                  color: '#fff'
-                }}>
-                  Welcome to Sreve
-                </h2>
-                <p style={{
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  marginBottom: '2rem',
-                  opacity: '0.8'
-                }}>
-                  Select a campaign from the sidebar to start chatting and generating content.
-                </p>
+          <div className="chat-ui-container">
+            <div className="chat-interface">
+              <div className="chat-messages">
+                <div className="message assistant-message">
+                  <div className="message-content">
+                    Hello! I'm your AI assistant. How can I help you create amazing marketing content today?
+                  </div>
+                </div>
+              </div>
+              <div className="chat-input-container">
+                <div className="chat-input-wrapper">
+                  <textarea
+                    className="chat-input"
+                    placeholder="Type your message here..."
+                    rows={1}
+                  />
+                  <button className="send-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </main>
       </div>
     </>
