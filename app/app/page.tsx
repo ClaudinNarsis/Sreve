@@ -85,14 +85,6 @@ function AppContent() {
             )}
           </div>
 
-          <button className="collapse-btn" onClick={() => {
-            const sidebar = document.getElementById('sidebar');
-            const layout = document.querySelector('.app-layout');
-            sidebar?.classList.toggle('collapsed');
-            layout?.classList.toggle('sidebar-collapsed');
-          }}>
-            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
-          </button>
 
           {/* Project explorer in middle - flex grow */}
           <div className="sidebar-content">
