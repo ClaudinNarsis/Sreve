@@ -187,10 +187,10 @@ function AppContent() {
         setIsCreatingProject(false);
       }
     } else {
-      // Campaign is selected, proceed with normal message sending
-      console.log('💬 Campaign selected, sending message to campaign:', selectedCampaignId);
+      // Campaign is selected, proceed with robust message sending via chat API
+      console.log('💬 Campaign selected, sending message to chat API:', selectedCampaignId);
 
-      // Add user message to chat
+      // Add user message to chat immediately for better UX
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         text: messageText,
@@ -201,22 +201,72 @@ function AppContent() {
       setMessages(prev => [...prev, userMessage]);
       setInputMessage('');
 
-      // Save user message to database
-      await saveMessageToDatabase(selectedCampaignId, userMessage);
+      try {
+        // Call the robust chat API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId: selectedCampaignId,
+            userMessage: messageText
+          })
+        });
 
-      // Add simple bot response for now
-      setTimeout(async () => {
-        const botMessage: ChatMessage = {
+        const data = await response.json();
+        console.log('🔄 Chat API response:', data);
+
+        if (response.ok && data.success) {
+          // Add bot response from API
+          const botMessage: ChatMessage = {
+            id: data.botMessageId || (Date.now() + 1).toString(),
+            text: data.botMessage || 'Message processed successfully.',
+            sender: 'bot',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+
+          // Handle special cases
+          if (data.recovery) {
+            console.log('🔄 Session recovery offered:', data.recovery);
+          }
+          if (data.questionsCompleted) {
+            console.log('✅ All questions completed!');
+          }
+          if (data.nextQuestion) {
+            console.log('❓ Next question available:', data.nextQuestion);
+          }
+        } else {
+          console.error('❌ Chat API error:', data.error);
+
+          // Add error message to chat
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
+            sender: 'bot',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+
+          // Show retry guidance if available
+          if (data.error?.retryable) {
+            const retryAfter = data.error.retryAfter || 30;
+            toast.error(`Service temporarily unavailable. Please try again in ${retryAfter} seconds.`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Network error calling chat API:', error);
+
+        // Add network error message to chat
+        const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          text: `I received your message: "${messageText}". I'm working on generating content for your campaign.`,
+          text: 'Network error occurred. Please check your connection and try again.',
           sender: 'bot',
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, botMessage]);
+        setMessages(prev => [...prev, errorMessage]);
 
-        // Save bot message to database
-        await saveMessageToDatabase(selectedCampaignId, botMessage);
-      }, 1000);
+        toast.error('Network error. Please try again.');
+      }
     }
   }, [inputMessage, selectedCampaignId]);
 
