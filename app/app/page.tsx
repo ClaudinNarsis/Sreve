@@ -53,6 +53,11 @@ function AppContent() {
           {/* Project explorer in middle - flex grow */}
           <div className="sidebar-content">
             <SignedIn>
+              <button className="new-project-button" onClick={() => {
+                console.log('Project creation not available in simplified interface');
+              }}>
+                + New Project
+              </button>
               <ProjectExplorer
                 onCampaignSelect={(campaignId, projectId) => {
                   console.log('Campaign selected:', campaignId, projectId);

@@ -42,6 +42,38 @@
   min-height: 0; /* Allow flex item to shrink below content size */
 }
 
+/* New Project Button */
+.new-project-button {
+  background-color: transparent;
+  color: white;
+  border: 1px solid #939393;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.new-project-button:hover {
+  background-color: #e65c00;
+  transform: translateY(-1px);
+}
+
+.new-project-button:active {
+  transform: translateY(0);
+}
+
+.new-project-button:focus {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid #333;
@@ -456,9 +488,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
+  
+  margin: 0 1rem;
   padding: 0.25rem;
 }
 
@@ -505,19 +536,20 @@
 }
 
 .chat-input-container {
-  padding: 1rem 0;
-  border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  padding: 1rem 0.5rem;
+  margin-bottom: 1rem;
+  background-color: #232323;
+  border-radius: 1rem;
 }
 
 .chat-input-wrapper {
   display: flex;
   gap: 0.75rem;
   align-items: flex-end;
-  background: var(--glass-background, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+
   border-radius: 1rem;
-  padding: 0.75rem;
-  backdrop-filter: var(--glass-backdrop, blur(10px));
+  padding: 0.25rem 0.75rem;
+
 }
 
 .chat-input {
@@ -526,8 +558,8 @@
   border: none;
   outline: none;
   color: var(--text-primary, #ffffff);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.25;
   resize: none;
   min-height: 1.5rem;
   max-height: 8rem;
@@ -538,27 +570,17 @@
 }
 
 .send-button {
-  background: var(--orange-primary, #ff6600);
   border: none;
+  background-color: #00000000;
   border-radius: 0.5rem;
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem;
-  transition: background-color 0.2s ease;
   flex-shrink: 0;
 }
 
-.send-button:hover {
-  background: var(--orange-secondary, #ff8533);
-}
-
-.send-button:focus {
-  outline: 2px solid var(--orange-primary, #ff6600);
-  outline-offset: 2px;
-}
 
 /* Responsive chat UI */
 @media (max-width: 768px) {

@@ -267,25 +267,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   return (
     <div className="project-explorer">
-      <div className="explorer-header">
-        <h3>Projects</h3>
-        <button 
-          className="create-btn" 
-          onClick={handleCreateProject}
-          title="Create New Project"
-        >
-          +
-        </button>
-      </div>
-
-      {projects.length === 0 ? (
-        <div className="empty-state">
-          <p>No projects yet</p>
-          <button className="create-project-btn" onClick={handleCreateProject}>
-            Create Your First Project
-          </button>
-        </div>
-      ) : (
+      {projects.length > 0 && (
         <div className="project-tree">
           {projects.map((project) => {
             const isExpanded = expandedProjects.has(project.projectId);
@@ -294,11 +276,11 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
             return (
               <div key={project.projectId} className={`project-item ${selectedProjectId === project.projectId ? 'selected' : ''}`}>
-                <div 
+                <div
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
                 >
-                  <svg 
+                  <svg
                     className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
                     width="16" height="16" viewBox="0 0 24 24"
                   >
@@ -315,7 +297,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                     <div className="campaigns-section">
                       <div className="section-header">
                         <span>Campaigns</span>
-                        <button 
+                        <button
                           className="create-btn small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -335,8 +317,8 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                       ) : (
                         <div className="campaigns-list">
                           {projectCampaigns.map((campaign) => (
-                            <div 
-                              key={campaign.campaignId} 
+                            <div
+                              key={campaign.campaignId}
                               className={`campaign-item ${selectedCampaignId === campaign.campaignId ? 'selected' : ''}`}
                               onClick={() => handleCampaignClick(campaign.campaignId, campaign.projectId)}
                             >
