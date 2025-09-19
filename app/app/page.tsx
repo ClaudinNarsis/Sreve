@@ -26,6 +26,7 @@ function AppContent() {
   // State management
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -116,6 +117,23 @@ function AppContent() {
       return data.campaign;
     } else {
       throw new Error(data.error || 'Failed to create campaign');
+    }
+  };
+
+  // Fetch project data
+  const fetchProjectData = async (projectId: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`);
+      const data = await response.json();
+
+      if (response.ok && data.project) {
+        setSelectedProject(data.project);
+        console.log('✅ Project data fetched:', data.project);
+      } else {
+        console.error('Failed to fetch project data:', data.error || 'Project not found');
+      }
+    } catch (error) {
+      console.error('Error fetching project data:', error);
     }
   };
 
@@ -351,6 +369,15 @@ function AppContent() {
     }
   }, [selectedCampaignId]);
 
+  // Fetch project data when project is selected
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchProjectData(selectedProjectId);
+    } else {
+      setSelectedProject(null);
+    }
+  }, [selectedProjectId]);
+
   // Handle pending prompts on app page load
   useEffect(() => {
     if (!user) return;
@@ -494,7 +521,7 @@ function AppContent() {
           <div className="chat-ui-container">
             <div className="chat-header">
               <h1 className="project-name">
-                {selectedCampaignId ? `Campaign: ${selectedCampaignId.slice(0, 8)}...` : 'New Project'}
+                {selectedProject?.brand_name || 'New Project'}
               </h1>
               <button className="edit-button" aria-label="Edit project">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

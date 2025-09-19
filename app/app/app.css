@@ -532,7 +532,9 @@
 }
 
 .user-message .message-content {
-  background: var(--orange-primary, #ff6600);
+  background: #5b00d23f;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  backdrop-filter: var(--glass-backdrop, blur(10px));
   color: white;
 }
 

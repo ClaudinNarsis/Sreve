@@ -50,6 +50,14 @@
   width: 24px;
   height: 24px;
   font-size: 1em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.project-item.selected .create-btn.small {
+  opacity: 1;
+  visibility: visible;
 }
 
 .create-btn:disabled {
