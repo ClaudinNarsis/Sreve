@@ -177,14 +177,14 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   const toggleProject = (projectId: string) => {
     const wasExpanded = expandedProjects.has(projectId);
-    
+
     setExpandedProjects(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(projectId)) {
-        newSet.delete(projectId);
-      } else {
+      const newSet = new Set<string>();
+      if (!prev.has(projectId)) {
+        // Only add the current project, ensuring single selection
         newSet.add(projectId);
       }
+      // If the project was expanded, newSet remains empty (collapses all)
       return newSet;
     });
 
@@ -280,7 +280,19 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
                 >
-                  
+                  <svg
+                    className={`chevron-icon ${isExpanded ? 'expanded' : ''}`}
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9,18 15,12 9,6"></polyline>
+                  </svg>
                   <span className="project-name">{getProjectName(project)}</span>
                   <button
                           className="create-btn small"

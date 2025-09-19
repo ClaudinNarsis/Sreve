@@ -129,6 +129,24 @@
   transform: rotate(90deg);
 }
 
+.chevron-icon {
+  fill: none;
+  stroke: #abb2bf;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-right: 8px;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: #abb2bf;
+}
+
+.chevron-icon.expanded {
+  transform: rotate(90deg);
+}
+
+
 .project-icon {
   fill: none;
   stroke: #98c379;
