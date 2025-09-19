@@ -432,7 +432,7 @@
   background:
     linear-gradient(240deg, #0000003b 50%, #4000943b 100%),
     linear-gradient(20deg, #0000003b 50%, #9221013b 100%);
-  margin: 2rem 2rem 0rem 2rem;
+  margin: 2rem 2rem 0rem 0rem;
   border-radius: 1rem 1rem 0rem 0rem;
 }
 

@@ -280,24 +280,9 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
                 >
-                  <svg
-                    className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
-                    width="16" height="16" viewBox="0 0 24 24"
-                  >
-                    <polyline points="9,6 15,12 9,18"></polyline>
-                  </svg>
-                  <svg className="project-icon" width="16" height="16" viewBox="0 0 24 24">
-                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"></path>
-                  </svg>
+                  
                   <span className="project-name">{getProjectName(project)}</span>
-                </div>
-
-                {isExpanded && (
-                  <div className="project-content">
-                    <div className="campaigns-section">
-                      <div className="section-header">
-                        <span>Campaigns</span>
-                        <button
+                  <button
                           className="create-btn small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -308,7 +293,12 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                         >
                           {creatingCampaign === project.projectId ? '...' : '+'}
                         </button>
-                      </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="project-content">
+                    <div className="campaigns-section">
+                      
 
                       {isLoadingCampaigns ? (
                         <div className="loading-item">Loading campaigns...</div>
@@ -322,11 +312,6 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                               className={`campaign-item ${selectedCampaignId === campaign.campaignId ? 'selected' : ''}`}
                               onClick={() => handleCampaignClick(campaign.campaignId, campaign.projectId)}
                             >
-                              <svg className="campaign-icon" width="14" height="14" viewBox="0 0 24 24">
-                                <path d="M9 2v6h6V2"></path>
-                                <path d="M9 18H5a2 2 0 01-2-2v-5h18v5a2 2 0 01-2 2h-4"></path>
-                                <path d="M5 8h14"></path>
-                              </svg>
                               <span className="campaign-name">{campaign.name}</span>
                             </div>
                           ))}
