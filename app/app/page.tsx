@@ -17,7 +17,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -487,7 +487,7 @@ function AppContent() {
       return (
         <div className="message-content">
           <div className="question-header">
-            
+
             <h3 className="question-title">
               {message.questionMetadata
                 ? `Question ${message.questionMetadata.currentQuestionIndex} out of ${message.questionMetadata.totalQuestions}`
@@ -497,6 +497,44 @@ function AppContent() {
           </div>
           <div className="question-text">
             {message.text.replace(/^.*?Question \d+ of \d+:\s*/, '')}
+          </div>
+        </div>
+      );
+    }
+
+    // Loading message types
+    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea') {
+      const loadingConfig = {
+        'loading-trends': {
+          gif: '/assets/loading/trends-loading.gif',
+          text: 'Analyzing market trends...'
+        },
+        'loading-competitors': {
+          gif: '/assets/loading/competitors-loading.gif',
+          text: 'Researching competitors...'
+        },
+        'loading-final-idea': {
+          gif: '/assets/loading/final-idea-loading.gif',
+          text: 'Generating final ideas...'
+        }
+      };
+
+      const config = loadingConfig[messageType];
+
+      return (
+        <div className="message-content loading-message">
+          <div className="loading-gif-container">
+            <NextImage
+              src={config.gif}
+              alt={`Loading ${messageType.replace('loading-', '')}`}
+              width={48}
+              height={48}
+              className="loading-gif"
+              priority
+            />
+          </div>
+          <div className="loading-text">
+            {config.text}
           </div>
         </div>
       );
