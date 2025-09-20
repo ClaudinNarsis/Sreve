@@ -4,6 +4,7 @@ import Link from "next/link";
 import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import ProjectExplorer from "../components/ProjectExplorer";
+import ProjectDetails from "../components/ProjectDetails";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 
@@ -47,6 +48,7 @@ function AppContent() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -609,7 +611,12 @@ function AppContent() {
               <h1 className="project-name">
                 {selectedProject?.brand_name || 'New Project'}
               </h1>
-              <button className="edit-button" aria-label="Edit project">
+              <button
+                className="edit-button"
+                aria-label="Edit project"
+                onClick={() => selectedProjectId && setShowProjectDetails(true)}
+                disabled={!selectedProjectId}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -664,6 +671,18 @@ function AppContent() {
           </div>
         </main>
       </div>
+
+      {/* Project Details Modal */}
+      {showProjectDetails && selectedProjectId && (
+        <ProjectDetails
+          projectId={selectedProjectId}
+          onClose={() => setShowProjectDetails(false)}
+          onProjectUpdate={(updatedProject) => {
+            setSelectedProject(updatedProject);
+            setShowProjectDetails(false);
+          }}
+        />
+      )}
     </>
   );
 }

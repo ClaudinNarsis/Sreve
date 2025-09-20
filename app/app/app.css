@@ -514,6 +514,11 @@
   outline-offset: 2px;
 }
 
+.edit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .chat-interface {
   height: 100%;
   display: flex;
