@@ -12,16 +12,30 @@ import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 
+interface TrendData {
+  trend_id: string;
+  trend: string;
+  status: string;
+  platform: string;
+  category: string;
+  prompt: string;
+  examples: Array<{
+    caption: string;
+    url: string;
+  }>;
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'trend-preview';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
   };
+  trendData?: TrendData;
 }
 
 interface Project {
@@ -262,18 +276,20 @@ function AppContent() {
         if (response.ok && data.success) {
           // Determine message type based on response data
           const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
+          const isTrendPreview = data.trendData && data.trendData;
 
           // Add bot response from API
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
             sender: 'bot',
-            messageType: isQuestionSession ? 'question-session' : 'default',
+            messageType: isTrendPreview ? 'trend-preview' : (isQuestionSession ? 'question-session' : 'default'),
             timestamp: new Date(),
             questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
               currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
               totalQuestions: data.totalQuestions || 5
-            } : undefined
+            } : undefined,
+            trendData: isTrendPreview ? data.trendData : undefined
           };
           setMessages(prev => [...prev, botMessage]);
 
@@ -536,6 +552,68 @@ function AppContent() {
           <div className="loading-text">
             {config.text}
           </div>
+        </div>
+      );
+    }
+
+    // Trend preview message type
+    if (messageType === 'trend-preview' && message.sender === 'bot' && message.trendData) {
+      const trend = message.trendData;
+
+      // Status icon mapping
+      const getStatusIcon = (status: string) => {
+        switch (status.toLowerCase()) {
+          case 'rising':
+            return <span className="trend-status-icon rising">📈</span>;
+          case 'trending':
+            return <span className="trend-status-icon trending">🔥</span>;
+          case 'stable':
+            return <span className="trend-status-icon stable">📊</span>;
+          case 'declining':
+            return <span className="trend-status-icon declining">📉</span>;
+          default:
+            return <span className="trend-status-icon default">⭐</span>;
+        }
+      };
+
+      return (
+        <div className="message-content trend-preview">
+          <div className="trend-intro">
+            {message.text}
+          </div>
+
+          <div className="trend-header">
+            <h3 className="trend-title">{trend.trend}</h3>
+            {getStatusIcon(trend.status)}
+          </div>
+
+          <div className="trend-platform">
+            <span className="trend-platform-chip">{trend.platform}</span>
+          </div>
+
+          <p className="trend-prompt">{trend.prompt}</p>
+
+          {trend.examples && trend.examples.length > 0 && (
+            <div className="trend-examples">
+              <h4 className="trend-examples-title">Examples:</h4>
+              <div className="trend-examples-scroll">
+                {trend.examples.map((example, index) => (
+                  <div
+                    key={index}
+                    className="trend-example-card"
+                    onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+                  >
+                    <div className="trend-example-caption">
+                      {example.caption}
+                    </div>
+                    <div className="trend-example-url">
+                      🔗 View Example
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       );
     }

@@ -691,15 +691,79 @@ export async function POST(request: NextRequest) {
           'final_data_update'
         );
 
-        // Store final bot response
-        const botMessage = 'Perfect! I\'ve processed all your information and updated your campaign with the details. Your campaign is now ready!';
-        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot', finalApiResult);
+        // Show loading message for trend analysis
+        const loadingMessage = 'Perfect! I\'ve processed all your information and updated your campaign. Now let me analyze current market trends for your brand...';
+        const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', undefined, 'loading-trends');
+
+        // Now make the find-trend API call with the extracted brand details
+        console.log('🔍 Making find-trend API call with extracted brand details');
+        let trendAnalysisMessage = 'Perfect! I\'ve processed all your information and updated your campaign with the details. Your campaign is now ready!';
+
+        try {
+          // Structure the brand_details payload according to the expected format
+          const brandDetails = {
+            brand_name: finalApiResult.brand_name || projectDetails?.brand_name || 'Unknown Brand',
+            offering: finalApiResult.offering || projectDetails?.offering || '',
+            usp: finalApiResult.usp || projectDetails?.usp || '',
+            icp: finalApiResult.icp || projectDetails?.icp || '',
+            goal: finalApiResult.goal || campaignDetails?.goal || '',
+            platform: finalApiResult.platform || campaignDetails?.platform || '',
+            brand_voice: finalApiResult.brand_voice || projectDetails?.brand_voice || '',
+            competitors: finalApiResult.competitors || projectDetails?.competitors || ''
+          };
+
+          console.log('📋 Structured brand_details payload:', brandDetails);
+
+          const findTrendResponse = await extractPromptCircuitBreaker.execute(() =>
+            makeAPICallWithRetry(
+              `${sreveApiEndpoint}/find-trend`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brand_details: brandDetails }),
+              }
+            )
+          );
+
+          if (findTrendResponse.ok) {
+            const trendData = await findTrendResponse.json();
+            console.log('📈 Find-trend API response received:', !!trendData.chosen_trend);
+
+            // If we have trend data, use trend-preview message type
+            if (trendData.chosen_trend) {
+              trendAnalysisMessage = `Perfect! I've found a trending opportunity for your brand. Here's what's working right now:`;
+
+              // Store the final bot response with trend data using trend-preview type
+              const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', finalApiResult, 'trend-preview');
+
+              return NextResponse.json({
+                message: 'Questions completed and campaign updated',
+                userMessageId,
+                botMessageId,
+                botMessage: trendAnalysisMessage,
+                extractedData: finalApiResult,
+                trendData: trendData.chosen_trend,
+                questionsCompleted: true,
+                success: true
+              }, { status: 201 });
+            } else {
+              trendAnalysisMessage = `Perfect! I've processed all your information and updated your campaign with the details. Your campaign is now ready!`;
+            }
+          } else {
+            console.warn('⚠️ Find-trend API call failed, using default message');
+          }
+        } catch (error) {
+          console.warn('⚠️ Find-trend API call error, using default message:', error);
+        }
+
+        // Store final bot response with trend analysis
+        const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', finalApiResult);
 
         return NextResponse.json({
           message: 'Questions completed and campaign updated',
           userMessageId,
           botMessageId,
-          botMessage,
+          botMessage: trendAnalysisMessage,
           extractedData: finalApiResult,
           questionsCompleted: true,
           success: true
@@ -871,15 +935,78 @@ export async function POST(request: NextRequest) {
           'direct_data_update'
         );
 
-        // Store bot response
-        const botMessage = 'Great! I\'ve processed your request and updated your campaign with the extracted information.';
-        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot', apiResult);
+        // Show loading message for trend analysis
+        const loadingMessage = 'Great! I\'ve processed your request and updated your campaign. Now let me analyze current market trends for your brand...';
+        const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', undefined, 'loading-trends');
+
+        // Now make the find-trend API call with the extracted brand details
+        console.log('🔍 Making find-trend API call with extracted brand details (direct flow)');
+        let trendAnalysisMessage = 'Great! I\'ve processed your request and updated your campaign with the extracted information.';
+
+        try {
+          // Structure the brand_details payload according to the expected format
+          const brandDetails = {
+            brand_name: apiResult.brand_name || projectDetails?.brand_name || 'Unknown Brand',
+            offering: apiResult.offering || projectDetails?.offering || '',
+            usp: apiResult.usp || projectDetails?.usp || '',
+            icp: apiResult.icp || projectDetails?.icp || '',
+            goal: apiResult.goal || campaignDetails?.goal || '',
+            platform: apiResult.platform || campaignDetails?.platform || '',
+            brand_voice: apiResult.brand_voice || projectDetails?.brand_voice || '',
+            competitors: apiResult.competitors || projectDetails?.competitors || ''
+          };
+
+          console.log('📋 Structured brand_details payload (direct flow):', brandDetails);
+
+          const findTrendResponse = await extractPromptCircuitBreaker.execute(() =>
+            makeAPICallWithRetry(
+              `${sreveApiEndpoint}/find-trend`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brand_details: brandDetails }),
+              }
+            )
+          );
+
+          if (findTrendResponse.ok) {
+            const trendData = await findTrendResponse.json();
+            console.log('📈 Find-trend API response received (direct flow):', !!trendData.chosen_trend);
+
+            // If we have trend data, use trend-preview message type
+            if (trendData.chosen_trend) {
+              trendAnalysisMessage = `Great! I've found a trending opportunity for your brand. Here's what's working right now:`;
+
+              // Store the bot response with trend data using trend-preview type
+              const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', apiResult, 'trend-preview');
+
+              return NextResponse.json({
+                message: 'Chat processed successfully',
+                userMessageId,
+                botMessageId,
+                botMessage: trendAnalysisMessage,
+                extractedData: apiResult,
+                trendData: trendData.chosen_trend,
+                success: true
+              }, { status: 201 });
+            } else {
+              trendAnalysisMessage = `Great! I've processed your request and updated your campaign with the extracted information.`;
+            }
+          } else {
+            console.warn('⚠️ Find-trend API call failed (direct flow), using default message');
+          }
+        } catch (error) {
+          console.warn('⚠️ Find-trend API call error (direct flow), using default message:', error);
+        }
+
+        // Store bot response with trend analysis
+        const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', apiResult);
 
         return NextResponse.json({
           message: 'Chat processed successfully',
           userMessageId,
           botMessageId,
-          botMessage,
+          botMessage: trendAnalysisMessage,
           extractedData: apiResult,
           success: true
         }, { status: 201 });
