@@ -580,12 +580,71 @@ export async function POST(request: NextRequest) {
           throw new Error('SREVE_CREATOR_API_ENDPOINT not configured');
         }
 
-        // Prepare final request with Q&A pairs as a single message string
+        // Get campaign and project details for final extract-prompt call
+        const campaignDetails = await getCampaignDetails(campaignId, userId);
+        let projectDetails = null;
+
+        if (campaignDetails?.projectId) {
+          try {
+            const getCommand = new ScanCommand({
+              TableName: PROJECTS_TABLE,
+              FilterExpression: 'projectId = :projectId AND userId = :userId',
+              ExpressionAttributeValues: {
+                ':projectId': campaignDetails.projectId,
+                ':userId': userId
+              }
+            });
+            const result = await docClient.send(getCommand);
+            projectDetails = result.Items && result.Items.length > 0 ? result.Items[0] : null;
+            console.log('📋 Project details found for final extract-prompt:', !!projectDetails);
+          } catch (error) {
+            console.warn('⚠️ Could not fetch project details for final extract-prompt:', error);
+          }
+        }
+
+        // Prepare final request with Q&A pairs and project/campaign context
         const qaContext = updateResult.session.qaHistory
           .map((qa: { question: string; answer: string }) => `Q: ${qa.question}\nA: ${qa.answer}`)
           .join('\n\n');
 
-        const finalMessage = `${activeSession.originalPrompt}\n\nAdditional Context:\n${qaContext}`;
+        let finalMessage = `${activeSession.originalPrompt}\n\nAdditional Context:\n${qaContext}`;
+
+        // Add project and campaign context to final message
+        if (projectDetails || campaignDetails) {
+          const contextParts = [];
+
+          if (projectDetails) {
+            const projectContext = [];
+            if (projectDetails.brand_name) projectContext.push(`Brand: ${projectDetails.brand_name}`);
+            if (projectDetails.offering) projectContext.push(`Offering: ${projectDetails.offering}`);
+            if (projectDetails.usp) projectContext.push(`USP: ${projectDetails.usp}`);
+            if (projectDetails.icp) projectContext.push(`Target Audience: ${projectDetails.icp}`);
+            if (projectDetails.brand_voice) projectContext.push(`Brand Voice: ${projectDetails.brand_voice}`);
+            if (projectDetails.competitors) projectContext.push(`Competitors: ${projectDetails.competitors}`);
+            if (projectDetails.additional_information) projectContext.push(`Additional Info: ${projectDetails.additional_information}`);
+
+            if (projectContext.length > 0) {
+              contextParts.push(`Project Details:\n${projectContext.join('\n')}`);
+            }
+          }
+
+          if (campaignDetails) {
+            const campaignContext = [];
+            if (campaignDetails.name) campaignContext.push(`Campaign: ${campaignDetails.name}`);
+            if (campaignDetails.description) campaignContext.push(`Description: ${campaignDetails.description}`);
+            if (campaignDetails.goal) campaignContext.push(`Goal: ${campaignDetails.goal}`);
+            if (campaignDetails.platform) campaignContext.push(`Platform: ${campaignDetails.platform}`);
+
+            if (campaignContext.length > 0) {
+              contextParts.push(`Campaign Details:\n${campaignContext.join('\n')}`);
+            }
+          }
+
+          if (contextParts.length > 0) {
+            finalMessage = `${finalMessage}\n\n${contextParts.join('\n\n')}`;
+            console.log('📝 Enhanced final message with project/campaign context');
+          }
+        }
 
         const finalRequest = {
           message: finalMessage
@@ -613,8 +672,7 @@ export async function POST(request: NextRequest) {
         const finalApiResult = await finalApiResponse.json();
         console.log('📥 Final SREVE API Response received');
 
-        // Get campaign details to extract projectId
-        const campaignDetails = await getCampaignDetails(campaignId, userId);
+        // Use campaign details already fetched above
         if (!campaignDetails) {
           throw new Error('Campaign not found');
         }
@@ -677,6 +735,67 @@ export async function POST(request: NextRequest) {
         throw new Error('SREVE_CREATOR_API_ENDPOINT not configured');
       }
 
+      // Get campaign and project details to include in the request
+      const campaignDetails = await getCampaignDetails(campaignId, userId);
+      let projectDetails = null;
+
+      if (campaignDetails?.projectId) {
+        try {
+          const getCommand = new ScanCommand({
+            TableName: PROJECTS_TABLE,
+            FilterExpression: 'projectId = :projectId AND userId = :userId',
+            ExpressionAttributeValues: {
+              ':projectId': campaignDetails.projectId,
+              ':userId': userId
+            }
+          });
+          const result = await docClient.send(getCommand);
+          projectDetails = result.Items && result.Items.length > 0 ? result.Items[0] : null;
+          console.log('📋 Project details found for extract-prompt:', !!projectDetails);
+        } catch (error) {
+          console.warn('⚠️ Could not fetch project details for extract-prompt:', error);
+        }
+      }
+
+      // Build the enhanced message with project and campaign context
+      let enhancedMessage = userMessage;
+
+      if (projectDetails || campaignDetails) {
+        const contextParts = [];
+
+        if (projectDetails) {
+          const projectContext = [];
+          if (projectDetails.brand_name) projectContext.push(`Brand: ${projectDetails.brand_name}`);
+          if (projectDetails.offering) projectContext.push(`Offering: ${projectDetails.offering}`);
+          if (projectDetails.usp) projectContext.push(`USP: ${projectDetails.usp}`);
+          if (projectDetails.icp) projectContext.push(`Target Audience: ${projectDetails.icp}`);
+          if (projectDetails.brand_voice) projectContext.push(`Brand Voice: ${projectDetails.brand_voice}`);
+          if (projectDetails.competitors) projectContext.push(`Competitors: ${projectDetails.competitors}`);
+          if (projectDetails.additional_information) projectContext.push(`Additional Info: ${projectDetails.additional_information}`);
+
+          if (projectContext.length > 0) {
+            contextParts.push(`Project Details:\n${projectContext.join('\n')}`);
+          }
+        }
+
+        if (campaignDetails) {
+          const campaignContext = [];
+          if (campaignDetails.name) campaignContext.push(`Campaign: ${campaignDetails.name}`);
+          if (campaignDetails.description) campaignContext.push(`Description: ${campaignDetails.description}`);
+          if (campaignDetails.goal) campaignContext.push(`Goal: ${campaignDetails.goal}`);
+          if (campaignDetails.platform) campaignContext.push(`Platform: ${campaignDetails.platform}`);
+
+          if (campaignContext.length > 0) {
+            contextParts.push(`Campaign Details:\n${campaignContext.join('\n')}`);
+          }
+        }
+
+        if (contextParts.length > 0) {
+          enhancedMessage = `${userMessage}\n\nContext:\n${contextParts.join('\n\n')}`;
+          console.log('📝 Enhanced message with project/campaign context');
+        }
+      }
+
       const apiResponse = await extractPromptCircuitBreaker.execute(() =>
         makeAPICallWithRetry(
           `${sreveApiEndpoint}/extract-prompt`,
@@ -684,7 +803,7 @@ export async function POST(request: NextRequest) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              message: userMessage
+              message: enhancedMessage
             }),
           }
         )
@@ -733,8 +852,7 @@ export async function POST(request: NextRequest) {
         // No questions - direct processing
         console.log('✅ No clarifying questions, processing directly');
 
-        // Get campaign details to extract projectId
-        const campaignDetails = await getCampaignDetails(campaignId, userId);
+        // Use campaign details already fetched above
         if (!campaignDetails) {
           throw new Error('Campaign not found');
         }

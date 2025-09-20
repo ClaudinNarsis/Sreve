@@ -23,6 +23,21 @@ interface ChatMessage {
   };
 }
 
+interface Project {
+  projectId: string;
+  userId: string;
+  brand_name: string;
+  offering: string;
+  usp: string;
+  icp: string;
+  brand_voice: string;
+  competitors: string;
+  additional_information: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+}
+
 function AppContent() {
   const { user } = useUser();
 
@@ -31,7 +46,7 @@ function AppContent() {
   // State management
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
