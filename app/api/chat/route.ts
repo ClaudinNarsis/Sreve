@@ -269,7 +269,7 @@ async function makeAPICallWithRetry(
 }
 
 // Helper function to save chat message with error handling
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session') {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -277,6 +277,7 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     userId,
     message,
     sender,
+    messageType: messageType || 'default',
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     ...(apiResponse && { apiResponse })
@@ -498,7 +499,7 @@ export async function POST(request: NextRequest) {
           const progress = `${recoverableSession.qaHistory.length + 1} of ${recoverableSession.questions.length}`;
 
           const continueMessage = `Great! Let's continue where we left off.\n\nQuestion ${progress}: ${nextQuestion}`;
-          const botMessageId = await saveChatMessage(campaignId, userId, continueMessage, 'bot');
+          const botMessageId = await saveChatMessage(campaignId, userId, continueMessage, 'bot', undefined, 'question-session');
 
           return NextResponse.json({
             message: 'Session recovered and continued',
@@ -529,7 +530,7 @@ export async function POST(request: NextRequest) {
             `Next question: ${nextQuestion}\n\n` +
             `Reply "continue" to resume, or "start over" to begin fresh.`;
 
-          const botMessageId = await saveChatMessage(campaignId, userId, recoveryMessage, 'bot');
+          const botMessageId = await saveChatMessage(campaignId, userId, recoveryMessage, 'bot', undefined, 'question-session');
 
           return NextResponse.json({
             message: 'Recoverable session found',
@@ -653,7 +654,7 @@ export async function POST(request: NextRequest) {
         const totalQuestions = activeSession.questions.length;
 
         const botMessage = `Thanks! Question ${currentIndex + 1} of ${totalQuestions}: ${nextQuestion}`;
-        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot');
+        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot', undefined, 'question-session');
 
         return NextResponse.json({
           message: 'Answer recorded, next question sent',
@@ -715,7 +716,7 @@ export async function POST(request: NextRequest) {
         const firstQuestion = apiResult.clarifying_questions[0];
         const totalQuestions = apiResult.clarifying_questions.length;
         const botMessage = `I need to clarify a few things to create the best campaign for you. Question 1 of ${totalQuestions}: ${firstQuestion}`;
-        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot');
+        const botMessageId = await saveChatMessage(campaignId, userId, botMessage, 'bot', undefined, 'question-session');
 
         return NextResponse.json({
           message: 'Clarifying questions started',

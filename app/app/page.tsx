@@ -16,6 +16,11 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  messageType?: 'default' | 'question-session';
+  questionMetadata?: {
+    currentQuestionIndex: number;
+    totalQuestions: number;
+  };
 }
 
 function AppContent() {
@@ -32,6 +37,7 @@ function AppContent() {
       id: '1',
       text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
       sender: 'bot',
+      messageType: 'default',
       timestamp: new Date()
     }
   ]);
@@ -175,6 +181,7 @@ function AppContent() {
           id: Date.now().toString(),
           text: messageText,
           sender: 'user',
+          messageType: 'default',
           timestamp: new Date()
         };
 
@@ -190,6 +197,7 @@ function AppContent() {
             id: (Date.now() + 1).toString(),
             text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
             sender: 'bot',
+            messageType: 'default',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMessage]);
@@ -213,6 +221,7 @@ function AppContent() {
         id: Date.now().toString(),
         text: messageText,
         sender: 'user',
+        messageType: 'default',
         timestamp: new Date()
       };
 
@@ -234,12 +243,20 @@ function AppContent() {
         console.log('🔄 Chat API response:', data);
 
         if (response.ok && data.success) {
+          // Determine message type based on response data
+          const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
+
           // Add bot response from API
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
             sender: 'bot',
-            timestamp: new Date()
+            messageType: isQuestionSession ? 'question-session' : 'default',
+            timestamp: new Date(),
+            questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
+              currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
+              totalQuestions: data.totalQuestions || 5
+            } : undefined
           };
           setMessages(prev => [...prev, botMessage]);
 
@@ -261,6 +278,7 @@ function AppContent() {
             id: (Date.now() + 1).toString(),
             text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
             sender: 'bot',
+            messageType: 'default',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, errorMessage]);
@@ -279,6 +297,7 @@ function AppContent() {
           id: (Date.now() + 1).toString(),
           text: 'Network error occurred. Please check your connection and try again.',
           sender: 'bot',
+          messageType: 'default',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -321,14 +340,31 @@ function AppContent() {
           chatMessageId: string;
           message: string;
           sender: string;
+          messageType?: string;
           timestamp?: string;
           createdAt: string;
-        }) => ({
-          id: dbMsg.chatMessageId,
-          text: dbMsg.message,
-          sender: dbMsg.sender as 'user' | 'bot',
-          timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt)
-        }));
+        }) => {
+          // Extract question metadata from message text if it's a question session
+          let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
+          if (dbMsg.messageType === 'question-session' && dbMsg.sender === 'bot') {
+            const questionMatch = dbMsg.message.match(/Question (\d+) of (\d+):/);
+            if (questionMatch) {
+              questionMetadata = {
+                currentQuestionIndex: parseInt(questionMatch[1]),
+                totalQuestions: parseInt(questionMatch[2])
+              };
+            }
+          }
+
+          return {
+            id: dbMsg.chatMessageId,
+            text: dbMsg.message,
+            sender: dbMsg.sender as 'user' | 'bot',
+            messageType: (dbMsg.messageType as 'default' | 'question-session') || 'default',
+            timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
+            questionMetadata
+          };
+        });
 
         // Add welcome message if no messages exist
         if (chatMessages.length === 0) {
@@ -336,6 +372,7 @@ function AppContent() {
             id: '1',
             text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
             sender: 'bot',
+            messageType: 'default',
             timestamp: new Date()
           });
         }
@@ -364,6 +401,7 @@ function AppContent() {
         id: '1',
         text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
         sender: 'bot',
+        messageType: 'default',
         timestamp: new Date()
       }]);
     }
@@ -423,6 +461,37 @@ function AppContent() {
     const timer = setTimeout(checkPendingPrompt, 1000);
     return () => clearTimeout(timer);
   }, [user, handleSendMessage]);
+
+  // Helper function to render message content based on type
+  const renderMessageContent = (message: ChatMessage) => {
+    const messageType = message.messageType || 'default';
+
+    if (messageType === 'question-session' && message.sender === 'bot') {
+      return (
+        <div className="message-content">
+          <div className="question-header">
+            
+            <h3 className="question-title">
+              {message.questionMetadata
+                ? `Question ${message.questionMetadata.currentQuestionIndex} out of ${message.questionMetadata.totalQuestions}`
+                : 'Question Session'
+              }
+            </h3>
+          </div>
+          <div className="question-text">
+            {message.text.replace(/^.*?Question \d+ of \d+:\s*/, '')}
+          </div>
+        </div>
+      );
+    }
+
+    // Default message rendering
+    return (
+      <div className="message-content">
+        {message.text}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -532,13 +601,17 @@ function AppContent() {
             </div>
             <div className="chat-interface">
               <div className="chat-messages">
-                {messages.map((message) => (
-                  <div key={message.id} className={`message ${message.sender === 'user' ? 'user-message' : 'assistant-message'}`}>
-                    <div className="message-content">
-                      {message.text}
+                {messages.map((message) => {
+                  const messageType = message.messageType || 'default';
+                  return (
+                    <div
+                      key={message.id}
+                      className={`message ${message.sender === 'user' ? 'user-message' : 'assistant-message'} ${messageType}`}
+                    >
+                      {renderMessageContent(message)}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isCreatingProject && (
                   <div className="message assistant-message">
                     <div className="message-content">

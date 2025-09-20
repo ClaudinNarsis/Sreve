@@ -1,5 +1,35 @@
 /* App page specific styles */
 
+/* CSS Variables for consistent theming */
+:root {
+  /* Three Levels of Darkness - STRICT HIERARCHY */
+  --darkness-level-1: #000000;   /* Deepest dark - main backgrounds */
+  --darkness-level-2: #0f0f0f;   /* Medium dark - card backgrounds, sections */
+  --darkness-level-3: #1f1f1f;   /* Lighter dark - elevated elements, hover states */
+
+  /* Text Colors - White/Grey Hierarchy */
+  --text-primary: #ffffff;       /* Primary headings, important text */
+  --text-secondary: #cccccc;     /* Secondary text, descriptions */
+  --text-tertiary: #888888;     /* Metadata, subtle text */
+
+  /* Orange Accent - LIMITED TO 25% OF PAGE */
+  --orange-primary: #ff6600;     /* Main orange - CTAs, highlights */
+  --orange-secondary: #ff8533;   /* Orange variations for gradients */
+  --orange-glow: rgba(255, 102, 0, 0.3); /* Orange glow effects */
+
+  /* Glass/Frost Effects */
+  --glass-background: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-backdrop: blur(10px);
+  --frost-background: rgba(15, 15, 15, 0.8);
+  --frost-border: rgba(255, 255, 255, 0.08);
+
+  /* Gradients */
+  --gradient-dark: linear-gradient(135deg, #000000, #0f0f0f);
+  --gradient-orange: linear-gradient(135deg, #ff6600, #ff8533);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+}
+
 /* Layout styles */
 .app-layout {
   display: flex;
@@ -584,6 +614,111 @@
   flex-shrink: 0;
 }
 
+
+/* Question Session Message Styles */
+.message.question-session {
+  max-width: 95%;
+  margin-bottom: 1.5rem;
+}
+
+.question-session .message-content {
+  
+  border-radius: 12px;
+  position: relative;
+  
+}
+
+.question-session .message-content::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 14px;
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(4px);
+}
+
+.question-session.assistant-message .message-content {
+  color: var(--text-primary, #ffffff);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.question-session.user-message .message-content {
+  background: linear-gradient(135deg, #4a1a66 0%, #5b00d2 50%, #7a2d96 100%);
+  color: white;
+  font-weight: 500;
+  border-color: #8b5cf6;
+}
+
+.question-session .message-content .question-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+
+.question-session .message-content .question-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b3b3b3;
+  margin: 0;
+}
+
+.question-session .message-content .question-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary, #ffffff);
+}
+
+
+
+.question-session .message-content:hover::before {
+  opacity: 0.5;
+  filter: blur(6px);
+}
+
+/* Responsive question session styles */
+@media (max-width: 768px) {
+  .question-session .message-content {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .question-session .message-content .question-title {
+    font-size: 1rem;
+  }
+
+  .question-session .message-content .question-text {
+    font-size: 0.95rem;
+  }
+
+  .question-session .message-content .question-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .question-session .message-content {
+    padding: 1rem 1.25rem;
+  }
+
+  .question-session .message-content .question-header {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .question-session .message-content .question-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}
 
 /* Responsive chat UI */
 @media (max-width: 768px) {
