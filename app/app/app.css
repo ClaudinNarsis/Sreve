@@ -591,6 +591,8 @@
   border: none;
   outline: none;
   color: var(--text-primary, #ffffff);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
   font-size: 0.85rem;
   line-height: 1.25;
   resize: none;

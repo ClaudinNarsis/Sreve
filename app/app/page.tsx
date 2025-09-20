@@ -542,7 +542,9 @@ function AppContent() {
           <div className="sidebar-content">
             <SignedIn>
               <button className="new-project-button" onClick={() => {
-                console.log('Project creation not available in simplified interface');
+                console.log('New Project button clicked - clearing selections');
+                setSelectedCampaignId(null);
+                setSelectedProjectId(null);
               }}>
                 + New Project
               </button>
