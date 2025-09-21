@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
       // Look for Instagram's image data in script tags or other patterns
       const instagramImageMatch = html.match(/"display_url":"([^"]+)"/);
       if (instagramImageMatch && instagramImageMatch[1]) {
-        let instagramImageUrl = instagramImageMatch[1].replace(/\\u0026/g, '&').replace(/\\/g, '');
+        const instagramImageUrl = instagramImageMatch[1].replace(/\\u0026/g, '&').replace(/\\/g, '');
         try {
           new URL(instagramImageUrl);
           metadata.image = instagramImageUrl;

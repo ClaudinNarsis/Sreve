@@ -46,18 +46,53 @@ interface TrendApiResponse {
   brand_goal_alignment?: string;
 }
 
+interface PostData {
+  post_id: string;
+  type: string;
+  tags: string[];
+  about: string;
+  caption: string;
+  engagement: {
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
+  };
+}
+
+interface AccountSummary {
+  niche: string;
+  content_style: string;
+  posting_frequency: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+interface SelectedAccount {
+  handle: string;
+  summary: AccountSummary;
+  posts: PostData[];
+  selection_reason: string;
+}
+
+interface AccountsApiResponse {
+  selected_accounts: SelectedAccount[];
+  overall_reasoning: string;
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'trend-preview';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
   };
   trendData?: TrendData;
   trendApiResponse?: TrendApiResponse;
+  accountsData?: AccountsApiResponse;
 }
 
 interface Project {
@@ -247,6 +282,67 @@ function AppContent() {
       }));
     }
   }, []); // Remove exampleMetadata from dependencies
+
+  // Function to poll for accounts data updates
+  const startAccountsPolling = useCallback((accountsMessageId: string) => {
+    console.log('🔍 [POLLING] Starting accounts polling for message:', accountsMessageId, '(will poll for up to 60 seconds)');
+
+    let pollCount = 0;
+    const maxPolls = 30; // 60 seconds / 2 second intervals
+
+    const pollInterval = setInterval(async () => {
+      pollCount++;
+      console.log(`🔍 [POLLING] Check #${pollCount}/${maxPolls} for accounts data updates...`);
+
+      // Stop polling if we've reached the maximum attempts
+      if (pollCount >= maxPolls) {
+        console.log('🔍 [POLLING] Reached maximum polling attempts, stopping...');
+        clearInterval(pollInterval);
+        return;
+      }
+
+      try {
+        // Reload chat messages to check for updates
+        if (selectedCampaignId) {
+          // Create a fresh fetch call rather than using the loadChatMessages function
+          // to avoid dependency issues
+          const timestamp = new Date().getTime();
+          const response = await fetch(`/api/chat?campaignId=${selectedCampaignId}&t=${timestamp}`, {
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+
+          const data = await response.json();
+          if (response.ok && data.success) {
+            const dbMessages = data.messages || [];
+
+            // Check if any message has accounts data that wasn't there before
+            const hasAccountsUpdate = dbMessages.some((msg: unknown) =>
+              (msg as { chatMessageId: string; accountsData?: unknown }).chatMessageId === accountsMessageId &&
+              (msg as { accountsData?: unknown }).accountsData
+            );
+
+            if (hasAccountsUpdate) {
+              console.log(`🔍 [POLLING] ✅ Accounts data found after ${pollCount} polls! Stopping polling.`);
+
+              // Stop polling - the message will be updated on next render cycle
+              clearInterval(pollInterval);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('🔍 [POLLING] Error during polling:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Stop polling after 60 seconds to allow for slow API responses (30-45s)
+    setTimeout(() => {
+      console.log('🔍 [POLLING] Stopping accounts polling after 60 second timeout');
+      clearInterval(pollInterval);
+    }, 60000);
+  }, [selectedCampaignId]);
 
   // Message saving utility
   const saveMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
@@ -472,7 +568,7 @@ function AppContent() {
             }
           }
 
-          // Create bot message object
+          // Create trend/main bot message object
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
@@ -487,6 +583,29 @@ function AppContent() {
             trendApiResponse: isTrendPreview && data.trendData?.chosen_trend ? data.trendData : undefined
           };
 
+          // Create accounts bot message object (with or without data)
+          let accountsBotMessage: ChatMessage | undefined;
+          if (data.accountsBotMessageId) {
+            console.log('🔍 [DEBUG] Accounts message ID detected in API response:', data.accountsBotMessageId);
+            console.log('🔍 [DEBUG] Accounts data present:', !!data.accountsData?.selected_accounts);
+
+            accountsBotMessage = {
+              id: data.accountsBotMessageId,
+              text: data.accountsBotMessage || 'Accounts analysis in progress...',
+              sender: 'bot',
+              messageType: data.accountsData ? 'accounts-preview' : 'loading-accounts',
+              timestamp: new Date(),
+              accountsData: data.accountsData
+            };
+            console.log('🔍 [DEBUG] Created accounts bot message:', accountsBotMessage.id, 'type:', accountsBotMessage.messageType);
+
+            // If no accounts data yet, start polling for updates
+            if (!data.accountsData) {
+              console.log('🔍 [DEBUG] Starting polling for accounts data updates');
+              startAccountsPolling(data.accountsBotMessageId);
+            }
+          }
+
           // Debug logging for bot message creation
           if (isTrendPreview) {
             console.log('🔍 [DEBUG] Created bot message with trend data:');
@@ -495,37 +614,50 @@ function AppContent() {
             console.log('🔍 [DEBUG] Message type:', botMessage.messageType);
           }
 
-          // Check if we should update an existing message or add a new one
+          // Handle both trend and accounts messages
           setMessages(prev => {
-            // First, check if we have a message with the exact same ID
-            const existingMessageIndex = prev.findIndex(msg => msg.id === botMessage.id);
+            const updatedMessages = [...prev];
 
+            // Handle trend/main message
+            const existingMessageIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
             if (existingMessageIndex !== -1) {
               // Update existing message (backend updated the same message)
-              const updatedMessages = [...prev];
               updatedMessages[existingMessageIndex] = botMessage;
-              console.log(`🔄 Updated existing message with ID: ${botMessage.id}`);
-              return updatedMessages;
+              console.log(`🔄 Updated existing trend message with ID: ${botMessage.id}`);
+            } else {
+              // Check if we have a temporary loading message that needs to be replaced
+              const tempLoadingIndex = updatedMessages.findIndex(msg =>
+                msg.sender === 'bot' &&
+                msg.id.startsWith('temp-loading-') &&
+                (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+              );
+
+              if (tempLoadingIndex !== -1) {
+                // Replace the temporary loading message with the real response
+                updatedMessages[tempLoadingIndex] = botMessage;
+                console.log(`🔄 Replaced temporary loading message with trend response: ${botMessage.id}`);
+              } else {
+                // Add new trend message if no existing or temp message found
+                updatedMessages.push(botMessage);
+                console.log(`➕ Added new trend message with ID: ${botMessage.id}`);
+              }
             }
 
-            // Check if we have a temporary loading message that needs to be replaced
-            const tempLoadingIndex = prev.findIndex(msg =>
-              msg.sender === 'bot' &&
-              msg.id.startsWith('temp-loading-') &&
-              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
-            );
-
-            if (tempLoadingIndex !== -1) {
-              // Replace the temporary loading message with the real response
-              const updatedMessages = [...prev];
-              updatedMessages[tempLoadingIndex] = botMessage;
-              console.log(`🔄 Replaced temporary loading message with real response: ${botMessage.id}`);
-              return updatedMessages;
+            // Handle accounts message if present
+            if (accountsBotMessage) {
+              const existingAccountsIndex = updatedMessages.findIndex(msg => msg.id === accountsBotMessage.id);
+              if (existingAccountsIndex !== -1) {
+                // Update existing accounts message
+                updatedMessages[existingAccountsIndex] = accountsBotMessage;
+                console.log(`🔄 Updated existing accounts message with ID: ${accountsBotMessage.id}`);
+              } else {
+                // Add new accounts message
+                updatedMessages.push(accountsBotMessage);
+                console.log(`➕ Added new accounts message with ID: ${accountsBotMessage.id}`);
+              }
             }
 
-            // Add new message if no existing or temp message found
-            console.log(`➕ Added new message with ID: ${botMessage.id}`);
-            return [...prev, botMessage];
+            return updatedMessages;
           });
 
           // Handle special cases
@@ -555,7 +687,7 @@ function AppContent() {
             const tempLoadingIndex = prev.findIndex(msg =>
               msg.sender === 'bot' &&
               msg.id.startsWith('temp-loading-') &&
-              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
             );
 
             if (tempLoadingIndex !== -1) {
@@ -593,7 +725,7 @@ function AppContent() {
           const tempLoadingIndex = prev.findIndex(msg =>
             msg.sender === 'bot' &&
             msg.id.startsWith('temp-loading-') &&
-            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -650,6 +782,7 @@ function AppContent() {
           timestamp?: string;
           createdAt: string;
           trendData?: TrendData | TrendApiResponse;
+          accountsData?: AccountsApiResponse;
         }) => {
           // Extract question metadata from message text if it's a question session
           let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
@@ -683,15 +816,23 @@ function AppContent() {
             }
           }
 
+          // Handle accounts data
+          let accountsData: AccountsApiResponse | undefined;
+          if (dbMsg.accountsData) {
+            console.log('🔍 [DEBUG] Processing DB message with accountsData:', JSON.stringify(dbMsg.accountsData, null, 2));
+            accountsData = dbMsg.accountsData as AccountsApiResponse;
+          }
+
           return {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'trend-preview') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
             questionMetadata,
             trendData,
-            trendApiResponse
+            trendApiResponse,
+            accountsData
           };
         });
 
@@ -815,7 +956,7 @@ function AppContent() {
     }
 
     // Loading message types
-    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea') {
+    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts') {
       const loadingConfig = {
         'loading-trends': {
           gif: '/assets/loading/trends-loading.gif',
@@ -828,6 +969,10 @@ function AppContent() {
         'loading-final-idea': {
           gif: '/assets/loading/final-idea-loading.gif',
           text: 'Generating final ideas...'
+        },
+        'loading-accounts': {
+          gif: '/assets/loading/accounts-loading.gif',
+          text: 'Finding successful competitor accounts...'
         }
       };
 
@@ -946,6 +1091,136 @@ function AppContent() {
             console.log('🔍 [DEBUG] Reason is falsy, not rendering reason paragraph');
             return null;
           })()}
+        </div>
+      );
+    }
+
+    // Accounts preview message type
+    if (messageType === 'accounts-preview' && message.sender === 'bot' && message.accountsData) {
+      const accountsData = message.accountsData;
+
+      // Helper function to format engagement numbers
+      const formatEngagement = (num: number): string => {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+      };
+
+      return (
+        <div className="message-content accounts-preview">
+          <div className="accounts-intro">
+            {message.text}
+          </div>
+
+          <div className="selected-accounts">
+            {Array.isArray(accountsData.selected_accounts) ? accountsData.selected_accounts.map((account, index) => (
+              <div key={index} className="account-card">
+                <div className="account-header">
+                  <h3 className="account-handle">{account.handle || 'Unknown Account'}</h3>
+                  <div className="account-niche">{account.summary?.niche || 'Unknown Niche'}</div>
+                </div>
+
+                <div className="account-summary">
+                  <div className="summary-item">
+                    <span className="summary-label">Content Style:</span>
+                    <span className="summary-value">{account.summary?.content_style || 'Not specified'}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-label">Posting Frequency:</span>
+                    <span className="summary-value">{account.summary?.posting_frequency || 'Not specified'}</span>
+                  </div>
+
+                  <div className="strengths-weaknesses">
+                    <div className="strengths">
+                      <span className="sw-label">Strengths:</span>
+                      <ul className="sw-list">
+                        {Array.isArray(account.summary?.strengths) ? (
+                          account.summary.strengths.map((strength, idx) => (
+                            <li key={idx}>{strength}</li>
+                          ))
+                        ) : (
+                          <li>No strengths available</li>
+                        )}
+                      </ul>
+                    </div>
+                    <div className="weaknesses">
+                      <span className="sw-label">Weaknesses:</span>
+                      <ul className="sw-list">
+                        {Array.isArray(account.summary?.weaknesses) ? (
+                          account.summary.weaknesses.map((weakness, idx) => (
+                            <li key={idx}>{weakness}</li>
+                          ))
+                        ) : (
+                          <li>No weaknesses available</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="account-posts">
+                  <h4 className="posts-title">Example Posts:</h4>
+                  <div className="posts-grid">
+                    {Array.isArray(account.posts) ? account.posts.map((post, postIdx) => (
+                      <div key={postIdx} className="post-card">
+                        <div className="post-header">
+                          <span className="post-type">{post.type || 'Unknown'}</span>
+                          <div className="post-tags">
+                            {Array.isArray(post.tags) ? post.tags.map((tag, tagIdx) => (
+                              <span key={tagIdx} className={`post-tag ${tag.replace('_', '-')}`}>
+                                {tag.replace('_', ' ')}
+                              </span>
+                            )) : null}
+                          </div>
+                        </div>
+                        <div className="post-content">
+                          <div className="post-about">{post.about || 'No description available'}</div>
+                          <div className="post-caption">&ldquo;{post.caption || 'No caption available'}&rdquo;</div>
+                        </div>
+                        <div className="post-engagement">
+                          <div className="engagement-item">
+                            <span className="engagement-icon">❤️</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.likes || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">💬</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.comments || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">🔄</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.shares || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">🔖</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.saves || 0)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="no-posts">No posts available</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="selection-reason">
+                  <h4 className="reason-title">Why This Account:</h4>
+                  <p className="reason-text">{account.selection_reason || 'No reasoning provided'}</p>
+                </div>
+              </div>
+            )) : (
+              <div className="no-accounts">No accounts available</div>
+            )}
+          </div>
+
+          {accountsData.overall_reasoning && (
+            <div className="overall-reasoning">
+              <h4 className="reasoning-title">Overall Strategy:</h4>
+              <p className="reasoning-text">{accountsData.overall_reasoning}</p>
+            </div>
+          )}
         </div>
       );
     }

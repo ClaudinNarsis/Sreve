@@ -268,8 +268,70 @@ async function makeAPICallWithRetry(
   throw new ExtractPromptAPIError('Unexpected error in retry logic', 500);
 }
 
+// Async function to process accounts data in the background
+async function processAccountsDataAsync(
+  campaignId: string,
+  userId: string,
+  brandDetails: unknown,
+  accountsLoadingBotMessageId: string,
+  sreveApiEndpoint: string,
+  extractPromptCircuitBreaker: unknown,
+  makeAPICallWithRetry: unknown,
+  updateChatMessage: unknown
+) {
+  try {
+    const startTime = Date.now();
+    console.log('🔍 Making find-accounts API call with extracted brand details (async) - started at:', new Date().toISOString());
+
+    const findAccountsResponse = await extractPromptCircuitBreaker.execute(() =>
+      makeAPICallWithRetry(
+        `${sreveApiEndpoint}/find-accounts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brand_details: brandDetails }),
+        }
+      )
+    );
+
+    const duration = Date.now() - startTime;
+    console.log(`🔍 Find-accounts API call completed (async) - duration: ${duration}ms`);
+
+    if (findAccountsResponse.ok) {
+      const accountsData = await findAccountsResponse.json();
+      console.log('📊 Find-accounts API response received (async):', !!accountsData.selected_accounts);
+
+      if (accountsData.selected_accounts && accountsData.selected_accounts.length > 0) {
+        const accountsAnalysisMessage = `Perfect! I've analyzed competitor accounts and found some great examples for your brand strategy:`;
+
+        // Update the loading message to become the accounts preview message
+        await updateChatMessage(accountsLoadingBotMessageId, accountsAnalysisMessage, 'accounts-preview', undefined, accountsData);
+        console.log('✅ Accounts message updated successfully (async)');
+      } else {
+        console.warn('⚠️ Find-accounts API returned no accounts (async), updating to default message');
+        await updateChatMessage(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
+      }
+    } else {
+      console.warn('⚠️ Find-accounts API call failed (async), updating to default message');
+      await updateChatMessage(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn('⚠️ Find-accounts API call error (async):', errorMessage);
+    console.warn('⚠️ Full error details:', error);
+
+    // Update the loading message with a fallback message
+    try {
+      await (updateChatMessage as (id: string, message: string, type: string) => Promise<void>)(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
+      console.log('✅ Updated accounts message with fallback text due to API error');
+    } catch (updateError) {
+      console.error('❌ Failed to update accounts message after API error:', updateError);
+    }
+  }
+}
+
 // Helper function to save chat message with error handling
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session' | 'loading-trends' | 'trend-preview', trendData?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview', trendData?: unknown, accountsData?: unknown) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -281,7 +343,8 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     ...(apiResponse && { apiResponse }),
-    ...(trendData && { trendData })
+    ...(trendData && { trendData }),
+    ...(accountsData && { accountsData })
   };
 
   try {
@@ -304,7 +367,7 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
 }
 
 // Helper function to update an existing chat message
-async function updateChatMessage(messageId: string, newMessage: string, newMessageType?: string, trendData?: unknown) {
+async function updateChatMessage(messageId: string, newMessage: string, newMessageType?: string, trendData?: unknown, accountsData?: unknown) {
   try {
     const updateExpressions = ['message = :message'];
     const expressionAttributeValues: Record<string, unknown> = {
@@ -319,6 +382,11 @@ async function updateChatMessage(messageId: string, newMessage: string, newMessa
     if (trendData) {
       updateExpressions.push('trendData = :trendData');
       expressionAttributeValues[':trendData'] = trendData;
+    }
+
+    if (accountsData) {
+      updateExpressions.push('accountsData = :accountsData');
+      expressionAttributeValues[':accountsData'] = accountsData;
     }
 
     const updateCommand = new UpdateCommand({
@@ -775,11 +843,22 @@ export async function POST(request: NextRequest) {
               // Update the loading message to become the trend preview message
               await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'trend-preview', trendData);
 
+              // Show loading message for accounts analysis
+              const accountsLoadingMessage = 'Great! Now let me find some successful competitor accounts that align with your brand strategy...';
+              const accountsLoadingBotMessageId = await saveChatMessage(campaignId, userId, accountsLoadingMessage, 'bot', undefined, 'loading-accounts');
+
+              // Start accounts API call asynchronously (don't await)
+              console.log('🔍 Starting find-accounts API call asynchronously with extracted brand details');
+              processAccountsDataAsync(campaignId, userId, brandDetails, accountsLoadingBotMessageId, sreveApiEndpoint, extractPromptCircuitBreaker, makeAPICallWithRetry, updateChatMessage);
+
+              // Return trend response immediately
               return NextResponse.json({
                 message: 'Questions completed and campaign updated',
                 userMessageId,
                 botMessageId: loadingBotMessageId,
                 botMessage: trendAnalysisMessage,
+                accountsBotMessageId: accountsLoadingBotMessageId,
+                accountsBotMessage: accountsLoadingMessage,
                 extractedData: finalApiResult,
                 trendData: trendData,
                 questionsCompleted: true,
@@ -1022,11 +1101,22 @@ export async function POST(request: NextRequest) {
               // Update the loading message to become the trend preview message
               await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'trend-preview', trendData);
 
+              // Show loading message for accounts analysis
+              const accountsLoadingMessage = 'Great! Now let me find some successful competitor accounts that align with your brand strategy...';
+              const accountsLoadingBotMessageId = await saveChatMessage(campaignId, userId, accountsLoadingMessage, 'bot', undefined, 'loading-accounts');
+
+              // Start accounts API call asynchronously (don't await) - direct flow
+              console.log('🔍 Starting find-accounts API call asynchronously with extracted brand details (direct flow)');
+              processAccountsDataAsync(campaignId, userId, brandDetails, accountsLoadingBotMessageId, sreveApiEndpoint, extractPromptCircuitBreaker, makeAPICallWithRetry, updateChatMessage);
+
+              // Return trend response immediately
               return NextResponse.json({
                 message: 'Chat processed successfully',
                 userMessageId,
                 botMessageId: loadingBotMessageId,
                 botMessage: trendAnalysisMessage,
+                accountsBotMessageId: accountsLoadingBotMessageId,
+                accountsBotMessage: accountsLoadingMessage,
                 extractedData: apiResult,
                 trendData: trendData,
                 success: true
