@@ -269,7 +269,7 @@ async function makeAPICallWithRetry(
 }
 
 // Helper function to save chat message with error handling
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session') {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session' | 'loading-trends' | 'trend-preview', trendData?: unknown) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -280,7 +280,8 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     messageType: messageType || 'default',
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    ...(apiResponse && { apiResponse })
+    ...(apiResponse && { apiResponse }),
+    ...(trendData && { trendData })
   };
 
   try {
@@ -297,6 +298,44 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     throw new DatabaseOperationError(
       `Failed to save ${sender} message to database`,
       'save_chat_message',
+      error
+    );
+  }
+}
+
+// Helper function to update an existing chat message
+async function updateChatMessage(messageId: string, newMessage: string, newMessageType?: string, trendData?: unknown) {
+  try {
+    const updateExpressions = ['message = :message'];
+    const expressionAttributeValues: Record<string, unknown> = {
+      ':message': newMessage
+    };
+
+    if (newMessageType) {
+      updateExpressions.push('messageType = :messageType');
+      expressionAttributeValues[':messageType'] = newMessageType;
+    }
+
+    if (trendData) {
+      updateExpressions.push('trendData = :trendData');
+      expressionAttributeValues[':trendData'] = trendData;
+    }
+
+    const updateCommand = new UpdateCommand({
+      TableName: CHAT_MESSAGES_TABLE,
+      Key: { chatMessageId: messageId },
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
+      ExpressionAttributeValues: expressionAttributeValues,
+    });
+
+    await docClient.send(updateCommand);
+    console.log(`✅ Message updated in DynamoDB:`, messageId);
+    return messageId;
+  } catch (error) {
+    console.error(`❌ Failed to update message:`, error);
+    throw new DatabaseOperationError(
+      `Failed to update message in database`,
+      'update_chat_message',
       error
     );
   }
@@ -729,40 +768,43 @@ export async function POST(request: NextRequest) {
             const trendData = await findTrendResponse.json();
             console.log('📈 Find-trend API response received:', !!trendData.chosen_trend);
 
-            // If we have trend data, use trend-preview message type
+            // If we have trend data, update the loading message to trend-preview
             if (trendData.chosen_trend) {
               trendAnalysisMessage = `Perfect! I've found a trending opportunity for your brand. Here's what's working right now:`;
 
-              // Store the final bot response with trend data using trend-preview type
-              const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', finalApiResult, 'trend-preview');
+              // Update the loading message to become the trend preview message
+              await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'trend-preview', trendData);
 
               return NextResponse.json({
                 message: 'Questions completed and campaign updated',
                 userMessageId,
-                botMessageId,
+                botMessageId: loadingBotMessageId,
                 botMessage: trendAnalysisMessage,
                 extractedData: finalApiResult,
-                trendData: trendData.chosen_trend,
+                trendData: trendData,
                 questionsCompleted: true,
                 success: true
               }, { status: 201 });
             } else {
               trendAnalysisMessage = `Perfect! I've processed all your information and updated your campaign with the details. Your campaign is now ready!`;
+              // Update the loading message to the final message
+              await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
             }
           } else {
             console.warn('⚠️ Find-trend API call failed, using default message');
+            trendAnalysisMessage = `Perfect! I've processed all your information and updated your campaign with the details. Your campaign is now ready!`;
+            await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
           }
         } catch (error) {
           console.warn('⚠️ Find-trend API call error, using default message:', error);
+          trendAnalysisMessage = `Perfect! I've processed all your information and updated your campaign with the details. Your campaign is now ready!`;
+          await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
         }
-
-        // Store final bot response with trend analysis
-        const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', finalApiResult);
 
         return NextResponse.json({
           message: 'Questions completed and campaign updated',
           userMessageId,
-          botMessageId,
+          botMessageId: loadingBotMessageId,
           botMessage: trendAnalysisMessage,
           extractedData: finalApiResult,
           questionsCompleted: true,
@@ -973,39 +1015,42 @@ export async function POST(request: NextRequest) {
             const trendData = await findTrendResponse.json();
             console.log('📈 Find-trend API response received (direct flow):', !!trendData.chosen_trend);
 
-            // If we have trend data, use trend-preview message type
+            // If we have trend data, update the loading message to trend-preview
             if (trendData.chosen_trend) {
               trendAnalysisMessage = `Great! I've found a trending opportunity for your brand. Here's what's working right now:`;
 
-              // Store the bot response with trend data using trend-preview type
-              const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', apiResult, 'trend-preview');
+              // Update the loading message to become the trend preview message
+              await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'trend-preview', trendData);
 
               return NextResponse.json({
                 message: 'Chat processed successfully',
                 userMessageId,
-                botMessageId,
+                botMessageId: loadingBotMessageId,
                 botMessage: trendAnalysisMessage,
                 extractedData: apiResult,
-                trendData: trendData.chosen_trend,
+                trendData: trendData,
                 success: true
               }, { status: 201 });
             } else {
               trendAnalysisMessage = `Great! I've processed your request and updated your campaign with the extracted information.`;
+              // Update the loading message to the final message
+              await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
             }
           } else {
             console.warn('⚠️ Find-trend API call failed (direct flow), using default message');
+            trendAnalysisMessage = `Great! I've processed your request and updated your campaign with the extracted information.`;
+            await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
           }
         } catch (error) {
           console.warn('⚠️ Find-trend API call error (direct flow), using default message:', error);
+          trendAnalysisMessage = `Great! I've processed your request and updated your campaign with the extracted information.`;
+          await updateChatMessage(loadingBotMessageId, trendAnalysisMessage, 'default');
         }
-
-        // Store bot response with trend analysis
-        const botMessageId = await saveChatMessage(campaignId, userId, trendAnalysisMessage, 'bot', apiResult);
 
         return NextResponse.json({
           message: 'Chat processed successfully',
           userMessageId,
-          botMessageId,
+          botMessageId: loadingBotMessageId,
           botMessage: trendAnalysisMessage,
           extractedData: apiResult,
           success: true

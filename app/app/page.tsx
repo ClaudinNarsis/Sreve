@@ -12,6 +12,21 @@ import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 
+interface UrlMetadata {
+  title?: string;
+  image?: string;
+  description?: string;
+  url: string;
+}
+
+interface ExampleWithMetadata {
+  caption: string;
+  url: string;
+  metadata?: UrlMetadata;
+  loading?: boolean;
+  error?: boolean;
+}
+
 interface TrendData {
   trend_id: string;
   trend: string;
@@ -25,6 +40,12 @@ interface TrendData {
   }>;
 }
 
+interface TrendApiResponse {
+  chosen_trend: TrendData;
+  reason: string;
+  brand_goal_alignment?: string;
+}
+
 interface ChatMessage {
   id: string;
   text: string;
@@ -36,6 +57,7 @@ interface ChatMessage {
     totalQuestions: number;
   };
   trendData?: TrendData;
+  trendApiResponse?: TrendApiResponse;
 }
 
 interface Project {
@@ -51,6 +73,89 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   status: string;
+}
+
+// ExampleCards component for displaying trend examples with metadata
+interface ExampleCardsProps {
+  examples: Array<{ caption: string; url: string; }>;
+  exampleMetadata: Record<string, ExampleWithMetadata>;
+  onFetchMetadata: (examples: Array<{ caption: string; url: string; }>) => void;
+}
+
+function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCardsProps) {
+  useEffect(() => {
+    // Fetch metadata when examples change
+    if (examples && examples.length > 0) {
+      onFetchMetadata(examples);
+    }
+  }, [examples, onFetchMetadata]); // Include examples but we've fixed the infinite loop with stable callback
+
+  return (
+    <div className="trend-examples">
+      <h4 className="trend-examples-title">Examples:</h4>
+      <div className="trend-examples-scroll">
+        {examples.map((example, index) => {
+          const metadata = exampleMetadata[example.url];
+          const isLoading = metadata?.loading ?? false;
+          const metaData = metadata?.metadata;
+
+          return (
+            <div
+              key={index}
+              className="trend-example-card"
+              onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+            >
+              {/* Image section */}
+              <div className="trend-example-image-container">
+                {isLoading ? (
+                  <div className="trend-example-loading">
+                    <div className="loading-spinner"></div>
+                  </div>
+                ) : metaData?.image ? (
+                  <img
+                    src={metaData.image}
+                    alt={metaData.title || example.caption}
+                    className="trend-example-image"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="trend-example-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                      <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Content section */}
+              <div className="trend-example-content">
+                {metaData?.title && (
+                  <div className="trend-example-title">
+                    {metaData.title}
+                  </div>
+                )}
+
+                <div className="trend-example-caption">
+                  {example.caption}
+                </div>
+
+                <div className="trend-example-url">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
+                    <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  View Example
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function AppContent() {
@@ -74,6 +179,74 @@ function AppContent() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  // State for storing example metadata
+  const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+
+  // Function to fetch URL metadata
+  const fetchUrlMetadata = async (url: string): Promise<UrlMetadata | null> => {
+    try {
+      console.log(`🔍 Fetching metadata for: ${url}`);
+
+      const response = await fetch('/api/url-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        console.warn(`❌ Failed to fetch metadata for ${url}:`, response.status);
+        return null;
+      }
+
+      const metadata = await response.json();
+      console.log(`✅ Successfully fetched metadata for ${url}:`, metadata);
+      return metadata;
+    } catch (error) {
+      console.error(`❌ Error fetching metadata for ${url}:`, error);
+      return null;
+    }
+  };
+
+  // Function to fetch metadata for all examples in a trend
+  const fetchExampleMetadata = useCallback(async (examples: Array<{ caption: string; url: string; }>) => {
+    for (const example of examples) {
+      const key = example.url;
+
+      // Set loading state
+      setExampleMetadata(prev => {
+        // Skip if we already have metadata for this URL
+        if (prev[key] && (prev[key].metadata || prev[key].error)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: example.caption,
+            url: example.url,
+            loading: true,
+            error: false
+          }
+        };
+      });
+
+      // Fetch metadata
+      const metadata = await fetchUrlMetadata(example.url);
+
+      // Update state with result
+      setExampleMetadata(prev => ({
+        ...prev,
+        [key]: {
+          caption: example.caption,
+          url: example.url,
+          metadata: metadata || undefined,
+          loading: false,
+          error: !metadata
+        }
+      }));
+    }
+  }, []); // Remove exampleMetadata from dependencies
 
   // Message saving utility
   const saveMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
@@ -259,6 +432,16 @@ function AppContent() {
       setMessages(prev => [...prev, userMessage]);
       setInputMessage('');
 
+      // Add temporary loading message that will be updated with the API response
+      const tempLoadingMessage: ChatMessage = {
+        id: 'temp-loading-' + Date.now().toString(),
+        text: 'Processing your request...',
+        sender: 'bot',
+        messageType: 'loading-trends',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, tempLoadingMessage]);
+
       try {
         // Call the robust chat API
         const response = await fetch('/api/chat', {
@@ -278,7 +461,18 @@ function AppContent() {
           const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
           const isTrendPreview = data.trendData && data.trendData;
 
-          // Add bot response from API
+          // Debug logging for trend data
+          if (isTrendPreview) {
+            console.log('🔍 [DEBUG] Trend preview detected in API response:');
+            console.log('🔍 [DEBUG] data.trendData:', JSON.stringify(data.trendData, null, 2));
+            console.log('🔍 [DEBUG] Has chosen_trend?', !!data.trendData?.chosen_trend);
+            console.log('🔍 [DEBUG] Has reason?', !!data.trendData?.reason);
+            if (data.trendData?.reason) {
+              console.log('🔍 [DEBUG] Reason text:', data.trendData.reason);
+            }
+          }
+
+          // Create bot message object
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
@@ -289,9 +483,50 @@ function AppContent() {
               currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
               totalQuestions: data.totalQuestions || 5
             } : undefined,
-            trendData: isTrendPreview ? data.trendData : undefined
+            trendData: isTrendPreview ? (data.trendData?.chosen_trend || data.trendData) : undefined,
+            trendApiResponse: isTrendPreview && data.trendData?.chosen_trend ? data.trendData : undefined
           };
-          setMessages(prev => [...prev, botMessage]);
+
+          // Debug logging for bot message creation
+          if (isTrendPreview) {
+            console.log('🔍 [DEBUG] Created bot message with trend data:');
+            console.log('🔍 [DEBUG] botMessage.trendData:', JSON.stringify(botMessage.trendData, null, 2));
+            console.log('🔍 [DEBUG] botMessage.trendApiResponse:', JSON.stringify(botMessage.trendApiResponse, null, 2));
+            console.log('🔍 [DEBUG] Message type:', botMessage.messageType);
+          }
+
+          // Check if we should update an existing message or add a new one
+          setMessages(prev => {
+            // First, check if we have a message with the exact same ID
+            const existingMessageIndex = prev.findIndex(msg => msg.id === botMessage.id);
+
+            if (existingMessageIndex !== -1) {
+              // Update existing message (backend updated the same message)
+              const updatedMessages = [...prev];
+              updatedMessages[existingMessageIndex] = botMessage;
+              console.log(`🔄 Updated existing message with ID: ${botMessage.id}`);
+              return updatedMessages;
+            }
+
+            // Check if we have a temporary loading message that needs to be replaced
+            const tempLoadingIndex = prev.findIndex(msg =>
+              msg.sender === 'bot' &&
+              msg.id.startsWith('temp-loading-') &&
+              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+            );
+
+            if (tempLoadingIndex !== -1) {
+              // Replace the temporary loading message with the real response
+              const updatedMessages = [...prev];
+              updatedMessages[tempLoadingIndex] = botMessage;
+              console.log(`🔄 Replaced temporary loading message with real response: ${botMessage.id}`);
+              return updatedMessages;
+            }
+
+            // Add new message if no existing or temp message found
+            console.log(`➕ Added new message with ID: ${botMessage.id}`);
+            return [...prev, botMessage];
+          });
 
           // Handle special cases
           if (data.recovery) {
@@ -306,7 +541,7 @@ function AppContent() {
         } else {
           console.error('❌ Chat API error:', data.error);
 
-          // Add error message to chat
+          // Create error message
           const errorMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
@@ -314,7 +549,26 @@ function AppContent() {
             messageType: 'default',
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, errorMessage]);
+
+          // Replace temporary loading message with error, or add new error message
+          setMessages(prev => {
+            const tempLoadingIndex = prev.findIndex(msg =>
+              msg.sender === 'bot' &&
+              msg.id.startsWith('temp-loading-') &&
+              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+            );
+
+            if (tempLoadingIndex !== -1) {
+              // Replace the temporary loading message with error
+              const updatedMessages = [...prev];
+              updatedMessages[tempLoadingIndex] = errorMessage;
+              console.log('🔄 Replaced temporary loading message with error message');
+              return updatedMessages;
+            }
+
+            // Add new error message if no temp message found
+            return [...prev, errorMessage];
+          });
 
           // Show retry guidance if available
           if (data.error?.retryable) {
@@ -325,7 +579,7 @@ function AppContent() {
       } catch (error) {
         console.error('❌ Network error calling chat API:', error);
 
-        // Add network error message to chat
+        // Create network error message
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           text: 'Network error occurred. Please check your connection and try again.',
@@ -333,7 +587,26 @@ function AppContent() {
           messageType: 'default',
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, errorMessage]);
+
+        // Replace temporary loading message with error, or add new error message
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' &&
+            msg.id.startsWith('temp-loading-') &&
+            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            // Replace the temporary loading message with error
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = errorMessage;
+            console.log('🔄 Replaced temporary loading message with network error message');
+            return updatedMessages;
+          }
+
+          // Add new error message if no temp message found
+          return [...prev, errorMessage];
+        });
 
         toast.error('Network error. Please try again.');
       }
@@ -376,6 +649,7 @@ function AppContent() {
           messageType?: string;
           timestamp?: string;
           createdAt: string;
+          trendData?: TrendData | TrendApiResponse;
         }) => {
           // Extract question metadata from message text if it's a question session
           let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
@@ -389,13 +663,35 @@ function AppContent() {
             }
           }
 
+          // Handle both old format (TrendData) and new format (TrendApiResponse)
+          let trendData: TrendData | undefined;
+          let trendApiResponse: TrendApiResponse | undefined;
+
+          if (dbMsg.trendData) {
+            console.log('🔍 [DEBUG] Processing DB message with trendData:', JSON.stringify(dbMsg.trendData, null, 2));
+
+            // Check if it's the new API response format (has chosen_trend property)
+            if ('chosen_trend' in dbMsg.trendData) {
+              trendApiResponse = dbMsg.trendData as TrendApiResponse;
+              trendData = trendApiResponse.chosen_trend;
+              console.log('🔍 [DEBUG] New format detected - extracted chosen_trend:', JSON.stringify(trendData, null, 2));
+              console.log('🔍 [DEBUG] Reason from API response:', trendApiResponse.reason);
+            } else {
+              // Old format - direct TrendData
+              trendData = dbMsg.trendData as TrendData;
+              console.log('🔍 [DEBUG] Old format detected - direct TrendData:', JSON.stringify(trendData, null, 2));
+            }
+          }
+
           return {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'trend-preview') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
-            questionMetadata
+            questionMetadata,
+            trendData,
+            trendApiResponse
           };
         });
 
@@ -557,22 +853,61 @@ function AppContent() {
     }
 
     // Trend preview message type
-    if (messageType === 'trend-preview' && message.sender === 'bot' && message.trendData) {
-      const trend = message.trendData;
+    if (messageType === 'trend-preview' && message.sender === 'bot' && (message.trendData || message.trendApiResponse)) {
+      const trend = message.trendApiResponse?.chosen_trend || message.trendData;
+      const reason = message.trendApiResponse?.reason;
+
+      // Debug logging for trend preview rendering
+      console.log('🔍 [DEBUG] Rendering trend preview message:');
+      console.log('🔍 [DEBUG] message.trendData:', JSON.stringify(message.trendData, null, 2));
+      console.log('🔍 [DEBUG] message.trendApiResponse:', JSON.stringify(message.trendApiResponse, null, 2));
+      console.log('🔍 [DEBUG] extracted trend:', JSON.stringify(trend, null, 2));
+      console.log('🔍 [DEBUG] extracted reason:', reason);
+      console.log('🔍 [DEBUG] reason truthy?', !!reason);
 
       // Status icon mapping
       const getStatusIcon = (status: string) => {
         switch (status.toLowerCase()) {
           case 'rising':
-            return <span className="trend-status-icon rising">📈</span>;
+            return (
+              <span className="trend-status-icon rising">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
           case 'trending':
-            return <span className="trend-status-icon trending">🔥</span>;
+            return (
+              <span className="trend-status-icon trending">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M13.5.67S10.25 3.88 10.25 8.25C10.25 12.5 13.5 15.75 13.5 15.75S16.75 12.5 16.75 8.25C16.75 3.88 13.5.67 13.5.67ZM13.5 11.25C12.25 11.25 11.25 10.25 11.25 9S12.25 6.75 13.5 6.75 15.75 7.75 15.75 9 14.75 11.25 13.5 11.25ZM7 14C7.01 17.73 8.78 21.08 11.65 23H4C2.9 23 2 22.1 2 21V17C2 15.9 2.9 15 4 15H7V14Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
           case 'stable':
-            return <span className="trend-status-icon stable">📊</span>;
+            return (
+              <span className="trend-status-icon stable">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 21H2V19H4V3H6V19H10V9H12V19H16V6H18V19H20V21Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
           case 'declining':
-            return <span className="trend-status-icon declining">📉</span>;
+            return (
+              <span className="trend-status-icon declining">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 18L18.29 15.71L13.41 10.83L9.41 14.83L2 7.41L3.41 6L9.41 12L13.41 8L19.71 14.29L22 12V18H16Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
           default:
-            return <span className="trend-status-icon default">⭐</span>;
+            return (
+              <span className="trend-status-icon default">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
         }
       };
 
@@ -587,33 +922,30 @@ function AppContent() {
             {getStatusIcon(trend.status)}
           </div>
 
-          <div className="trend-platform">
-            <span className="trend-platform-chip">{trend.platform}</span>
-          </div>
+          
 
           <p className="trend-prompt">{trend.prompt}</p>
-
+          
           {trend.examples && trend.examples.length > 0 && (
-            <div className="trend-examples">
-              <h4 className="trend-examples-title">Examples:</h4>
-              <div className="trend-examples-scroll">
-                {trend.examples.map((example, index) => (
-                  <div
-                    key={index}
-                    className="trend-example-card"
-                    onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
-                  >
-                    <div className="trend-example-caption">
-                      {example.caption}
-                    </div>
-                    <div className="trend-example-url">
-                      🔗 View Example
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ExampleCards
+              examples={trend.examples}
+              exampleMetadata={exampleMetadata}
+              onFetchMetadata={fetchExampleMetadata}
+            />
           )}
+
+          {reason && (
+            <p className="trend-reason">
+              {(() => {
+                console.log('🔍 [DEBUG] Rendering reason paragraph with text:', reason);
+                return reason;
+              })()}
+            </p>
+          )}
+          {!reason && (() => {
+            console.log('🔍 [DEBUG] Reason is falsy, not rendering reason paragraph');
+            return null;
+          })()}
         </div>
       );
     }

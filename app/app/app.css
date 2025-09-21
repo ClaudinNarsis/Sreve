@@ -651,7 +651,6 @@
 }
 
 .trend-title {
-  color: var(--orange-primary, #ff6600);
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
@@ -701,6 +700,18 @@
   letter-spacing: 0.025em;
 }
 
+.trend-reason {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 0.5rem;
+  font-style: italic;
+}
+
 .trend-prompt {
   color: var(--text-secondary, #cccccc);
   line-height: 1.6;
@@ -743,27 +754,106 @@
 
 .trend-example-card {
   flex-shrink: 0;
-  width: 200px;
+  width: 280px;
+  height: 320px;
   background: var(--darkness-level-3, #1f1f1f);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .trend-example-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--orange-primary, #ff6600);
-  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+  box-shadow: 0 8px 25px rgba(255, 102, 0, 0.15);
+}
+
+/* Image container */
+.trend-example-image-container {
+  width: 100%;
+  height: 140px;
+  background: var(--darkness-level-2, #0f0f0f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.trend-example-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+.trend-example-placeholder {
+  color: var(--text-tertiary, #888888);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.trend-example-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--text-tertiary, #888888);
+  border-top: 2px solid var(--orange-primary, #ff6600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Content section */
+.trend-example-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+}
+
+.trend-example-title {
+  color: var(--text-primary, #ffffff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trend-example-caption {
-  color: var(--text-primary, #ffffff);
-  font-size: 0.875rem;
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.8rem;
   line-height: 1.4;
-  margin-bottom: 0.75rem;
-  font-weight: 500;
+  margin-bottom: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trend-example-url {
@@ -773,6 +863,9 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Question Session Message Styles */
@@ -860,12 +953,24 @@
   }
 
   .trend-example-card {
-    width: 160px;
+    width: 240px;
+    height: 280px;
+  }
+
+  .trend-example-image-container {
+    height: 120px;
+  }
+
+  .trend-example-content {
     padding: 0.75rem;
   }
 
+  .trend-example-title {
+    font-size: 0.85rem;
+  }
+
   .trend-example-caption {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .question-session .message-content {
@@ -915,12 +1020,24 @@
   }
 
   .trend-example-card {
-    width: 140px;
+    width: 200px;
+    height: 260px;
+  }
+
+  .trend-example-image-container {
+    height: 100px;
+  }
+
+  .trend-example-content {
     padding: 0.5rem;
   }
 
+  .trend-example-title {
+    font-size: 0.8rem;
+  }
+
   .trend-example-caption {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 
   .trend-example-url {
@@ -975,11 +1092,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
+  width: 3rem;
+  height: auto;
   border-radius: 50%;
-  background: var(--darkness-level-2, #0f0f0f);
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
   overflow: hidden;
   position: relative;
 }
@@ -989,7 +1104,6 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, var(--orange-primary, #ff6600), var(--orange-secondary, #ff8533), var(--orange-primary, #ff6600));
   opacity: 0.2;
   animation: spin 2s linear infinite;
 }
