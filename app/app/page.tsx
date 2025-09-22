@@ -1115,70 +1115,69 @@ function AppContent() {
             {message.text}
           </div>
 
-          <div className="selected-accounts">
+          <div className="accounts-overview">
             {Array.isArray(accountsData.selected_accounts) ? accountsData.selected_accounts.map((account, index) => (
               <div key={index} className="account-card">
                 <div className="account-header">
-                  <h3 className="account-handle">{account.handle || 'Unknown Account'}</h3>
-                  <div className="account-niche">{account.summary?.niche || 'Unknown Niche'}</div>
+                  <div className="account-avatar">
+                    <div className="account-placeholder-avatar">
+                      {(account.handle || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="account-info">
+                    <h3 className="account-username">{account.handle || 'Unknown Account'}</h3>
+                    <p className="account-handle">@{account.handle?.toLowerCase() || 'unknown'}</p>
+                  </div>
                 </div>
 
-                <div className="account-summary">
-                  <div className="summary-item">
-                    <span className="summary-label">Content Style:</span>
-                    <span className="summary-value">{account.summary?.content_style || 'Not specified'}</span>
+                <div className="account-stats">
+                  <div className="stat-item">
+                    <p className="stat-value">{account.summary?.niche || 'General'}</p>
+                    <p className="stat-label">Niche</p>
                   </div>
-                  <div className="summary-item">
-                    <span className="summary-label">Posting Frequency:</span>
-                    <span className="summary-value">{account.summary?.posting_frequency || 'Not specified'}</span>
+                  <div className="stat-item">
+                    <p className="stat-value">{account.summary?.content_style || 'Mixed'}</p>
+                    <p className="stat-label">Style</p>
                   </div>
+                </div>
 
-                  <div className="strengths-weaknesses">
-                    <div className="strengths">
-                      <span className="sw-label">Strengths:</span>
-                      <ul className="sw-list">
-                        {Array.isArray(account.summary?.strengths) ? (
-                          account.summary.strengths.map((strength, idx) => (
+                {(Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0) ||
+                 (Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0) ? (
+                  <div className="account-summary">
+                    {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 && (
+                      <div className="summary-section">
+                        <h4 className="summary-title">Strengths</h4>
+                        <ul className="summary-list">
+                          {account.summary.strengths.map((strength, idx) => (
                             <li key={idx}>{strength}</li>
-                          ))
-                        ) : (
-                          <li>No strengths available</li>
-                        )}
-                      </ul>
-                    </div>
-                    <div className="weaknesses">
-                      <span className="sw-label">Weaknesses:</span>
-                      <ul className="sw-list">
-                        {Array.isArray(account.summary?.weaknesses) ? (
-                          account.summary.weaknesses.map((weakness, idx) => (
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 && (
+                      <div className="summary-section">
+                        <h4 className="summary-title">Weaknesses</h4>
+                        <ul className="summary-list">
+                          {account.summary.weaknesses.map((weakness, idx) => (
                             <li key={idx}>{weakness}</li>
-                          ))
-                        ) : (
-                          <li>No weaknesses available</li>
-                        )}
-                      </ul>
-                    </div>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : null}
 
-                <div className="account-posts">
-                  <h4 className="posts-title">Example Posts:</h4>
+                <div className="recent-posts">
+                  <h4 className="recent-posts-title">Recent Posts</h4>
                   <div className="posts-grid">
                     {Array.isArray(account.posts) ? account.posts.map((post, postIdx) => (
                       <div key={postIdx} className="post-card">
                         <div className="post-header">
-                          <span className="post-type">{post.type || 'Unknown'}</span>
-                          <div className="post-tags">
-                            {Array.isArray(post.tags) ? post.tags.map((tag, tagIdx) => (
-                              <span key={tagIdx} className={`post-tag ${tag.replace('_', '-')}`}>
-                                {tag.replace('_', ' ')}
-                              </span>
-                            )) : null}
-                          </div>
+                          <span className="post-platform">{post.type || 'Social'}</span>
+                          <span className="post-date">{new Date().toLocaleDateString()}</span>
                         </div>
                         <div className="post-content">
-                          <div className="post-about">{post.about || 'No description available'}</div>
-                          <div className="post-caption">&ldquo;{post.caption || 'No caption available'}&rdquo;</div>
+                          {post.caption || post.about || 'No content available'}
                         </div>
                         <div className="post-engagement">
                           <div className="engagement-item">
@@ -1205,9 +1204,9 @@ function AppContent() {
                   </div>
                 </div>
 
-                <div className="selection-reason">
-                  <h4 className="reason-title">Why This Account:</h4>
-                  <p className="reason-text">{account.selection_reason || 'No reasoning provided'}</p>
+                <div className="selection-reasoning">
+                  <h4 className="reasoning-title">Selection Reasoning</h4>
+                  <p className="reasoning-content">{account.selection_reason || 'No reasoning provided'}</p>
                 </div>
               </div>
             )) : (
@@ -1218,7 +1217,7 @@ function AppContent() {
           {accountsData.overall_reasoning && (
             <div className="overall-reasoning">
               <h4 className="reasoning-title">Overall Strategy:</h4>
-              <p className="reasoning-text">{accountsData.overall_reasoning}</p>
+              <p className="reasoning-content">{accountsData.overall_reasoning}</p>
             </div>
           )}
         </div>
