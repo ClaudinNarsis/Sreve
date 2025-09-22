@@ -1700,3 +1700,292 @@
     font-size: 0.85rem;
   }
 }
+
+/* ==============================
+   IDEA PREVIEW STYLES
+   ============================== */
+
+/* Main idea preview container */
+.idea-preview {
+  background: var(--frost-background, rgba(15, 15, 15, 0.8));
+  border: 1px solid var(--frost-border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  backdrop-filter: var(--glass-backdrop, blur(10px));
+}
+
+/* Introduction text */
+.idea-intro {
+  color: var(--text-primary, #ffffff);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Section titles */
+.section-title {
+  color: var(--orange-primary, #ff6600);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* All ideas section */
+.all-ideas-section {
+  margin-bottom: 2rem;
+}
+
+.ideas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.idea-card {
+  background: var(--darkness-level-3, #1f1f1f);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.idea-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: var(--orange-primary, #ff6600);
+}
+
+.idea-header {
+  margin-bottom: 0.75rem;
+}
+
+.idea-angle {
+  color: var(--text-primary, #ffffff);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.idea-hook {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.idea-description {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Selected idea section */
+.selected-idea-section {
+  margin-bottom: 2rem;
+}
+
+.selected-idea-card {
+  background: linear-gradient(135deg, var(--darkness-level-2, #0f0f0f), var(--darkness-level-3, #1f1f1f));
+  border: 2px solid var(--orange-primary, #ff6600);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 20px var(--orange-glow, rgba(255, 102, 0, 0.3));
+  margin-top: 1rem;
+}
+
+.selected-idea-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.selected-idea-angle {
+  color: var(--text-primary, #ffffff);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+}
+
+.idea-badge {
+  background: var(--gradient-orange, linear-gradient(135deg, #ff6600, #ff8533));
+  color: var(--text-primary, #ffffff);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.selected-idea-hook {
+  color: var(--text-secondary, #cccccc);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+  padding: 0.75rem;
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  border-radius: 6px;
+  border-left: 4px solid var(--orange-primary, #ff6600);
+}
+
+.selected-idea-description {
+  color: var(--text-secondary, #cccccc);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+/* Scoring section */
+.idea-scores {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.scores-title {
+  color: var(--text-primary, #ffffff);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.score-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.score-label {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.score-bar-container {
+  height: 8px;
+  background: var(--darkness-level-3, #1f1f1f);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  background: var(--orange-primary, #ff6600);
+}
+
+.score-value {
+  color: var(--text-primary, #ffffff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Rationale section */
+.idea-rationale {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--darkness-level-2, #0f0f0f);
+  border-radius: 8px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.rationale-title {
+  color: var(--orange-primary, #ff6600);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.rationale-content {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Overall reasoning */
+.idea-preview .overall-reasoning {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.idea-preview .reasoning-title {
+  color: var(--orange-primary, #ff6600);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.idea-preview .reasoning-content {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* No ideas fallback */
+.no-ideas {
+  color: var(--text-tertiary, #888888);
+  text-align: center;
+  padding: 2rem;
+  font-style: italic;
+}
+
+/* Responsive design for idea preview */
+@media (max-width: 768px) {
+  .ideas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .scores-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .selected-idea-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .idea-badge {
+    align-self: flex-start;
+  }
+
+  .score-item {
+    grid-template-columns: 1fr 3fr auto;
+  }
+
+  .idea-preview {
+    padding: 1rem;
+  }
+
+  .selected-idea-card {
+    padding: 1rem;
+  }
+}

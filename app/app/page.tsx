@@ -80,12 +80,34 @@ interface AccountsApiResponse {
   overall_reasoning: string;
 }
 
+interface IdeaData {
+  angle: string;
+  hook: string;
+  description: string;
+}
+
+interface SelectedIdea extends IdeaData {
+  scores: {
+    Attention: number;
+    'Trend-Fit': number;
+    Originality: number;
+    'Brand-Fit': number;
+  };
+  rationale: string;
+}
+
+interface IdeaApiResponse {
+  ideas: IdeaData[];
+  selected_idea: SelectedIdea;
+  reasoning: string;
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview' | 'idea-preview';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -93,6 +115,7 @@ interface ChatMessage {
   trendData?: TrendData;
   trendApiResponse?: TrendApiResponse;
   accountsData?: AccountsApiResponse;
+  ideaData?: IdeaApiResponse;
 }
 
 interface Project {
@@ -283,66 +306,10 @@ function AppContent() {
     }
   }, []); // Remove exampleMetadata from dependencies
 
-  // Function to poll for accounts data updates
-  const startAccountsPolling = useCallback((accountsMessageId: string) => {
-    console.log('🔍 [POLLING] Starting accounts polling for message:', accountsMessageId, '(will poll for up to 60 seconds)');
+  // Message loading state
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-    let pollCount = 0;
-    const maxPolls = 30; // 60 seconds / 2 second intervals
 
-    const pollInterval = setInterval(async () => {
-      pollCount++;
-      console.log(`🔍 [POLLING] Check #${pollCount}/${maxPolls} for accounts data updates...`);
-
-      // Stop polling if we've reached the maximum attempts
-      if (pollCount >= maxPolls) {
-        console.log('🔍 [POLLING] Reached maximum polling attempts, stopping...');
-        clearInterval(pollInterval);
-        return;
-      }
-
-      try {
-        // Reload chat messages to check for updates
-        if (selectedCampaignId) {
-          // Create a fresh fetch call rather than using the loadChatMessages function
-          // to avoid dependency issues
-          const timestamp = new Date().getTime();
-          const response = await fetch(`/api/chat?campaignId=${selectedCampaignId}&t=${timestamp}`, {
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-
-          const data = await response.json();
-          if (response.ok && data.success) {
-            const dbMessages = data.messages || [];
-
-            // Check if any message has accounts data that wasn't there before
-            const hasAccountsUpdate = dbMessages.some((msg: unknown) =>
-              (msg as { chatMessageId: string; accountsData?: unknown }).chatMessageId === accountsMessageId &&
-              (msg as { accountsData?: unknown }).accountsData
-            );
-
-            if (hasAccountsUpdate) {
-              console.log(`🔍 [POLLING] ✅ Accounts data found after ${pollCount} polls! Stopping polling.`);
-
-              // Stop polling - the message will be updated on next render cycle
-              clearInterval(pollInterval);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('🔍 [POLLING] Error during polling:', error);
-      }
-    }, 2000); // Poll every 2 seconds
-
-    // Stop polling after 60 seconds to allow for slow API responses (30-45s)
-    setTimeout(() => {
-      console.log('🔍 [POLLING] Stopping accounts polling after 60 second timeout');
-      clearInterval(pollInterval);
-    }, 60000);
-  }, [selectedCampaignId]);
 
   // Message saving utility
   const saveMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
@@ -556,6 +523,7 @@ function AppContent() {
           // Determine message type based on response data
           const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
           const isTrendPreview = data.trendData && data.trendData;
+          const isAccountsPreview = data.accountsData && data.accountsData;
 
           // Debug logging for trend data
           if (isTrendPreview) {
@@ -568,7 +536,14 @@ function AppContent() {
             }
           }
 
-          // Create trend/main bot message object
+          // Debug logging for accounts data
+          if (isAccountsPreview) {
+            console.log('🔍 [DEBUG] Accounts preview detected in API response:');
+            console.log('🔍 [DEBUG] data.accountsData:', JSON.stringify(data.accountsData, null, 2));
+            console.log('🔍 [DEBUG] Has selected_accounts?', !!data.accountsData?.selected_accounts);
+          }
+
+          // Create main bot message object (trends/questions)
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
@@ -583,77 +558,109 @@ function AppContent() {
             trendApiResponse: isTrendPreview && data.trendData?.chosen_trend ? data.trendData : undefined
           };
 
-          // Create accounts bot message object (with or without data)
+          // Create separate accounts bot message (just like trends)
           let accountsBotMessage: ChatMessage | undefined;
           if (data.accountsBotMessageId) {
-            console.log('🔍 [DEBUG] Accounts message ID detected in API response:', data.accountsBotMessageId);
-            console.log('🔍 [DEBUG] Accounts data present:', !!data.accountsData?.selected_accounts);
+            console.log('🔍 [DEBUG] Creating separate accounts message:', data.accountsBotMessageId);
+            console.log('🔍 [DEBUG] Accounts data present:', !!data.accountsData);
 
             accountsBotMessage = {
               id: data.accountsBotMessageId,
-              text: data.accountsBotMessage || 'Accounts analysis in progress...',
+              text: data.accountsBotMessage || 'Analyzing competitor accounts...',
               sender: 'bot',
-              messageType: data.accountsData ? 'accounts-preview' : 'loading-accounts',
+              messageType: isAccountsPreview ? 'accounts-preview' : 'loading-accounts',
               timestamp: new Date(),
               accountsData: data.accountsData
             };
-            console.log('🔍 [DEBUG] Created accounts bot message:', accountsBotMessage.id, 'type:', accountsBotMessage.messageType);
+            console.log('🔍 [DEBUG] Created accounts message with type:', accountsBotMessage.messageType);
+          }
 
-            // If no accounts data yet, start polling for updates
-            if (!data.accountsData) {
-              console.log('🔍 [DEBUG] Starting polling for accounts data updates');
-              startAccountsPolling(data.accountsBotMessageId);
+          // Create separate idea bot message (sequential step 4)
+          let ideaBotMessage: ChatMessage | undefined;
+          if (data.ideaBotMessageId) {
+            console.log('🔍 [DEBUG] Creating separate idea message:', data.ideaBotMessageId);
+            console.log('🔍 [DEBUG] Idea data present:', !!data.ideaData);
+
+            const isIdeaPreview = data.ideaData && data.ideaData;
+            ideaBotMessage = {
+              id: data.ideaBotMessageId,
+              text: data.ideaBotMessage || 'Generating creative ideas...',
+              sender: 'bot',
+              messageType: isIdeaPreview ? 'idea-preview' : 'loading-final-idea',
+              timestamp: new Date(),
+              ideaData: data.ideaData
+            };
+            console.log('🔍 [DEBUG] Created idea message with type:', ideaBotMessage.messageType);
+          }
+
+
+          // Debug logging for bot message creation
+          if (isTrendPreview || isAccountsPreview) {
+            console.log('🔍 [DEBUG] Created unified bot message:');
+            console.log('🔍 [DEBUG] Message type:', botMessage.messageType);
+            if (isTrendPreview) {
+              console.log('🔍 [DEBUG] botMessage.trendData:', JSON.stringify(botMessage.trendData, null, 2));
+              console.log('🔍 [DEBUG] botMessage.trendApiResponse:', JSON.stringify(botMessage.trendApiResponse, null, 2));
+            }
+            if (isAccountsPreview) {
+              console.log('🔍 [DEBUG] botMessage.accountsData:', JSON.stringify(botMessage.accountsData, null, 2));
             }
           }
 
-          // Debug logging for bot message creation
-          if (isTrendPreview) {
-            console.log('🔍 [DEBUG] Created bot message with trend data:');
-            console.log('🔍 [DEBUG] botMessage.trendData:', JSON.stringify(botMessage.trendData, null, 2));
-            console.log('🔍 [DEBUG] botMessage.trendApiResponse:', JSON.stringify(botMessage.trendApiResponse, null, 2));
-            console.log('🔍 [DEBUG] Message type:', botMessage.messageType);
-          }
-
-          // Handle both trend and accounts messages
+          // Handle both trend/main message and accounts message separately (like two separate API responses)
           setMessages(prev => {
             const updatedMessages = [...prev];
 
-            // Handle trend/main message
+            // Handle main message (trends/questions)
             const existingMessageIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
             if (existingMessageIndex !== -1) {
               // Update existing message (backend updated the same message)
               updatedMessages[existingMessageIndex] = botMessage;
-              console.log(`🔄 Updated existing trend message with ID: ${botMessage.id}`);
+              console.log(`🔄 Updated existing main message with ID: ${botMessage.id}`);
             } else {
               // Check if we have a temporary loading message that needs to be replaced
               const tempLoadingIndex = updatedMessages.findIndex(msg =>
                 msg.sender === 'bot' &&
                 msg.id.startsWith('temp-loading-') &&
-                (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea')
+                (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
               );
 
               if (tempLoadingIndex !== -1) {
                 // Replace the temporary loading message with the real response
                 updatedMessages[tempLoadingIndex] = botMessage;
-                console.log(`🔄 Replaced temporary loading message with trend response: ${botMessage.id}`);
+                console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
               } else {
-                // Add new trend message if no existing or temp message found
+                // Add new message if no existing or temp message found
                 updatedMessages.push(botMessage);
-                console.log(`➕ Added new trend message with ID: ${botMessage.id}`);
+                console.log(`➕ Added new main message with ID: ${botMessage.id}`);
               }
             }
 
-            // Handle accounts message if present
+            // Handle accounts message if present (exactly like trends)
             if (accountsBotMessage) {
               const existingAccountsIndex = updatedMessages.findIndex(msg => msg.id === accountsBotMessage.id);
               if (existingAccountsIndex !== -1) {
-                // Update existing accounts message
+                // Update existing accounts message (this is key for async updates!)
                 updatedMessages[existingAccountsIndex] = accountsBotMessage;
                 console.log(`🔄 Updated existing accounts message with ID: ${accountsBotMessage.id}`);
               } else {
                 // Add new accounts message
                 updatedMessages.push(accountsBotMessage);
                 console.log(`➕ Added new accounts message with ID: ${accountsBotMessage.id}`);
+              }
+            }
+
+            // Handle idea message if present (sequential step 4)
+            if (ideaBotMessage) {
+              const existingIdeaIndex = updatedMessages.findIndex(msg => msg.id === ideaBotMessage.id);
+              if (existingIdeaIndex !== -1) {
+                // Update existing idea message
+                updatedMessages[existingIdeaIndex] = ideaBotMessage;
+                console.log(`🔄 Updated existing idea message with ID: ${ideaBotMessage.id}`);
+              } else {
+                // Add new idea message
+                updatedMessages.push(ideaBotMessage);
+                console.log(`➕ Added new idea message with ID: ${ideaBotMessage.id}`);
               }
             }
 
@@ -754,8 +761,15 @@ function AppContent() {
   };
 
   // Load existing chat messages when campaign is selected
-  const loadChatMessages = async (campaignId: string) => {
+  const loadChatMessages = useCallback(async (campaignId: string) => {
+    // Prevent concurrent loading calls
+    if (isLoadingMessages) {
+      console.log('📥 Already loading messages, skipping duplicate request');
+      return;
+    }
+
     console.log('📥 Loading chat messages for campaign:', campaignId);
+    setIsLoadingMessages(true);
 
     try {
       const timestamp = new Date().getTime();
@@ -783,6 +797,7 @@ function AppContent() {
           createdAt: string;
           trendData?: TrendData | TrendApiResponse;
           accountsData?: AccountsApiResponse;
+          ideaData?: IdeaApiResponse;
         }) => {
           // Extract question metadata from message text if it's a question session
           let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
@@ -823,16 +838,24 @@ function AppContent() {
             accountsData = dbMsg.accountsData as AccountsApiResponse;
           }
 
+          // Handle idea data
+          let ideaData: IdeaApiResponse | undefined;
+          if (dbMsg.ideaData) {
+            console.log('🔍 [DEBUG] Processing DB message with ideaData:', JSON.stringify(dbMsg.ideaData, null, 2));
+            ideaData = dbMsg.ideaData as IdeaApiResponse;
+          }
+
           return {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview' | 'idea-preview') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
             questionMetadata,
             trendData,
             trendApiResponse,
-            accountsData
+            accountsData,
+            ideaData
           };
         });
 
@@ -854,8 +877,10 @@ function AppContent() {
       }
     } catch (error) {
       console.error('❌ Error loading chat messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
     }
-  };
+  }, []);
 
   // Load messages when campaign changes
   useEffect(() => {
@@ -875,7 +900,8 @@ function AppContent() {
         timestamp: new Date()
       }]);
     }
-  }, [selectedCampaignId]);
+  }, [selectedCampaignId, loadChatMessages]);
+
 
   // Fetch project data when project is selected
   useEffect(() => {
@@ -1218,6 +1244,116 @@ function AppContent() {
             <div className="overall-reasoning">
               <h4 className="reasoning-title">Overall Strategy:</h4>
               <p className="reasoning-content">{accountsData.overall_reasoning}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Idea preview message type
+    if (messageType === 'idea-preview' && message.sender === 'bot' && message.ideaData) {
+      const ideaData = message.ideaData;
+
+      // Helper function to render score bars
+      const renderScoreBar = (score: number, label: string) => {
+        const percentage = (score / 10) * 100; // Assuming scores are out of 10
+        const getScoreColor = (score: number) => {
+          if (score >= 8) return '#4CAF50'; // Green
+          if (score >= 6) return '#FF9800'; // Orange
+          return '#f44336'; // Red
+        };
+
+        return (
+          <div key={label} className="score-item">
+            <div className="score-label">{label}</div>
+            <div className="score-bar-container">
+              <div
+                className="score-bar-fill"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: getScoreColor(score)
+                }}
+              ></div>
+            </div>
+            <div className="score-value">{score}/10</div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="message-content idea-preview">
+          <div className="idea-intro">
+            {message.text}
+          </div>
+
+          {/* All Generated Ideas */}
+          <div className="all-ideas-section">
+            <h3 className="section-title">Generated Ideas</h3>
+            <div className="ideas-grid">
+              {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
+                <div key={index} className="idea-card">
+                  <div className="idea-header">
+                    <h4 className="idea-angle">{idea.angle}</h4>
+                  </div>
+                  <div className="idea-hook">
+                    <strong>Hook:</strong> "{idea.hook}"
+                  </div>
+                  <div className="idea-description">
+                    {idea.description}
+                  </div>
+                </div>
+              )) : (
+                <div className="no-ideas">No ideas available</div>
+              )}
+            </div>
+          </div>
+
+          {/* Selected Idea with Scores */}
+          {ideaData.selected_idea && (
+            <div className="selected-idea-section">
+              <h3 className="section-title">🎯 Recommended Idea</h3>
+              <div className="selected-idea-card">
+                <div className="selected-idea-header">
+                  <h4 className="selected-idea-angle">{ideaData.selected_idea.angle}</h4>
+                  <div className="idea-badge">Top Pick</div>
+                </div>
+
+                <div className="selected-idea-hook">
+                  <strong>Hook:</strong> "{ideaData.selected_idea.hook}"
+                </div>
+
+                <div className="selected-idea-description">
+                  {ideaData.selected_idea.description}
+                </div>
+
+                {/* Scoring Section */}
+                {ideaData.selected_idea.scores && (
+                  <div className="idea-scores">
+                    <h5 className="scores-title">Performance Scores</h5>
+                    <div className="scores-grid">
+                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) =>
+                        renderScoreBar(value, key)
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Rationale */}
+                {ideaData.selected_idea.rationale && (
+                  <div className="idea-rationale">
+                    <h5 className="rationale-title">Why This Idea Works</h5>
+                    <p className="rationale-content">{ideaData.selected_idea.rationale}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Overall Reasoning */}
+          {ideaData.reasoning && (
+            <div className="overall-reasoning">
+              <h4 className="reasoning-title">Analysis Summary</h4>
+              <p className="reasoning-content">{ideaData.reasoning}</p>
             </div>
           )}
         </div>

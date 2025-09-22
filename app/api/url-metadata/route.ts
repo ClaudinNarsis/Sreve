@@ -65,15 +65,7 @@ export async function POST(request: NextRequest) {
     const metaTags = html.match(/<meta[^>]+>/gi) || [];
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
 
-    // Debug: Log some meta tags for inspection
-    console.log(`📝 All meta tags (${metaTags.length}):`);
-    metaTags.forEach((tag, i) => {
-      if (typeof tag === 'string') {
-        console.log(`  ${i + 1}: ${tag.substring(0, 200)}${tag.length > 200 ? '...' : ''}`);
-      } else {
-        console.log(`  ${i + 1}: [Non-string tag: ${JSON.stringify(tag)}]`);
-      }
-    });
+    
 
     // Extract og:title or fallback to title tag
     const ogTitle = metaTags.find((tag: string) =>
@@ -99,8 +91,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract og:image - Enhanced pattern matching
-    console.log(`🔍 Looking for og:image in ${metaTags.length} meta tags`);
+    
     const ogImage = metaTags.find((tag: string) => {
       const lowerTag = tag.toLowerCase();
       return (
@@ -115,7 +106,6 @@ export async function POST(request: NextRequest) {
         lowerTag.includes('property=og:image:url')
       );
     });
-    console.log(`🖼️ og:image meta tag found:`, ogImage ? `"${ogImage.substring(0, 200)}${ogImage.length > 200 ? '...' : ''}"` : 'None');
 
     // Debug: Log all image-related meta tags
     const imageRelatedTags = metaTags.filter((tag: string) =>
@@ -197,7 +187,6 @@ export async function POST(request: NextRequest) {
           lowerTag.includes('property=twitter:image:src')
         );
       });
-      console.log(`🖼️ twitter:image meta tag found:`, twitterImage ? `"${twitterImage.substring(0, 200)}${twitterImage.length > 200 ? '...' : ''}"` : 'None');
 
       if (twitterImage) {
         const imageContent = twitterImage.match(/content=["']([^"']+)["']/i);

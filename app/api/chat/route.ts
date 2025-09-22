@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
@@ -268,70 +269,10 @@ async function makeAPICallWithRetry(
   throw new ExtractPromptAPIError('Unexpected error in retry logic', 500);
 }
 
-// Async function to process accounts data in the background
-async function processAccountsDataAsync(
-  campaignId: string,
-  userId: string,
-  brandDetails: unknown,
-  accountsLoadingBotMessageId: string,
-  sreveApiEndpoint: string,
-  extractPromptCircuitBreaker: unknown,
-  makeAPICallWithRetry: unknown,
-  updateChatMessage: unknown
-) {
-  try {
-    const startTime = Date.now();
-    console.log('🔍 Making find-accounts API call with extracted brand details (async) - started at:', new Date().toISOString());
 
-    const findAccountsResponse = await extractPromptCircuitBreaker.execute(() =>
-      makeAPICallWithRetry(
-        `${sreveApiEndpoint}/find-accounts`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brand_details: brandDetails }),
-        }
-      )
-    );
-
-    const duration = Date.now() - startTime;
-    console.log(`🔍 Find-accounts API call completed (async) - duration: ${duration}ms`);
-
-    if (findAccountsResponse.ok) {
-      const accountsData = await findAccountsResponse.json();
-      console.log('📊 Find-accounts API response received (async):', !!accountsData.selected_accounts);
-
-      if (accountsData.selected_accounts && accountsData.selected_accounts.length > 0) {
-        const accountsAnalysisMessage = `Perfect! I've analyzed competitor accounts and found some great examples for your brand strategy:`;
-
-        // Update the loading message to become the accounts preview message
-        await updateChatMessage(accountsLoadingBotMessageId, accountsAnalysisMessage, 'accounts-preview', undefined, accountsData);
-        console.log('✅ Accounts message updated successfully (async)');
-      } else {
-        console.warn('⚠️ Find-accounts API returned no accounts (async), updating to default message');
-        await updateChatMessage(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
-      }
-    } else {
-      console.warn('⚠️ Find-accounts API call failed (async), updating to default message');
-      await updateChatMessage(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn('⚠️ Find-accounts API call error (async):', errorMessage);
-    console.warn('⚠️ Full error details:', error);
-
-    // Update the loading message with a fallback message
-    try {
-      await (updateChatMessage as (id: string, message: string, type: string) => Promise<void>)(accountsLoadingBotMessageId, 'I\'ve analyzed your brand strategy and the trend data. Your campaign is now ready!', 'default');
-      console.log('✅ Updated accounts message with fallback text due to API error');
-    } catch (updateError) {
-      console.error('❌ Failed to update accounts message after API error:', updateError);
-    }
-  }
-}
 
 // Helper function to save chat message with error handling
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview', trendData?: unknown, accountsData?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', apiResponse?: unknown, messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview' | 'idea-preview', trendData?: unknown, accountsData?: unknown, ideaData?: unknown) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -344,7 +285,8 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     createdAt: new Date().toISOString(),
     ...(apiResponse && { apiResponse }),
     ...(trendData && { trendData }),
-    ...(accountsData && { accountsData })
+    ...(accountsData && { accountsData }),
+    ...(ideaData && { ideaData })
   };
 
   try {
@@ -367,7 +309,7 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
 }
 
 // Helper function to update an existing chat message
-async function updateChatMessage(messageId: string, newMessage: string, newMessageType?: string, trendData?: unknown, accountsData?: unknown) {
+async function updateChatMessage(messageId: string, newMessage: string, newMessageType?: string, trendData?: unknown, accountsData?: unknown, ideaData?: unknown) {
   try {
     const updateExpressions = ['message = :message'];
     const expressionAttributeValues: Record<string, unknown> = {
@@ -387,6 +329,11 @@ async function updateChatMessage(messageId: string, newMessage: string, newMessa
     if (accountsData) {
       updateExpressions.push('accountsData = :accountsData');
       expressionAttributeValues[':accountsData'] = accountsData;
+    }
+
+    if (ideaData) {
+      updateExpressions.push('ideaData = :ideaData');
+      expressionAttributeValues[':ideaData'] = ideaData;
     }
 
     const updateCommand = new UpdateCommand({
@@ -847,11 +794,83 @@ export async function POST(request: NextRequest) {
               const accountsLoadingMessage = 'Great! Now let me find some successful competitor accounts that align with your brand strategy...';
               const accountsLoadingBotMessageId = await saveChatMessage(campaignId, userId, accountsLoadingMessage, 'bot', undefined, 'loading-accounts');
 
-              // Start accounts API call asynchronously (don't await)
-              console.log('🔍 Starting find-accounts API call asynchronously with extracted brand details');
-              processAccountsDataAsync(campaignId, userId, brandDetails, accountsLoadingBotMessageId, sreveApiEndpoint, extractPromptCircuitBreaker, makeAPICallWithRetry, updateChatMessage);
+              // Step 3: Make accounts API call synchronously
+              console.log('🔍 Making find-accounts API call synchronously with extracted brand details');
+              let accountsData = null;
 
-              // Return trend response immediately
+              try {
+                const findAccountsResponse = await extractPromptCircuitBreaker.execute(() =>
+                  makeAPICallWithRetry(
+                    `${sreveApiEndpoint}/find-accounts`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ brand_details: brandDetails }),
+                    }
+                  )
+                );
+
+                if (findAccountsResponse.ok) {
+                  accountsData = await findAccountsResponse.json();
+                  console.log('🔍 Find-accounts API response received:', !!accountsData?.selected_accounts);
+
+                  if (accountsData?.selected_accounts && accountsData.selected_accounts.length > 0) {
+                    const accountsAnalysisMessage = 'Great! I\'ve found some successful competitor accounts that align with your brand strategy. Here are the top accounts to study:';
+                    await updateChatMessage(accountsLoadingBotMessageId, accountsAnalysisMessage, 'accounts-preview', undefined, accountsData);
+                  } else {
+                    await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+                  }
+                } else {
+                  console.warn('⚠️ Find-accounts API call failed, continuing to ideas generation');
+                  await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+                }
+              } catch (error) {
+                console.warn('⚠️ Find-accounts API call error:', error);
+                await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+              }
+
+              // Step 4: Generate ideas API call synchronously
+              const ideaLoadingMessage = 'Now let me generate creative content ideas based on the trends and competitor insights...';
+              const ideaLoadingBotMessageId = await saveChatMessage(campaignId, userId, ideaLoadingMessage, 'bot', undefined, 'loading-final-idea');
+
+              try {
+                console.log('💡 Making generate_idea API call synchronously');
+                const generateIdeaPayload = {
+                  brand_details: brandDetails,
+                  selected_accounts: accountsData?.selected_accounts || [],
+                  selected_trends: Array.isArray(trendData.chosen_trend) ? trendData.chosen_trend : [trendData.chosen_trend || trendData]
+                };
+
+                const generateIdeaResponse = await extractPromptCircuitBreaker.execute(() =>
+                  makeAPICallWithRetry(
+                    `${sreveApiEndpoint}/generate_idea`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(generateIdeaPayload),
+                    }
+                  )
+                );
+
+                if (generateIdeaResponse.ok) {
+                  const ideaData = await generateIdeaResponse.json();
+                  console.log('💡 Generate-idea API response received:', !!ideaData?.selected_idea);
+
+                  if (ideaData?.ideas && ideaData.selected_idea) {
+                    const ideaAnalysisMessage = 'Excellent! I\'ve generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:';
+                    await updateChatMessage(ideaLoadingBotMessageId, ideaAnalysisMessage, 'idea-preview', undefined, undefined, ideaData);
+                  } else {
+                    await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+                  }
+                } else {
+                  console.warn('⚠️ Generate-idea API call failed');
+                  await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+                }
+              } catch (error) {
+                console.warn('⚠️ Generate-idea API call error:', error);
+                await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+              }
+
               return NextResponse.json({
                 message: 'Questions completed and campaign updated',
                 userMessageId,
@@ -859,8 +878,11 @@ export async function POST(request: NextRequest) {
                 botMessage: trendAnalysisMessage,
                 accountsBotMessageId: accountsLoadingBotMessageId,
                 accountsBotMessage: accountsLoadingMessage,
+                ideaBotMessageId: ideaLoadingBotMessageId,
+                ideaBotMessage: ideaLoadingMessage,
                 extractedData: finalApiResult,
                 trendData: trendData,
+                accountsData: accountsData,
                 questionsCompleted: true,
                 success: true
               }, { status: 201 });
@@ -1105,11 +1127,83 @@ export async function POST(request: NextRequest) {
               const accountsLoadingMessage = 'Great! Now let me find some successful competitor accounts that align with your brand strategy...';
               const accountsLoadingBotMessageId = await saveChatMessage(campaignId, userId, accountsLoadingMessage, 'bot', undefined, 'loading-accounts');
 
-              // Start accounts API call asynchronously (don't await) - direct flow
-              console.log('🔍 Starting find-accounts API call asynchronously with extracted brand details (direct flow)');
-              processAccountsDataAsync(campaignId, userId, brandDetails, accountsLoadingBotMessageId, sreveApiEndpoint, extractPromptCircuitBreaker, makeAPICallWithRetry, updateChatMessage);
+              // Step 3: Make accounts API call synchronously - direct flow
+              console.log('🔍 Making find-accounts API call synchronously with extracted brand details (direct flow)');
+              let accountsData = null;
 
-              // Return trend response immediately
+              try {
+                const findAccountsResponse = await extractPromptCircuitBreaker.execute(() =>
+                  makeAPICallWithRetry(
+                    `${sreveApiEndpoint}/find-accounts`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ brand_details: brandDetails }),
+                    }
+                  )
+                );
+
+                if (findAccountsResponse.ok) {
+                  accountsData = await findAccountsResponse.json();
+                  console.log('🔍 Find-accounts API response received (direct flow):', !!accountsData?.selected_accounts);
+
+                  if (accountsData?.selected_accounts && accountsData.selected_accounts.length > 0) {
+                    const accountsAnalysisMessage = 'Great! I\'ve found some successful competitor accounts that align with your brand strategy. Here are the top accounts to study:';
+                    await updateChatMessage(accountsLoadingBotMessageId, accountsAnalysisMessage, 'accounts-preview', undefined, accountsData);
+                  } else {
+                    await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+                  }
+                } else {
+                  console.warn('⚠️ Find-accounts API call failed (direct flow), continuing to ideas generation');
+                  await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+                }
+              } catch (error) {
+                console.warn('⚠️ Find-accounts API call error (direct flow):', error);
+                await updateChatMessage(accountsLoadingBotMessageId, 'Moving on to generate creative ideas for your campaign...', 'default');
+              }
+
+              // Step 4: Generate ideas API call synchronously - direct flow
+              const ideaLoadingMessage = 'Now let me generate creative content ideas based on the trends and competitor insights...';
+              const ideaLoadingBotMessageId = await saveChatMessage(campaignId, userId, ideaLoadingMessage, 'bot', undefined, 'loading-final-idea');
+
+              try {
+                console.log('💡 Making generate_idea API call synchronously (direct flow)');
+                const generateIdeaPayload = {
+                  brand_details: brandDetails,
+                  selected_accounts: accountsData?.selected_accounts || [],
+                  selected_trends: Array.isArray(trendData.chosen_trend) ? trendData.chosen_trend : [trendData.chosen_trend || trendData]
+                };
+
+                const generateIdeaResponse = await extractPromptCircuitBreaker.execute(() =>
+                  makeAPICallWithRetry(
+                    `${sreveApiEndpoint}/generate_idea`,
+                    {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(generateIdeaPayload),
+                    }
+                  )
+                );
+
+                if (generateIdeaResponse.ok) {
+                  const ideaData = await generateIdeaResponse.json();
+                  console.log('💡 Generate-idea API response received (direct flow):', !!ideaData?.selected_idea);
+
+                  if (ideaData?.ideas && ideaData.selected_idea) {
+                    const ideaAnalysisMessage = 'Excellent! I\'ve generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:';
+                    await updateChatMessage(ideaLoadingBotMessageId, ideaAnalysisMessage, 'idea-preview', undefined, undefined, ideaData);
+                  } else {
+                    await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+                  }
+                } else {
+                  console.warn('⚠️ Generate-idea API call failed (direct flow)');
+                  await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+                }
+              } catch (error) {
+                console.warn('⚠️ Generate-idea API call error (direct flow):', error);
+                await updateChatMessage(ideaLoadingBotMessageId, 'Perfect! Your campaign strategy is complete with trends and competitor insights!', 'default');
+              }
+
               return NextResponse.json({
                 message: 'Chat processed successfully',
                 userMessageId,
@@ -1117,8 +1211,11 @@ export async function POST(request: NextRequest) {
                 botMessage: trendAnalysisMessage,
                 accountsBotMessageId: accountsLoadingBotMessageId,
                 accountsBotMessage: accountsLoadingMessage,
+                ideaBotMessageId: ideaLoadingBotMessageId,
+                ideaBotMessage: ideaLoadingMessage,
                 extractedData: apiResult,
                 trendData: trendData,
+                accountsData: accountsData,
                 success: true
               }, { status: 201 });
             } else {
