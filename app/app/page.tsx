@@ -1421,6 +1421,14 @@ function AppContent() {
   const renderMessageContent = (message: ChatMessage) => {
     const messageType = message.messageType || 'default';
 
+    // Helper function to safely extract score values - used by both ideas and critique components
+    const extractScore = (scoreValue: number | { score: number } | null | undefined): number => {
+      if (scoreValue !== null && typeof scoreValue === 'object' && 'score' in scoreValue) {
+        return (scoreValue as { score: number }).score;
+      }
+      return typeof scoreValue === 'number' ? scoreValue : 0;
+    };
+
     if (messageType === 'question-session' && message.sender === 'bot') {
       return (
         <div className="message-content">
@@ -1790,9 +1798,9 @@ function AppContent() {
                   <div className="idea-scores">
                     <h5 className="scores-title">Performance Scores</h5>
                     <div className="scores-grid">
-                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) =>
-                        renderScoreBar(value, key)
-                      )}
+                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => {
+                        return renderScoreBar(extractScore(value), key);
+                      })}
                     </div>
                   </div>
                 )}
@@ -1813,6 +1821,137 @@ function AppContent() {
             <div className="overall-reasoning">
               <h4 className="reasoning-title">Analysis Summary</h4>
               <p className="reasoning-content">{ideaData.reasoning}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Critique preview message type
+    if (messageType === 'critique-preview' && message.sender === 'bot' && message.critiqueData) {
+      const critiqueData = message.critiqueData;
+
+      // Helper function to render score bars
+      const renderCritiqueScoreBar = (score: number, label: string) => {
+        const percentage = (score / 10) * 100; // Assuming scores are out of 10
+        const getScoreColor = (score: number) => {
+          if (score >= 8) return '#4CAF50'; // Green
+          if (score >= 6) return '#FF9800'; // Orange
+          return '#f44336'; // Red
+        };
+
+        return (
+          <div key={label} className="score-item">
+            <div className="score-label">{label}</div>
+            <div className="score-bar-container">
+              <div
+                className="score-bar-fill"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: getScoreColor(score)
+                }}
+              />
+              <span className="score-value">{score}/10</span>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="message-content critique-preview">
+          <div className="critique-intro">
+            {message.text}
+          </div>
+
+          {/* Overall Score Section */}
+          {critiqueData.overall_score !== undefined && (
+            <div className="overall-score-section">
+              <h3 className="section-title">📊 Overall Performance Score</h3>
+              <div className="overall-score-card">
+                <div className="overall-score-number" style={{
+                  color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
+                         extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
+                }}>
+                  {extractScore(critiqueData.overall_score)}/10
+                </div>
+                <div className="overall-score-label">Overall Rating</div>
+              </div>
+            </div>
+          )}
+
+          {/* Individual Scores Section */}
+          <div className="scores-breakdown">
+            <h4 className="scores-title">Performance Breakdown</h4>
+            <div className="scores-grid">
+              {critiqueData.attention_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.attention_score),
+                  'Attention'
+                )
+              }
+              {critiqueData.relatability_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.relatability_score),
+                  'Relatability'
+                )
+              }
+              {critiqueData.originality_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.originality_score),
+                  'Originality'
+                )
+              }
+              {critiqueData.goal_alignment_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.goal_alignment_score),
+                  'Goal Alignment'
+                )
+              }
+            </div>
+          </div>
+
+          {/* Detailed Feedback Section */}
+          {critiqueData.detailed_feedback && (
+            <div className="detailed-feedback">
+              <h4 className="feedback-title">Detailed Analysis</h4>
+              <div className="feedback-grid">
+                {critiqueData.detailed_feedback.attention && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🎯 Attention</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.attention}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.relatability && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🤝 Relatability</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.relatability}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.originality && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">💡 Originality</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.originality}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.goal_alignment && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🎯 Goal Alignment</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.goal_alignment}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Follow-up Questions Section */}
+          {critiqueData.follow_up_questions && critiqueData.follow_up_questions.length > 0 && (
+            <div className="follow-up-questions">
+              <h4 className="questions-title">💭 Consider These Questions</h4>
+              <ul className="questions-list">
+                {critiqueData.follow_up_questions.map((question, index) => (
+                  <li key={index} className="question-item">{question}</li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
