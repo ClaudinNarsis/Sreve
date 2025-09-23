@@ -69,7 +69,7 @@ async function makeAPICallWithRetry(
   url: string,
   options: RequestInit,
   maxRetries: number = 3,
-  timeoutMs: number = 30000
+  timeoutMs: number = 60000
 ): Promise<Response> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -218,12 +218,12 @@ export async function POST(request: NextRequest) {
             ideasBotMessageId,
             ideasMessage,
             ideaData,
-            flowCompleted: true,
+            nextStep: 'critique',
             success: true
           }, { status: 200 });
         } else {
           console.log('ℹ️ [IDEAS-API] No specific ideas found in response');
-          const noIdeasMessage = 'I\'ve completed the analysis. Your campaign strategy is now ready!';
+          const noIdeasMessage = 'I was unable to generate specific content ideas at this time. However, I can still analyze what we have so far...';
           const noIdeasBotMessageId = await saveChatMessage(campaignId, userId, noIdeasMessage, 'bot', 'default');
           console.log('✅ [IDEAS-API] No-ideas message saved with ID:', noIdeasBotMessageId);
 
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
             loadingBotMessageId,
             noIdeasBotMessageId,
             noIdeasMessage,
-            flowCompleted: true,
+            nextStep: 'critique',
             success: true
           }, { status: 200 });
         }
@@ -255,27 +255,24 @@ export async function POST(request: NextRequest) {
         apiEndpoint: process.env.SREVE_CREATOR_API_ENDPOINT ? 'configured' : 'missing'
       });
 
-      const errorMessage = 'Your campaign strategy is complete! I\'ve gathered all the insights needed for your marketing content.';
-      console.log('💾 [IDEAS-API] Saving error message');
-      const errorBotMessageId = await saveChatMessage(campaignId, userId, errorMessage, 'bot', 'default');
-      console.log('✅ [IDEAS-API] Error message saved with ID:', errorBotMessageId);
-
       // Delete the loading message from DynamoDB
       console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
       await deleteChatMessage(loadingBotMessageId);
       console.log('✅ [IDEAS-API] Loading message deleted from DynamoDB');
 
       const totalDuration = Date.now() - startTime;
-      console.log(`🎯 [IDEAS-API] Error response sent (${totalDuration}ms total) - FLOW COMPLETED`);
+      console.log(`🎯 [IDEAS-API] Error response sent (${totalDuration}ms total) - SEQUENCE STOPPED`);
 
+      // Return error response to trigger frontend sequence stop
       return NextResponse.json({
-        message: 'Ideas generation failed, but flow completed',
-        loadingBotMessageId,
-        errorBotMessageId,
-        errorMessage,
-        flowCompleted: true,
-        success: true
-      }, { status: 200 });
+        success: false,
+        error: {
+          code: 'IDEAS_API_ERROR',
+          message: 'Ideas generation API failed. Please try again.',
+          type: 'api_error',
+          step: 'ideas'
+        }
+      }, { status: 500 });
     }
 
   } catch (error: unknown) {

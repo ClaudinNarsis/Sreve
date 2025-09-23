@@ -11,6 +11,19 @@ Sreve is an AI-powered marketing content creation platform built with Next.js 15
 - **Styling**: CSS Modules + Inline Styles
 - **Deployment**: Vercel (likely)
 
+## 🚨 CRITICAL: Sequential Chat Flow Architecture
+
+**BEFORE making ANY changes to the chat system, you MUST read and follow:**
+📋 **SEQUENTIAL_CHAT_ARCHITECTURE.md** - Contains MANDATORY implementation patterns
+
+The chat flow uses a proven sequential architecture:
+1. Main chat API → Returns `brandDetails` + `nextStep: 'trends'`
+2. Frontend sequential handler → Calls 3 APIs in order (trends → accounts → ideas)
+3. Each API → Shows loading → Returns result → Deletes loading from DB
+4. **NO async operations, NO polling, NO complex message updates**
+
+**NEVER modify the chat system without following the documented patterns!**
+
 ## Key Project Principles
 
 ### 1. SEO-First Approach

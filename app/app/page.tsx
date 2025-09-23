@@ -102,12 +102,27 @@ interface IdeaApiResponse {
   reasoning: string;
 }
 
+interface CritiqueApiResponse {
+  attention_score: number;
+  relatability_score: number;
+  originality_score: number;
+  goal_alignment_score: number;
+  overall_score: number;
+  detailed_feedback: {
+    attention: string;
+    relatability: string;
+    originality: string;
+    goal_alignment: string;
+  };
+  follow_up_questions: string[];
+}
+
 interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview' | 'idea-preview';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -116,6 +131,7 @@ interface ChatMessage {
   trendApiResponse?: TrendApiResponse;
   accountsData?: AccountsApiResponse;
   ideaData?: IdeaApiResponse;
+  critiqueData?: CritiqueApiResponse;
 }
 
 interface Project {
@@ -238,6 +254,22 @@ function AppContent() {
   const [inputMessage, setInputMessage] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
+  // Sequential flow error handling state
+  const [sequenceError, setSequenceError] = useState<{
+    hasError: boolean;
+    errorMessage: string;
+    failedStep: string;
+    brandDetails?: Record<string, unknown>;
+    campaignId?: string;
+  }>({
+    hasError: false,
+    errorMessage: '',
+    failedStep: '',
+    brandDetails: undefined,
+    campaignId: undefined
+  });
+  const [isRetryingSequence, setIsRetryingSequence] = useState(false);
+
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
 
@@ -266,7 +298,44 @@ function AppContent() {
     }
   };
 
-  // Sequential flow handler for trends -> accounts -> ideas
+  // Retry sequence function - defined as regular function to avoid circular dependency
+  const retrySequence = async () => {
+    console.log('🔄 [RETRY] Retrying sequential flow from the beginning');
+
+    if (!sequenceError.brandDetails || !sequenceError.campaignId) {
+      console.error('❌ [RETRY] Missing brandDetails or campaignId for retry');
+      return;
+    }
+
+    setIsRetryingSequence(true);
+
+    // Store current error data before clearing
+    const retryBrandDetails = sequenceError.brandDetails;
+    const retryCampaignId = sequenceError.campaignId;
+
+    // Clear the error state
+    setSequenceError({
+      hasError: false,
+      errorMessage: '',
+      failedStep: '',
+      brandDetails: undefined,
+      campaignId: undefined
+    });
+
+    // Clear any loading messages from previous failed attempt
+    setMessages(prev => prev.filter(msg => !msg.messageType?.startsWith('loading-')));
+
+    try {
+      // Restart the sequence from the beginning (trends step)
+      await handleSequentialFlow('trends', retryBrandDetails, retryCampaignId);
+    } catch (error) {
+      console.error('❌ [RETRY] Failed to retry sequence:', error);
+    } finally {
+      setIsRetryingSequence(false);
+    }
+  };
+
+  // Sequential flow handler for trends -> accounts -> ideas -> critique
   const handleSequentialFlow = useCallback(async (step: string, brandDetails: Record<string, unknown>, campaignId: string) => {
     const flowStartTime = Date.now();
     console.log('🚀 [SEQUENTIAL-FLOW] Starting sequential flow:', { step, campaignId, brandName: brandDetails.brand_name });
@@ -303,10 +372,17 @@ function AppContent() {
         const trendsResult = await trendsResponse.json();
         const trendsDuration = Date.now() - trendsStartTime;
         console.log(`📈 [SEQUENTIAL-FLOW] Trends API completed in ${trendsDuration}ms:`, {
+          status: trendsResponse.status,
           success: trendsResult.success,
           hasTrendData: !!trendsResult.trendData,
           loadingMessageId: trendsResult.loadingBotMessageId
         });
+
+        // Check for HTTP error status or API error response
+        if (!trendsResponse.ok || !trendsResult.success) {
+          const errorMessage = trendsResult.error?.message || `Trends API failed with status: ${trendsResponse.status}`;
+          throw new Error(errorMessage);
+        }
 
         if (trendsResult.success) {
           // Replace loading message or add new result message
@@ -391,10 +467,17 @@ function AppContent() {
           const accountsResult = await accountsResponse.json();
           const accountsDuration = Date.now() - accountsStartTime;
           console.log(`🔍 [SEQUENTIAL-FLOW] Accounts API completed in ${accountsDuration}ms:`, {
+            status: accountsResponse.status,
             success: accountsResult.success,
             hasAccountsData: !!accountsResult.accountsData,
             loadingMessageId: accountsResult.loadingBotMessageId
           });
+
+          // Check for HTTP error status or API error response
+          if (!accountsResponse.ok || !accountsResult.success) {
+            const errorMessage = accountsResult.error?.message || `Accounts API failed with status: ${accountsResponse.status}`;
+            throw new Error(errorMessage);
+          }
 
           if (accountsResult.success) {
             // Replace loading message or add new result message
@@ -479,11 +562,18 @@ function AppContent() {
             const ideasResult = await ideasResponse.json();
             const ideasDuration = Date.now() - ideasStartTime;
             console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
+              status: ideasResponse.status,
               success: ideasResult.success,
               hasIdeaData: !!ideasResult.ideaData,
               flowCompleted: ideasResult.flowCompleted,
               loadingMessageId: ideasResult.loadingBotMessageId
             });
+
+            // Check for HTTP error status or API error response
+            if (!ideasResponse.ok || !ideasResult.success) {
+              const errorMessage = ideasResult.error?.message || `Ideas API failed with status: ${ideasResponse.status}`;
+              throw new Error(errorMessage);
+            }
 
             if (ideasResult.success) {
               // Replace loading message or add new result message
@@ -538,8 +628,156 @@ function AppContent() {
                 });
               }
 
-              const totalFlowDuration = Date.now() - flowStartTime;
-              console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+              // Check if we should proceed to critique step
+              if (ideasResult.nextStep === 'critique') {
+                // Step 4: Critique Analysis
+                console.log('🎯 [SEQUENTIAL-FLOW] Step 4/4: Starting critique analysis');
+
+                // Show loading message immediately in frontend
+                const critiqueLoadingMessage: ChatMessage = {
+                  id: `critique-loading-${Date.now()}`,
+                  text: 'Analyzing and critiquing the generated idea against your requirements...',
+                  sender: 'bot',
+                  messageType: 'loading-critique',
+                  timestamp: new Date()
+                };
+                setMessages(prev => [...prev, critiqueLoadingMessage]);
+
+                // Extract idea string from ideaData for critique
+                let ideaString = '';
+                let userRequirement = '';
+
+                if (ideasResult.ideaData?.selected_idea) {
+                  ideaString = JSON.stringify(ideasResult.ideaData.selected_idea);
+                } else if (ideasResult.ideaData?.ideas && ideasResult.ideaData.ideas.length > 0) {
+                  ideaString = JSON.stringify(ideasResult.ideaData.ideas[0]);
+                } else {
+                  ideaString = 'Generated content idea for campaign analysis';
+                }
+
+                // Use brand details as user requirement context
+                userRequirement = `Brand: ${brandDetails.brand_name}, Goal: ${brandDetails.goal}, Platform: ${brandDetails.platform}, Target: ${brandDetails.icp}`;
+
+                const critiqueStartTime = Date.now();
+
+                try {
+                  const critiqueResponse = await fetch('/api/chat/critique', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      campaignId,
+                      ideaString,
+                      userRequirement
+                    })
+                  });
+
+                  const critiqueResult = await critiqueResponse.json();
+                  const critiqueDuration = Date.now() - critiqueStartTime;
+                  console.log(`🎯 [SEQUENTIAL-FLOW] Critique API completed in ${critiqueDuration}ms:`, {
+                    status: critiqueResponse.status,
+                    success: critiqueResult.success,
+                    hasCritiqueData: !!critiqueResult.critiqueData,
+                    flowCompleted: critiqueResult.flowCompleted,
+                    loadingMessageId: critiqueResult.loadingBotMessageId
+                  });
+
+                  // Check for HTTP error status or API error response
+                  if (!critiqueResponse.ok || !critiqueResult.success) {
+                    const errorMessage = critiqueResult.error?.message || `Critique API failed with status: ${critiqueResponse.status}`;
+                    throw new Error(errorMessage);
+                  }
+
+                  if (critiqueResult.success) {
+                    // Replace loading message with critique results
+                    if (critiqueResult.critiqueData) {
+                      const critiqueMessage: ChatMessage = {
+                        id: critiqueResult.critiqueBotMessageId,
+                        text: critiqueResult.critiqueMessage,
+                        sender: 'bot',
+                        messageType: 'critique-preview',
+                        timestamp: new Date(),
+                        critiqueData: critiqueResult.critiqueData
+                      };
+
+                      setMessages(prev => {
+                        const loadingIndex = prev.findIndex(msg =>
+                          msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                        );
+
+                        if (loadingIndex !== -1) {
+                          console.log('🔄 [SEQUENTIAL-FLOW] Replacing critique loading message with results');
+                          const updated = [...prev];
+                          updated[loadingIndex] = critiqueMessage;
+                          return updated;
+                        } else {
+                          console.log('➕ [SEQUENTIAL-FLOW] Adding new critique message');
+                          return [...prev, critiqueMessage];
+                        }
+                      });
+                    } else if (critiqueResult.noCritiqueBotMessageId) {
+                      // Handle no critique case
+                      const noCritiqueMessage: ChatMessage = {
+                        id: critiqueResult.noCritiqueBotMessageId,
+                        text: critiqueResult.noCritiqueMessage,
+                        sender: 'bot',
+                        messageType: 'default',
+                        timestamp: new Date()
+                      };
+
+                      setMessages(prev => {
+                        const loadingIndex = prev.findIndex(msg =>
+                          msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                        );
+
+                        if (loadingIndex !== -1) {
+                          console.log('🔄 [SEQUENTIAL-FLOW] Replacing critique loading with completion message');
+                          const updated = [...prev];
+                          updated[loadingIndex] = noCritiqueMessage;
+                          return updated;
+                        } else {
+                          return [...prev, noCritiqueMessage];
+                        }
+                      });
+                    }
+
+                    const totalFlowDuration = Date.now() - flowStartTime;
+                    console.log(`✅ [SEQUENTIAL-FLOW] All 4 steps completed successfully in ${totalFlowDuration}ms!`);
+                  } else {
+                    throw new Error(`Critique API failed: ${critiqueResult.message}`);
+                  }
+                } catch (error) {
+                  console.error('❌ [SEQUENTIAL-FLOW] Critique step error:', error);
+
+                  // Replace loading message with error message
+                  const critiqueErrorMessage: ChatMessage = {
+                    id: Date.now().toString(),
+                    text: 'Your campaign strategy is complete! I\'ve generated comprehensive insights for your marketing campaign.',
+                    sender: 'bot',
+                    messageType: 'default',
+                    timestamp: new Date()
+                  };
+
+                  setMessages(prev => {
+                    const loadingIndex = prev.findIndex(msg =>
+                      msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                    );
+
+                    if (loadingIndex !== -1) {
+                      const updated = [...prev];
+                      updated[loadingIndex] = critiqueErrorMessage;
+                      return updated;
+                    } else {
+                      return [...prev, critiqueErrorMessage];
+                    }
+                  });
+
+                  const totalFlowDuration = Date.now() - flowStartTime;
+                  console.log(`✅ [SEQUENTIAL-FLOW] Flow completed with critique error in ${totalFlowDuration}ms`);
+                }
+              } else {
+                const totalFlowDuration = Date.now() - flowStartTime;
+                console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+              }
             } else {
               throw new Error(`Ideas API failed: ${ideasResult.message}`);
             }
@@ -552,23 +790,37 @@ function AppContent() {
       }
     } catch (error) {
       const totalFlowDuration = Date.now() - flowStartTime;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+
       console.error(`❌ [SEQUENTIAL-FLOW] Error in sequential flow after ${totalFlowDuration}ms:`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMsg,
         step,
         campaignId
       });
 
-      // Add error message to chat
+      // Clear any loading messages from the failed sequence
+      setMessages(prev => prev.filter(msg => !msg.messageType?.startsWith('loading-')));
+
+      // Set error state for retry functionality
+      setSequenceError({
+        hasError: true,
+        errorMessage: `The ${step} analysis failed. Please try again.`,
+        failedStep: step,
+        brandDetails,
+        campaignId
+      });
+
+      // Add error message to chat with retry button context
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
-        text: 'There was an error processing your request. The analysis has been completed with the available information.',
+        text: `❌ The ${step} analysis encountered an error and the sequence was stopped. You can retry the entire sequence below.`,
         sender: 'bot',
         messageType: 'default',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     }
-  }, []);
+  }, [setSequenceError]);
 
   // Function to fetch metadata for all examples in a trend
   const fetchExampleMetadata = useCallback(async (examples: Array<{ caption: string; url: string; }>) => {
@@ -996,6 +1248,7 @@ function AppContent() {
           trendData?: TrendData | TrendApiResponse;
           accountsData?: AccountsApiResponse;
           ideaData?: IdeaApiResponse;
+          critiqueData?: CritiqueApiResponse;
         }) => {
           // Extract question metadata from message text if it's a question session
           let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
@@ -1043,17 +1296,25 @@ function AppContent() {
             ideaData = dbMsg.ideaData as IdeaApiResponse;
           }
 
+          // Handle critique data
+          let critiqueData: CritiqueApiResponse | undefined;
+          if (dbMsg.critiqueData) {
+            console.log('🔍 [DEBUG] Processing DB message with critiqueData:', JSON.stringify(dbMsg.critiqueData, null, 2));
+            critiqueData = dbMsg.critiqueData as CritiqueApiResponse;
+          }
+
           return {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'trend-preview' | 'accounts-preview' | 'idea-preview') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
             questionMetadata,
             trendData,
             trendApiResponse,
             accountsData,
-            ideaData
+            ideaData,
+            critiqueData
           };
         });
 
@@ -1700,6 +1961,43 @@ function AppContent() {
                   </div>
                 )}
               </div>
+
+              {/* Retry Button for Sequence Errors */}
+              {sequenceError.hasError && (
+                <div className="retry-container" style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: '1px solid #333',
+                  background: '#1a1a1a'
+                }}>
+                  <p style={{
+                    color: '#ff6b6b',
+                    marginBottom: '12px',
+                    fontSize: '14px'
+                  }}>
+                    {sequenceError.errorMessage}
+                  </p>
+                  <button
+                    onClick={retrySequence}
+                    disabled={isRetryingSequence}
+                    style={{
+                      background: '#ff6600',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 24px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: isRetryingSequence ? 'not-allowed' : 'pointer',
+                      opacity: isRetryingSequence ? 0.6 : 1,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {isRetryingSequence ? '🔄 Retrying...' : '🔄 Retry Analysis'}
+                  </button>
+                </div>
+              )}
+
               <div className="chat-input-container">
                 <div className="chat-input-wrapper">
                   <textarea
