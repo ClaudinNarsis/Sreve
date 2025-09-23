@@ -30,6 +30,28 @@ console.log('🔧 DynamoDB table names:', {
   campaigns: CAMPAIGNS_TABLE
 });
 
+// Debug environment variables in development
+if (process.env.ENVIRONMENT === 'Dev') {
+  console.log('🔧 Environment variables debug:', {
+    ENVIRONMENT: process.env.ENVIRONMENT,
+    SREVE_CREATOR_API_ENDPOINT: process.env.SREVE_CREATOR_API_ENDPOINT,
+    SREVE_CREATOR_HEALTHCHECK_ENDPOINT: process.env.SREVE_CREATOR_HEALTHCHECK_ENDPOINT,
+    REGION_AWS: process.env.REGION_AWS,
+    NODE_ENV: process.env.NODE_ENV,
+    // Don't log sensitive variables, just check if they exist
+    ACCESS_KEY_ID_AWS_EXISTS: !!process.env.ACCESS_KEY_ID_AWS,
+    SECRET_ACCESS_KEY_AWS_EXISTS: !!process.env.SECRET_ACCESS_KEY_AWS,
+    CLERK_SECRET_KEY_EXISTS: !!process.env.CLERK_SECRET_KEY,
+    allEnvKeys: Object.keys(process.env).filter(key =>
+      key.includes('SREVE') ||
+      key.includes('AWS') ||
+      key.includes('CLERK') ||
+      key === 'ENVIRONMENT' ||
+      key === 'NODE_ENV'
+    )
+  });
+}
+
 // Custom error classes for better error handling
 class QuestioningSessionError extends Error {
   constructor(message: string, public code: string, public statusCode: number = 500) {
