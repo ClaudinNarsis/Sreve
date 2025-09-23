@@ -2,770 +2,2422 @@
 
 import Link from "next/link";
 import NextImage from "next/image";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
-import ProjectExplorer, { ProjectExplorerRef } from "../components/ProjectExplorer";
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import ProjectExplorer from "../components/ProjectExplorer";
+import ProjectDetails from "../components/ProjectDetails";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
-import toast from 'react-hot-toast';
-import { useRouter, useSearchParams } from 'next/navigation';
 
 import "./app.css";
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import CampaignExplorer from "../components/CampaignExplorer";
-import ProjectDetailsExplorer from "../components/ProjectDetailsExplorer";
+import React, { Suspense, useState, useEffect, useCallback } from "react";
+import toast from "react-hot-toast";
 
-
-interface QuestionOption {
-  value: string;
-  label: string;
+interface UrlMetadata {
+  title?: string;
+  image?: string;
+  description?: string;
+  url: string;
 }
 
-interface Question {
-  step: number;
-  sidebarTitle: string;
-  question: string;
-  placeholder?: string;
-  answerType: 'text' | 'textarea' | 'select' | 'multiselect' | 'url' | 'file';
-  required: boolean;
-  options?: QuestionOption[];
-  acceptedTypes?: string[];
-  maxFiles?: number;
-  maxSize?: string;
-  validation?: {
-    minLength?: number;
-    maxLength?: number;
-    pattern?: string;
+interface ExampleWithMetadata {
+  caption: string;
+  url: string;
+  metadata?: UrlMetadata;
+  loading?: boolean;
+  error?: boolean;
+}
+
+interface TrendData {
+  trend_id: string;
+  trend: string;
+  status: string;
+  platform: string;
+  category: string;
+  prompt: string;
+  examples: Array<{
+    caption: string;
+    url: string;
+  }>;
+}
+
+interface TrendApiResponse {
+  chosen_trend: TrendData;
+  reason: string;
+  brand_goal_alignment?: string;
+}
+
+interface PostData {
+  post_id: string;
+  type: string;
+  tags: string[];
+  about: string;
+  caption: string;
+  engagement: {
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
   };
 }
 
-interface QuestionsData {
-  questions: Question[];
+interface AccountSummary {
+  niche: string;
+  content_style: string;
+  posting_frequency: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+interface SelectedAccount {
+  handle: string;
+  summary: AccountSummary;
+  posts: PostData[];
+  selection_reason: string;
+}
+
+interface AccountsApiResponse {
+  selected_accounts: SelectedAccount[];
+  overall_reasoning: string;
+}
+
+interface IdeaData {
+  angle: string;
+  hook: string;
+  description: string;
+  execution_script?: string;
+}
+
+interface SelectedIdea extends IdeaData {
+  scores: {
+    Attention: number;
+    'Trend-Fit': number;
+    Originality: number;
+    'Brand-Fit': number;
+  };
+  rationale: string;
+}
+
+interface IdeaApiResponse {
+  ideas: IdeaData[];
+  selected_idea: SelectedIdea;
+  reasoning: string;
+}
+
+interface CritiqueApiResponse {
+  attention_score: number;
+  relatability_score: number;
+  originality_score: number;
+  goal_alignment_score: number;
+  overall_score: number;
+  detailed_feedback: {
+    attention: string;
+    relatability: string;
+    originality: string;
+    goal_alignment: string;
+  };
+  follow_up_questions: string[];
+}
+
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview';
+  questionMetadata?: {
+    currentQuestionIndex: number;
+    totalQuestions: number;
+  };
+  trendData?: TrendData;
+  trendApiResponse?: TrendApiResponse;
+  accountsData?: AccountsApiResponse;
+  ideaData?: IdeaApiResponse;
+  critiqueData?: CritiqueApiResponse;
+}
+
+interface Project {
+  projectId: string;
+  userId: string;
+  brand_name: string;
+  offering: string;
+  usp: string;
+  icp: string;
+  brand_voice: string;
+  competitors: string;
+  additional_information: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+}
+
+// ExampleCards component for displaying trend examples with metadata
+interface ExampleCardsProps {
+  examples: Array<{ caption: string; url: string; }>;
+  exampleMetadata: Record<string, ExampleWithMetadata>;
+  onFetchMetadata: (examples: Array<{ caption: string; url: string; }>) => void;
+}
+
+function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCardsProps) {
+  useEffect(() => {
+    // Fetch metadata when examples change
+    if (examples && examples.length > 0) {
+      onFetchMetadata(examples);
+    }
+  }, [examples, onFetchMetadata]); // Include examples but we've fixed the infinite loop with stable callback
+
+  return (
+    <div className="trend-examples">
+      <h4 className="trend-examples-title">Examples:</h4>
+      <div className="trend-examples-scroll">
+        {examples.map((example, index) => {
+          const metadata = exampleMetadata[example.url];
+          const isLoading = metadata?.loading ?? false;
+          const metaData = metadata?.metadata;
+
+          return (
+            <div
+              key={index}
+              className="trend-example-card"
+              onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+            >
+              {/* Image section */}
+              <div className="trend-example-image-container">
+                {isLoading ? (
+                  <div className="trend-example-loading">
+                    <div className="loading-spinner"></div>
+                  </div>
+                ) : metaData?.image ? (
+                  <img
+                    src={metaData.image}
+                    alt={metaData.title || example.caption}
+                    className="trend-example-image"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="trend-example-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                      <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Content section */}
+              <div className="trend-example-content">
+                {metaData?.title && (
+                  <div className="trend-example-title">
+                    {metaData.title}
+                  </div>
+                )}
+
+                <div className="trend-example-caption">
+                  {example.caption}
+                </div>
+
+                <div className="trend-example-url">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
+                    <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  View Example
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function AppContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { user } = useUser();
+
+  useAutoCreateUser();
+
+  // State management
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [isAutoCreating, setIsAutoCreating] = useState(false);
-  const [creationProgress, setCreationProgress] = useState<string>('');
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showProjectDetails, setShowProjectDetails] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
+      sender: 'bot',
+      messageType: 'default',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
+  // Sequential flow error handling state
+  const [sequenceError, setSequenceError] = useState<{
+    hasError: boolean;
+    errorMessage: string;
+    failedStep: string;
+    brandDetails?: Record<string, unknown>;
+    campaignId?: string;
+  }>({
+    hasError: false,
+    errorMessage: '',
+    failedStep: '',
+    brandDetails: undefined,
+    campaignId: undefined
+  });
+  const [isRetryingSequence, setIsRetryingSequence] = useState(false);
+
+  // Follow-up flow state
+  const [isSequenceComplete, setIsSequenceComplete] = useState(false);
+
+  // State for storing example metadata
+  const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+
+  // Function to fetch URL metadata
+  const fetchUrlMetadata = async (url: string): Promise<UrlMetadata | null> => {
+    try {
+      console.log(`🔍 Fetching metadata for: ${url}`);
+
+      const response = await fetch('/api/url-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        console.warn(`❌ Failed to fetch metadata for ${url}:`, response.status);
+        return null;
+      }
+
+      const metadata = await response.json();
+      console.log(`✅ Successfully fetched metadata for ${url}:`, metadata);
+      return metadata;
+    } catch (error) {
+      console.error(`❌ Error fetching metadata for ${url}:`, error);
+      return null;
+    }
+  };
+
+  // Retry sequence function - defined as regular function to avoid circular dependency
+  const retrySequence = async () => {
+    console.log('🔄 [RETRY] Retrying sequential flow from the beginning');
+
+    if (!sequenceError.brandDetails || !sequenceError.campaignId) {
+      console.error('❌ [RETRY] Missing brandDetails or campaignId for retry');
+      return;
+    }
+
+    setIsRetryingSequence(true);
+
+    // Store current error data before clearing
+    const retryBrandDetails = sequenceError.brandDetails;
+    const retryCampaignId = sequenceError.campaignId;
+
+    // Clear the error state
+    setSequenceError({
+      hasError: false,
+      errorMessage: '',
+      failedStep: '',
+      brandDetails: undefined,
+      campaignId: undefined
+    });
+
+    // Clear any loading messages from previous failed attempt
+    setMessages(prev => prev.filter(msg => !msg.messageType?.startsWith('loading-')));
+
+    try {
+      // Restart the sequence from the beginning (trends step)
+      await handleSequentialFlow('trends', retryBrandDetails, retryCampaignId);
+    } catch (error) {
+      console.error('❌ [RETRY] Failed to retry sequence:', error);
+    } finally {
+      setIsRetryingSequence(false);
+    }
+  };
+
+  // Sequential flow handler for trends -> accounts -> ideas -> critique
+  const handleSequentialFlow = useCallback(async (step: string, brandDetails: Record<string, unknown>, campaignId: string) => {
+    const flowStartTime = Date.now();
+    console.log('🚀 [SEQUENTIAL-FLOW] Starting sequential flow:', { step, campaignId, brandName: brandDetails.brand_name });
+
+    let trendData = null;
+    let accountsData = null;
+
+    try {
+      // Step 1: Trends Analysis
+      if (step === 'trends') {
+        console.log('📈 [SEQUENTIAL-FLOW] Step 1/3: Starting trends analysis');
+
+        // Show loading message immediately in frontend
+        const trendsLoadingMessage: ChatMessage = {
+          id: `trends-loading-${Date.now()}`,
+          text: 'Analyzing current market trends for your brand...',
+          sender: 'bot',
+          messageType: 'loading-trends',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, trendsLoadingMessage]);
+
+        const trendsStartTime = Date.now();
+
+        const trendsResponse = await fetch('/api/chat/trends', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId,
+            brandDetails
+          })
+        });
+
+        const trendsResult = await trendsResponse.json();
+        const trendsDuration = Date.now() - trendsStartTime;
+        console.log(`📈 [SEQUENTIAL-FLOW] Trends API completed in ${trendsDuration}ms:`, {
+          status: trendsResponse.status,
+          success: trendsResult.success,
+          hasTrendData: !!trendsResult.trendData,
+          loadingMessageId: trendsResult.loadingBotMessageId
+        });
+
+        // Check for HTTP error status or API error response
+        if (!trendsResponse.ok || !trendsResult.success) {
+          const errorMessage = trendsResult.error?.message || `Trends API failed with status: ${trendsResponse.status}`;
+          throw new Error(errorMessage);
+        }
+
+        if (trendsResult.success) {
+          // Replace loading message or add new result message
+          if (trendsResult.trendData) {
+            trendData = trendsResult.trendData;
+            const trendMessage: ChatMessage = {
+              id: trendsResult.trendBotMessageId,
+              text: trendsResult.trendMessage,
+              sender: 'bot',
+              messageType: 'trend-preview',
+              timestamp: new Date(),
+              trendData: trendData.chosen_trend || trendData,
+              trendApiResponse: trendData.chosen_trend ? trendData : undefined
+            };
+
+            // Replace the frontend loading message with results
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.messageType === 'loading-trends' && msg.sender === 'bot'
+              );
+
+              if (loadingIndex !== -1) {
+                console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading message with results');
+                const updated = [...prev];
+                updated[loadingIndex] = trendMessage;
+                return updated;
+              } else {
+                console.log('➕ [SEQUENTIAL-FLOW] Adding new trends message');
+                return [...prev, trendMessage];
+              }
+            });
+          } else if (trendsResult.noTrendBotMessageId) {
+            // Handle no trends case
+            const noTrendMessage: ChatMessage = {
+              id: trendsResult.noTrendBotMessageId,
+              text: trendsResult.noTrendMessage,
+              sender: 'bot',
+              messageType: 'default',
+              timestamp: new Date()
+            };
+
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.messageType === 'loading-trends' && msg.sender === 'bot'
+              );
+
+              if (loadingIndex !== -1) {
+                console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading with no-trend message');
+                const updated = [...prev];
+                updated[loadingIndex] = noTrendMessage;
+                return updated;
+              } else {
+                return [...prev, noTrendMessage];
+              }
+            });
+          }
+
+          // Step 2: Accounts Analysis
+          console.log('🔍 [SEQUENTIAL-FLOW] Step 2/3: Starting accounts analysis');
+
+          // Show loading message immediately in frontend
+          const accountsLoadingMessage: ChatMessage = {
+            id: `accounts-loading-${Date.now()}`,
+            text: 'Finding successful competitor accounts that align with your brand strategy...',
+            sender: 'bot',
+            messageType: 'loading-accounts',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, accountsLoadingMessage]);
+
+          const accountsStartTime = Date.now();
+
+          const accountsResponse = await fetch('/api/chat/accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              campaignId,
+              brandDetails
+            })
+          });
+
+          const accountsResult = await accountsResponse.json();
+          const accountsDuration = Date.now() - accountsStartTime;
+          console.log(`🔍 [SEQUENTIAL-FLOW] Accounts API completed in ${accountsDuration}ms:`, {
+            status: accountsResponse.status,
+            success: accountsResult.success,
+            hasAccountsData: !!accountsResult.accountsData,
+            loadingMessageId: accountsResult.loadingBotMessageId
+          });
+
+          // Check for HTTP error status or API error response
+          if (!accountsResponse.ok || !accountsResult.success) {
+            const errorMessage = accountsResult.error?.message || `Accounts API failed with status: ${accountsResponse.status}`;
+            throw new Error(errorMessage);
+          }
+
+          if (accountsResult.success) {
+            // Replace loading message or add new result message
+            if (accountsResult.accountsData) {
+              accountsData = accountsResult.accountsData;
+              const accountsMessage: ChatMessage = {
+                id: accountsResult.accountsBotMessageId,
+                text: accountsResult.accountsMessage,
+                sender: 'bot',
+                messageType: 'accounts-preview',
+                timestamp: new Date(),
+                accountsData: accountsData
+              };
+
+              setMessages(prev => {
+                const loadingIndex = prev.findIndex(msg =>
+                  msg.messageType === 'loading-accounts' && msg.sender === 'bot'
+                );
+
+                if (loadingIndex !== -1) {
+                  console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading message with results');
+                  const updated = [...prev];
+                  updated[loadingIndex] = accountsMessage;
+                  return updated;
+                } else {
+                  console.log('➕ [SEQUENTIAL-FLOW] Adding new accounts message');
+                  return [...prev, accountsMessage];
+                }
+              });
+            } else if (accountsResult.noAccountsBotMessageId) {
+              // Handle no accounts case
+              const noAccountsMessage: ChatMessage = {
+                id: accountsResult.noAccountsBotMessageId,
+                text: accountsResult.noAccountsMessage,
+                sender: 'bot',
+                messageType: 'default',
+                timestamp: new Date()
+              };
+
+              setMessages(prev => {
+                const loadingIndex = prev.findIndex(msg =>
+                  msg.messageType === 'loading-accounts' && msg.sender === 'bot'
+                );
+
+                if (loadingIndex !== -1) {
+                  console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading with no-accounts message');
+                  const updated = [...prev];
+                  updated[loadingIndex] = noAccountsMessage;
+                  return updated;
+                } else {
+                  return [...prev, noAccountsMessage];
+                }
+              });
+            }
+
+            // Step 3: Ideas Generation
+            console.log('💡 [SEQUENTIAL-FLOW] Step 3/3: Starting ideas generation');
+
+            // Show loading message immediately in frontend
+            const ideasLoadingMessage: ChatMessage = {
+              id: `ideas-loading-${Date.now()}`,
+              text: 'Generating creative content ideas based on the trends and competitor insights...',
+              sender: 'bot',
+              messageType: 'loading-final-idea',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, ideasLoadingMessage]);
+
+            const ideasStartTime = Date.now();
+
+            const ideasResponse = await fetch('/api/chat/ideas', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                campaignId,
+                brandDetails,
+                selectedAccounts: accountsData?.selected_accounts || [],
+                selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
+              })
+            });
+
+            const ideasResult = await ideasResponse.json();
+            const ideasDuration = Date.now() - ideasStartTime;
+            console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
+              status: ideasResponse.status,
+              success: ideasResult.success,
+              hasIdeaData: !!ideasResult.ideaData,
+              flowCompleted: ideasResult.flowCompleted,
+              loadingMessageId: ideasResult.loadingBotMessageId
+            });
+
+            // Check for HTTP error status or API error response
+            if (!ideasResponse.ok || !ideasResult.success) {
+              const errorMessage = ideasResult.error?.message || `Ideas API failed with status: ${ideasResponse.status}`;
+              throw new Error(errorMessage);
+            }
+
+            if (ideasResult.success) {
+              // Replace loading message or add new result message
+              if (ideasResult.ideaData) {
+                const ideasMessage: ChatMessage = {
+                  id: ideasResult.ideasBotMessageId,
+                  text: ideasResult.ideasMessage,
+                  sender: 'bot',
+                  messageType: 'idea-preview',
+                  timestamp: new Date(),
+                  ideaData: ideasResult.ideaData
+                };
+
+                setMessages(prev => {
+                  const loadingIndex = prev.findIndex(msg =>
+                    msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
+                  );
+
+                  if (loadingIndex !== -1) {
+                    console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading message with results');
+                    const updated = [...prev];
+                    updated[loadingIndex] = ideasMessage;
+                    return updated;
+                  } else {
+                    console.log('➕ [SEQUENTIAL-FLOW] Adding new ideas message');
+                    return [...prev, ideasMessage];
+                  }
+                });
+              } else if (ideasResult.noIdeasBotMessageId) {
+                // Handle no ideas case
+                const noIdeasMessage: ChatMessage = {
+                  id: ideasResult.noIdeasBotMessageId,
+                  text: ideasResult.noIdeasMessage,
+                  sender: 'bot',
+                  messageType: 'default',
+                  timestamp: new Date()
+                };
+
+                setMessages(prev => {
+                  const loadingIndex = prev.findIndex(msg =>
+                    msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
+                  );
+
+                  if (loadingIndex !== -1) {
+                    console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading with completion message');
+                    const updated = [...prev];
+                    updated[loadingIndex] = noIdeasMessage;
+                    return updated;
+                  } else {
+                    return [...prev, noIdeasMessage];
+                  }
+                });
+              }
+
+              // Check if we should proceed to critique step
+              if (ideasResult.nextStep === 'critique') {
+                // Step 4: Critique Analysis
+                console.log('🎯 [SEQUENTIAL-FLOW] Step 4/4: Starting critique analysis');
+
+                // Show loading message immediately in frontend
+                const critiqueLoadingMessage: ChatMessage = {
+                  id: `critique-loading-${Date.now()}`,
+                  text: 'Analyzing and critiquing the generated idea against your requirements...',
+                  sender: 'bot',
+                  messageType: 'loading-critique',
+                  timestamp: new Date()
+                };
+                setMessages(prev => [...prev, critiqueLoadingMessage]);
+
+                // Extract idea string from ideaData for critique
+                let ideaString = '';
+                let userRequirement = '';
+
+                if (ideasResult.ideaData?.selected_idea) {
+                  ideaString = JSON.stringify(ideasResult.ideaData.selected_idea);
+                } else if (ideasResult.ideaData?.ideas && ideasResult.ideaData.ideas.length > 0) {
+                  ideaString = JSON.stringify(ideasResult.ideaData.ideas[0]);
+                } else {
+                  ideaString = 'Generated content idea for campaign analysis';
+                }
+
+                // Use brand details as user requirement context
+                userRequirement = `Brand: ${brandDetails.brand_name}, Goal: ${brandDetails.goal}, Platform: ${brandDetails.platform}, Target: ${brandDetails.icp}`;
+
+                const critiqueStartTime = Date.now();
+
+                try {
+                  const critiqueResponse = await fetch('/api/chat/critique', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      campaignId,
+                      ideaString,
+                      userRequirement
+                    })
+                  });
+
+                  const critiqueResult = await critiqueResponse.json();
+                  const critiqueDuration = Date.now() - critiqueStartTime;
+                  console.log(`🎯 [SEQUENTIAL-FLOW] Critique API completed in ${critiqueDuration}ms:`, {
+                    status: critiqueResponse.status,
+                    success: critiqueResult.success,
+                    hasCritiqueData: !!critiqueResult.critiqueData,
+                    flowCompleted: critiqueResult.flowCompleted,
+                    loadingMessageId: critiqueResult.loadingBotMessageId
+                  });
+
+                  // Check for HTTP error status or API error response
+                  if (!critiqueResponse.ok || !critiqueResult.success) {
+                    const errorMessage = critiqueResult.error?.message || `Critique API failed with status: ${critiqueResponse.status}`;
+                    throw new Error(errorMessage);
+                  }
+
+                  if (critiqueResult.success) {
+                    // Replace loading message with critique results
+                    if (critiqueResult.critiqueData) {
+                      const critiqueMessage: ChatMessage = {
+                        id: critiqueResult.critiqueBotMessageId,
+                        text: critiqueResult.critiqueMessage,
+                        sender: 'bot',
+                        messageType: 'critique-preview',
+                        timestamp: new Date(),
+                        critiqueData: critiqueResult.critiqueData
+                      };
+
+                      setMessages(prev => {
+                        const loadingIndex = prev.findIndex(msg =>
+                          msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                        );
+
+                        if (loadingIndex !== -1) {
+                          console.log('🔄 [SEQUENTIAL-FLOW] Replacing critique loading message with results');
+                          const updated = [...prev];
+                          updated[loadingIndex] = critiqueMessage;
+                          return updated;
+                        } else {
+                          console.log('➕ [SEQUENTIAL-FLOW] Adding new critique message');
+                          return [...prev, critiqueMessage];
+                        }
+                      });
+                    } else if (critiqueResult.noCritiqueBotMessageId) {
+                      // Handle no critique case
+                      const noCritiqueMessage: ChatMessage = {
+                        id: critiqueResult.noCritiqueBotMessageId,
+                        text: critiqueResult.noCritiqueMessage,
+                        sender: 'bot',
+                        messageType: 'default',
+                        timestamp: new Date()
+                      };
+
+                      setMessages(prev => {
+                        const loadingIndex = prev.findIndex(msg =>
+                          msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                        );
+
+                        if (loadingIndex !== -1) {
+                          console.log('🔄 [SEQUENTIAL-FLOW] Replacing critique loading with completion message');
+                          const updated = [...prev];
+                          updated[loadingIndex] = noCritiqueMessage;
+                          return updated;
+                        } else {
+                          return [...prev, noCritiqueMessage];
+                        }
+                      });
+                    }
+
+                    const totalFlowDuration = Date.now() - flowStartTime;
+                    console.log(`✅ [SEQUENTIAL-FLOW] All 4 steps completed successfully in ${totalFlowDuration}ms!`);
+
+                    // Mark sequence as complete for follow-up functionality
+                    setIsSequenceComplete(true);
+                    console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete - follow-up mode enabled');
+                  } else {
+                    throw new Error(`Critique API failed: ${critiqueResult.message}`);
+                  }
+                } catch (error) {
+                  console.error('❌ [SEQUENTIAL-FLOW] Critique step error:', error);
+
+                  // Replace loading message with error message
+                  const critiqueErrorMessage: ChatMessage = {
+                    id: Date.now().toString(),
+                    text: 'Your campaign strategy is complete! I\'ve generated comprehensive insights for your marketing campaign.',
+                    sender: 'bot',
+                    messageType: 'default',
+                    timestamp: new Date()
+                  };
+
+                  setMessages(prev => {
+                    const loadingIndex = prev.findIndex(msg =>
+                      msg.messageType === 'loading-critique' && msg.sender === 'bot'
+                    );
+
+                    if (loadingIndex !== -1) {
+                      const updated = [...prev];
+                      updated[loadingIndex] = critiqueErrorMessage;
+                      return updated;
+                    } else {
+                      return [...prev, critiqueErrorMessage];
+                    }
+                  });
+
+                  const totalFlowDuration = Date.now() - flowStartTime;
+                  console.log(`✅ [SEQUENTIAL-FLOW] Flow completed with critique error in ${totalFlowDuration}ms`);
+
+                  // Mark sequence as complete even with critique error
+                  setIsSequenceComplete(true);
+                  console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete despite critique error - follow-up mode enabled');
+                }
+              } else {
+                const totalFlowDuration = Date.now() - flowStartTime;
+                console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+
+                // Mark sequence as complete when ideas step is final
+                setIsSequenceComplete(true);
+                console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete after ideas step - follow-up mode enabled');
+              }
+            } else {
+              throw new Error(`Ideas API failed: ${ideasResult.message}`);
+            }
+          } else {
+            throw new Error(`Accounts API failed: ${accountsResult.message}`);
+          }
+        } else {
+          throw new Error(`Trends API failed: ${trendsResult.message}`);
+        }
+      }
+    } catch (error) {
+      const totalFlowDuration = Date.now() - flowStartTime;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+
+      console.error(`❌ [SEQUENTIAL-FLOW] Error in sequential flow after ${totalFlowDuration}ms:`, {
+        error: errorMsg,
+        step,
+        campaignId
+      });
+
+      // Clear any loading messages from the failed sequence
+      setMessages(prev => prev.filter(msg => !msg.messageType?.startsWith('loading-')));
+
+      // Set error state for retry functionality
+      setSequenceError({
+        hasError: true,
+        errorMessage: `The ${step} analysis failed. Please try again.`,
+        failedStep: step,
+        brandDetails,
+        campaignId
+      });
+
+      // Add error message to chat with retry button context
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: `❌ The ${step} analysis encountered an error and the sequence was stopped. You can retry the entire sequence below.`,
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  }, [setSequenceError]);
+
+  // Function to fetch metadata for all examples in a trend
+  const fetchExampleMetadata = useCallback(async (examples: Array<{ caption: string; url: string; }>) => {
+    for (const example of examples) {
+      const key = example.url;
+
+      // Set loading state
+      setExampleMetadata(prev => {
+        // Skip if we already have metadata for this URL
+        if (prev[key] && (prev[key].metadata || prev[key].error)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: example.caption,
+            url: example.url,
+            loading: true,
+            error: false
+          }
+        };
+      });
+
+      // Fetch metadata
+      const metadata = await fetchUrlMetadata(example.url);
+
+      // Update state with result
+      setExampleMetadata(prev => ({
+        ...prev,
+        [key]: {
+          caption: example.caption,
+          url: example.url,
+          metadata: metadata || undefined,
+          loading: false,
+          error: !metadata
+        }
+      }));
+    }
+  }, []); // Remove exampleMetadata from dependencies
+
+  // Message loading state
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+
+
+  // Message saving utility
+  const saveMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
+    console.log('💾 Saving message to database:', { campaignId, message });
+
+    try {
+      const response = await fetch('/api/chat/save-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignId,
+          message: {
+            id: message.id,
+            text: message.text,
+            sender: message.sender,
+            timestamp: message.timestamp.toISOString()
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        console.log('✅ Message saved to database successfully');
+        return true;
+      } else {
+        console.error('❌ Failed to save message:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error saving message to database:', error);
+      return false;
+    }
+  };
+
+  // Project and campaign creation utilities
+  const createProject = async (initialPrompt: string) => {
+    console.log('🔄 Creating project for prompt:', initialPrompt);
+
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brand_name: 'New Project',
+        offering: '',
+        usp: '',
+        icp: '',
+        brand_voice: '',
+        competitors: '',
+        additional_information: `Created from prompt: ${initialPrompt.substring(0, 200)}...`
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok && data.success) {
+      console.log('✅ Project created:', data.project);
+      return data.project;
+    } else {
+      throw new Error(data.error || 'Failed to create project');
+    }
+  };
+
+  const createCampaign = async (projectId: string, initialPrompt: string) => {
+    console.log('🔄 Creating campaign for project:', projectId);
+
+    const response = await fetch('/api/campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        projectId,
+        name: 'New Campaign',
+        description: `Auto-created campaign from: ${initialPrompt.substring(0, 100)}...`
+      })
+    });
+
+    const data = await response.json();
+    if (response.ok && data.success) {
+      console.log('✅ Campaign created:', data.campaign);
+      return data.campaign;
+    } else {
+      throw new Error(data.error || 'Failed to create campaign');
+    }
+  };
+
+  // Fetch project data
+  const fetchProjectData = async (projectId: string) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`);
+      const data = await response.json();
+
+      if (response.ok && data.project) {
+        setSelectedProject(data.project);
+        console.log('✅ Project data fetched:', data.project);
+      } else {
+        console.error('Failed to fetch project data:', data.error || 'Project not found');
+      }
+    } catch (error) {
+      console.error('Error fetching project data:', error);
+    }
+  };
+
+  // Helper function to get campaign details for follow-up context
+  const getCampaignDetailsForFollowUp = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`);
+      const data = await response.json();
+      return data.campaign || null;
+    } catch (error) {
+      console.warn('⚠️ Could not fetch campaign details for follow-up:', error);
+      return null;
+    }
+  };
+
+  // Helper function to handle follow-up messages
+  const handleFollowUpMessage = async (messageText: string) => {
+    if (!selectedCampaignId || !selectedProject) {
+      console.error('❌ [FOLLOW-UP] Missing campaign or project for follow-up');
+      return;
+    }
+
+    console.log('🎯 [FOLLOW-UP] Processing follow-up message');
+
+    // Add user message to chat immediately
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: messageText,
+      sender: 'user',
+      messageType: 'default',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    // Add temporary loading message
+    const tempLoadingMessage: ChatMessage = {
+      id: 'temp-followup-loading-' + Date.now().toString(),
+      text: 'Processing your follow-up question...',
+      sender: 'bot',
+      messageType: 'loading-followup',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, tempLoadingMessage]);
+
+    try {
+      // Get campaign details
+      const campaignDetails = await getCampaignDetailsForFollowUp(selectedCampaignId);
+
+      // Get last 5 messages (excluding the temp loading message)
+      const lastMessages = messages.slice(-5).map(msg => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.sender,
+        timestamp: msg.timestamp
+      }));
+
+      // Extract selected idea from messages
+      const ideaMessage = messages.find(msg =>
+        msg.messageType === 'idea-preview' && msg.ideaData?.selected_idea
+      );
+      const selectedIdea = ideaMessage?.ideaData?.selected_idea;
+
+      // Prepare context object
+      const context = {
+        projectDetails: selectedProject,
+        campaignDetails: campaignDetails,
+        selectedIdea: selectedIdea,
+        lastMessages: lastMessages
+      };
+
+      console.log('📋 [FOLLOW-UP] Context prepared:', {
+        hasProjectDetails: !!selectedProject,
+        hasCampaignDetails: !!campaignDetails,
+        hasSelectedIdea: !!selectedIdea,
+        messageCount: lastMessages.length
+      });
+
+      // Call follow-up API
+      const response = await fetch('/api/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: context,
+          query: messageText
+        })
+      });
+
+      const data = await response.json();
+      console.log('🔄 [FOLLOW-UP] API response:', data);
+
+      if (response.ok && data.success) {
+        // Replace temp loading message with response
+        const botMessage: ChatMessage = {
+          id: data.responseBotMessageId || (Date.now() + 1).toString(),
+          text: data.responseMessage || 'I processed your follow-up question.',
+          sender: 'bot',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = botMessage;
+            console.log('🔄 [FOLLOW-UP] Replaced temp loading with response');
+            return updatedMessages;
+          } else {
+            return [...prev, botMessage];
+          }
+        });
+      } else {
+        console.error('❌ [FOLLOW-UP] API error:', data.error);
+
+        // Replace temp loading with error message
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: 'I\'m having trouble processing your follow-up question right now. Please try again.',
+          sender: 'bot',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = errorMessage;
+            return updatedMessages;
+          } else {
+            return [...prev, errorMessage];
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ [FOLLOW-UP] Network error:', error);
+
+      // Replace temp loading with network error message
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'Network error occurred. Please check your connection and try again.',
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => {
+        const tempLoadingIndex = prev.findIndex(msg =>
+          msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+        );
+
+        if (tempLoadingIndex !== -1) {
+          const updatedMessages = [...prev];
+          updatedMessages[tempLoadingIndex] = errorMessage;
+          return updatedMessages;
+        } else {
+          return [...prev, errorMessage];
+        }
+      });
+    }
+  };
+
+  // Message sending logic with campaign validation
+  const handleSendMessage = useCallback(async () => {
+    console.log('🚀 handleSendMessage called');
+
+    if (!inputMessage.trim()) {
+      console.log('❌ Empty input message');
+      return;
+    }
+
+    const messageText = inputMessage.trim();
+
+    // Check if campaign is selected
+    if (!selectedCampaignId) {
+      console.log('📝 No campaign selected, starting project/campaign creation flow');
+      setIsCreatingProject(true);
+
+      try {
+        toast.loading('Creating your project and campaign...', { id: 'creating' });
+
+        // Create project
+        const project = await createProject(messageText);
+        setSelectedProjectId(project.projectId);
+
+        // Create campaign
+        const campaign = await createCampaign(project.projectId, messageText);
+        setSelectedCampaignId(campaign.campaignId);
+        setIsSequenceComplete(false); // Reset sequence state for new campaign
+
+        // Store initial prompt for the campaign
+        sessionStorage.setItem(`initialPrompt_${campaign.campaignId}`, messageText);
+        sessionStorage.setItem(`initialPrompt_${campaign.campaignId}_timestamp`, Date.now().toString());
+
+        toast.success('Project and campaign created!', { id: 'creating' });
+
+        // Add user message to chat
+        const userMessage: ChatMessage = {
+          id: Date.now().toString(),
+          text: messageText,
+          sender: 'user',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setInputMessage('');
+
+        // Save user message to database
+        await saveMessageToDatabase(campaign.campaignId, userMessage);
+
+        // Add bot response
+        setTimeout(async () => {
+          const botMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
+            sender: 'bot',
+            messageType: 'default',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, botMessage]);
+
+          // Save bot message to database
+          await saveMessageToDatabase(campaign.campaignId, botMessage);
+        }, 1000);
+
+      } catch (error) {
+        console.error('❌ Error in project/campaign creation:', error);
+        toast.error('Failed to create project and campaign', { id: 'creating' });
+      } finally {
+        setIsCreatingProject(false);
+      }
+    } else {
+      // Campaign is selected, check if sequence is complete for follow-up routing
+      console.log('💬 Campaign selected, sending message:', selectedCampaignId);
+      console.log('🎯 [ROUTING] Sequence complete status:', isSequenceComplete);
+
+      // Clear input immediately for better UX
+      setInputMessage('');
+
+      // Route to follow-up if sequence is complete
+      if (isSequenceComplete) {
+        console.log('🎯 [ROUTING] Routing to follow-up handler');
+        await handleFollowUpMessage(messageText);
+        return;
+      }
+
+      // Otherwise proceed with main chat API
+      console.log('🎯 [ROUTING] Routing to main chat API');
+
+      // Add user message to chat immediately for better UX
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: messageText,
+        sender: 'user',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      // Add temporary loading message that will be updated with the API response
+      const tempLoadingMessage: ChatMessage = {
+        id: 'temp-loading-' + Date.now().toString(),
+        text: 'Processing your request...',
+        sender: 'bot',
+        messageType: 'loading-trends',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, tempLoadingMessage]);
+
+      try {
+        // Call the robust chat API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId: selectedCampaignId,
+            userMessage: messageText
+          })
+        });
+
+        const data = await response.json();
+        console.log('🔄 Chat API response:', data);
+
+        if (response.ok && data.success) {
+          // Determine message type based on response data
+          const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
+
+          // Create main bot message
+          const botMessage: ChatMessage = {
+            id: data.botMessageId || (Date.now() + 1).toString(),
+            text: data.botMessage || 'Message processed successfully.',
+            sender: 'bot',
+            messageType: isQuestionSession ? 'question-session' : 'default',
+            timestamp: new Date(),
+            questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
+              currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
+              totalQuestions: data.totalQuestions || 5
+            } : undefined
+          };
+
+          // Replace temporary loading message with the main response
+          setMessages(prev => {
+            const tempLoadingIndex = prev.findIndex(msg =>
+              msg.sender === 'bot' &&
+              msg.id.startsWith('temp-loading-')
+            );
+
+            if (tempLoadingIndex !== -1) {
+              // Replace the temporary loading message with the real response
+              const updatedMessages = [...prev];
+              updatedMessages[tempLoadingIndex] = botMessage;
+              console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
+              return updatedMessages;
+            } else {
+              // Add new message if no temp message found
+              return [...prev, botMessage];
+            }
+          });
+
+          // Check if we need to start sequential flow
+          if (data.nextStep && data.brandDetails) {
+            console.log('🚀 Starting sequential flow with step:', data.nextStep);
+            await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
+          }
+
+          // Handle special cases
+          if (data.recovery) {
+            console.log('🔄 Session recovery offered:', data.recovery);
+          }
+          if (data.questionsCompleted) {
+            console.log('✅ All questions completed!');
+          }
+          if (data.nextQuestion) {
+            console.log('❓ Next question available:', data.nextQuestion);
+          }
+        } else {
+          console.error('❌ Chat API error:', data.error);
+
+          // Create error message
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
+            sender: 'bot',
+            messageType: 'default',
+            timestamp: new Date()
+          };
+
+          // Replace temporary loading message with error, or add new error message
+          setMessages(prev => {
+            const tempLoadingIndex = prev.findIndex(msg =>
+              msg.sender === 'bot' &&
+              msg.id.startsWith('temp-loading-') &&
+              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
+            );
+
+            if (tempLoadingIndex !== -1) {
+              // Replace the temporary loading message with error
+              const updatedMessages = [...prev];
+              updatedMessages[tempLoadingIndex] = errorMessage;
+              console.log('🔄 Replaced temporary loading message with error message');
+              return updatedMessages;
+            }
+
+            // Add new error message if no temp message found
+            return [...prev, errorMessage];
+          });
+
+          // Show retry guidance if available
+          if (data.error?.retryable) {
+            const retryAfter = data.error.retryAfter || 30;
+            toast.error(`Service temporarily unavailable. Please try again in ${retryAfter} seconds.`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Network error calling chat API:', error);
+
+        // Create network error message
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: 'Network error occurred. Please check your connection and try again.',
+          sender: 'bot',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        // Replace temporary loading message with error, or add new error message
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' &&
+            msg.id.startsWith('temp-loading-') &&
+            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            // Replace the temporary loading message with error
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = errorMessage;
+            console.log('🔄 Replaced temporary loading message with network error message');
+            return updatedMessages;
+          }
+
+          // Add new error message if no temp message found
+          return [...prev, errorMessage];
+        });
+
+        toast.error('Network error. Please try again.');
+      }
+    }
+  }, [inputMessage, selectedCampaignId, handleSequentialFlow]);
+
+  // Handle keyboard events
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Load existing chat messages when campaign is selected
+  const loadChatMessages = useCallback(async (campaignId: string) => {
+    // Prevent concurrent loading calls
+    if (isLoadingMessages) {
+      console.log('📥 Already loading messages, skipping duplicate request');
+      return;
+    }
+
+    console.log('📥 Loading chat messages for campaign:', campaignId);
+    setIsLoadingMessages(true);
+
+    try {
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/chat?campaignId=${campaignId}&t=${timestamp}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      const data = await response.json();
+      console.log('📥 Chat API response:', data);
+
+      if (response.ok && data.success) {
+        // Convert database messages to ChatMessage format
+        const dbMessages = data.messages || [];
+        console.log('📋 Raw DB messages:', dbMessages);
+
+        const chatMessages: ChatMessage[] = dbMessages.map((dbMsg: {
+          chatMessageId: string;
+          message: string;
+          sender: string;
+          messageType?: string;
+          timestamp?: string;
+          createdAt: string;
+          trendData?: TrendData | TrendApiResponse;
+          accountsData?: AccountsApiResponse;
+          ideaData?: IdeaApiResponse;
+          critiqueData?: CritiqueApiResponse;
+        }) => {
+          // Extract question metadata from message text if it's a question session
+          let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
+          if (dbMsg.messageType === 'question-session' && dbMsg.sender === 'bot') {
+            const questionMatch = dbMsg.message.match(/Question (\d+) of (\d+):/);
+            if (questionMatch) {
+              questionMetadata = {
+                currentQuestionIndex: parseInt(questionMatch[1]),
+                totalQuestions: parseInt(questionMatch[2])
+              };
+            }
+          }
+
+          // Handle both old format (TrendData) and new format (TrendApiResponse)
+          let trendData: TrendData | undefined;
+          let trendApiResponse: TrendApiResponse | undefined;
+
+          if (dbMsg.trendData) {
+            console.log('🔍 [DEBUG] Processing DB message with trendData:', JSON.stringify(dbMsg.trendData, null, 2));
+
+            // Check if it's the new API response format (has chosen_trend property)
+            if ('chosen_trend' in dbMsg.trendData) {
+              trendApiResponse = dbMsg.trendData as TrendApiResponse;
+              trendData = trendApiResponse.chosen_trend;
+              console.log('🔍 [DEBUG] New format detected - extracted chosen_trend:', JSON.stringify(trendData, null, 2));
+              console.log('🔍 [DEBUG] Reason from API response:', trendApiResponse.reason);
+            } else {
+              // Old format - direct TrendData
+              trendData = dbMsg.trendData as TrendData;
+              console.log('🔍 [DEBUG] Old format detected - direct TrendData:', JSON.stringify(trendData, null, 2));
+            }
+          }
+
+          // Handle accounts data
+          let accountsData: AccountsApiResponse | undefined;
+          if (dbMsg.accountsData) {
+            console.log('🔍 [DEBUG] Processing DB message with accountsData:', JSON.stringify(dbMsg.accountsData, null, 2));
+            accountsData = dbMsg.accountsData as AccountsApiResponse;
+          }
+
+          // Handle idea data
+          let ideaData: IdeaApiResponse | undefined;
+          if (dbMsg.ideaData) {
+            console.log('🔍 [DEBUG] Processing DB message with ideaData:', JSON.stringify(dbMsg.ideaData, null, 2));
+            ideaData = dbMsg.ideaData as IdeaApiResponse;
+          }
+
+          // Handle critique data
+          let critiqueData: CritiqueApiResponse | undefined;
+          if (dbMsg.critiqueData) {
+            console.log('🔍 [DEBUG] Processing DB message with critiqueData:', JSON.stringify(dbMsg.critiqueData, null, 2));
+            critiqueData = dbMsg.critiqueData as CritiqueApiResponse;
+          }
+
+          return {
+            id: dbMsg.chatMessageId,
+            text: dbMsg.message,
+            sender: dbMsg.sender as 'user' | 'bot',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview') || 'default',
+            timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
+            questionMetadata,
+            trendData,
+            trendApiResponse,
+            accountsData,
+            ideaData,
+            critiqueData
+          };
+        });
+
+        // Add welcome message if no messages exist
+        if (chatMessages.length === 0) {
+          chatMessages.unshift({
+            id: '1',
+            text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
+            sender: 'bot',
+            messageType: 'default',
+            timestamp: new Date()
+          });
+        }
+
+        setMessages(chatMessages);
+        console.log('✅ Loaded', chatMessages.length, 'chat messages');
+
+        // Check if sequence is already complete based on loaded messages
+        const hasCritiqueMessage = chatMessages.some(msg =>
+          msg.messageType === 'critique-preview' ||
+          (msg.sender === 'bot' && (
+            msg.text.includes('comprehensive insights for your marketing campaign') ||
+            msg.text.includes('campaign strategy is complete') ||
+            msg.text.includes('All 4 steps completed successfully')
+          ))
+        );
+
+        if (hasCritiqueMessage) {
+          console.log('🎯 [LOAD-MESSAGES] Sequence already complete - enabling follow-up mode');
+          setIsSequenceComplete(true);
+        } else {
+          console.log('🎯 [LOAD-MESSAGES] Sequence not complete - normal mode');
+          setIsSequenceComplete(false);
+        }
+      } else {
+        console.error('❌ Failed to load chat messages:', data.error);
+      }
+    } catch (error) {
+      console.error('❌ Error loading chat messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, []);
+
+  // Load messages when campaign changes
   useEffect(() => {
-    if (selectedProjectId === null) {
-      setSelectedCampaignId(null);
+    console.log('🔄 Campaign selection changed:', selectedCampaignId);
+
+    if (selectedCampaignId) {
+      console.log('✅ Loading messages for campaign:', selectedCampaignId);
+      loadChatMessages(selectedCampaignId);
+    } else {
+      console.log('📝 No campaign selected, showing default message');
+      // Reset to default welcome message when no campaign selected
+      setMessages([{
+        id: '1',
+        text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      }]);
+    }
+  }, [selectedCampaignId, loadChatMessages]);
+
+
+  // Fetch project data when project is selected
+  useEffect(() => {
+    if (selectedProjectId) {
+      fetchProjectData(selectedProjectId);
+    } else {
+      setSelectedProject(null);
     }
   }, [selectedProjectId]);
 
-  // Handle URL parameters for auto-selecting campaign
+  // Handle pending prompts on app page load
   useEffect(() => {
-    const campaignId = searchParams.get('campaignId');
-    const projectId = searchParams.get('projectId');
-    
-    console.log('🎯 [APP] URL parameters check:', { campaignId, projectId });
-    
-    if (campaignId && projectId) {
-      console.log('🎯 [APP] Auto-selecting campaign from URL:', { campaignId, projectId });
-      setSelectedCampaignId(campaignId);
-      setSelectedProjectId(projectId);
-      setViewMode('campaignExplorer');
-      
-      // Don't clear URL parameters immediately - let them persist for proper campaign selection
-      console.log('🎯 [APP] URL parameters processed, keeping them for campaign selection');
-    } else {
-      console.log('🎯 [APP] No URL parameters to process');
-    }
-  }, [searchParams]);
+    if (!user) return;
 
-  // Check for pending prompts after auth and auto-process them
-  useEffect(() => {
-    console.log('🎯 [APP] useEffect for pending prompt check triggered');
-    
-    const checkPendingPrompt = async () => {
-      console.log('🎯 [APP] checkPendingPrompt function called');
+    const checkPendingPrompt = () => {
       const pendingPrompt = sessionStorage.getItem('pendingPrompt');
       const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
-      
-      console.log('🎯 [APP] Checking for pending prompt:', { 
+
+      console.log('🔍 Checking for pending prompt on app load:', {
         hasPendingPrompt: !!pendingPrompt,
-        pendingPrompt: pendingPrompt,
-        timestamp: pendingTimestamp 
+        pendingPrompt,
+        timestamp: pendingTimestamp
       });
-      
+
       if (pendingPrompt && pendingTimestamp) {
         // Check if prompt is still fresh (5 minutes)
         const timestamp = parseInt(pendingTimestamp);
         const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
-        
+
         if (timestamp > fiveMinutesAgo) {
-          console.log('🎯 [APP] Found valid pending prompt, auto-creating project and campaign');
-          
-          // Show loading state
-          setIsAutoCreating(true);
-          setCreationProgress('Setting up your project...');
-          
-          try {
-            // Create project with placeholder data
-            console.log('🎯 [APP] Creating project with placeholder data...');
-            
-            const projectResponse = await fetch('/api/projects', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                answers: {
-                  1: "New Brand", // Brand Name - only required field
-                  2: "", // Website - empty
-                  3: "", // Description - empty
-                  4: "", // Brand Voice - empty
-                  5: [], // Brand Assets - empty
-                  6: "" // Additional Info - empty
-                },
-                questions: [] // We'll load questions in the API if needed
-              }),
-            });
+          console.log('✅ Fresh pending prompt found, processing automatically');
 
-            const projectData = await projectResponse.json();
-            console.log('🎯 [APP] Project creation response:', projectData);
+          // Set the input message and trigger send
+          setInputMessage(pendingPrompt);
 
-            if (projectResponse.ok && projectData.success) {
-              console.log('🎯 [APP] ✅ Project created successfully:', projectData.project);
-              setCreationProgress('Creating your campaign...');
-              
-              // Create campaign with the prompt
-              console.log('🎯 [APP] Creating campaign with prompt:', pendingPrompt);
-              
-              const campaignResponse = await fetch('/api/campaigns', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  projectId: projectData.project.projectId,
-                  name: `Campaign from prompt`,
-                  description: `Auto-created campaign from: ${pendingPrompt.substring(0, 100)}...`
-                }),
-              });
+          // Clear the pending prompt
+          sessionStorage.removeItem('pendingPrompt');
+          sessionStorage.removeItem('pendingPromptTimestamp');
 
-              const campaignData = await campaignResponse.json();
-              console.log('🎯 [APP] Campaign creation response:', campaignData);
-              
-              if (campaignResponse.ok && campaignData.success) {
-                console.log('🎯 [APP] ✅ Campaign created successfully:', campaignData.campaign);
-                setCreationProgress('Almost ready...');
-                
-                // Store initial prompt for the campaign
-                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}`, pendingPrompt);
-                sessionStorage.setItem(`initialPrompt_${campaignData.campaign.campaignId}_timestamp`, Date.now().toString());
-                
-                // Clear the pending prompt
-                sessionStorage.removeItem('pendingPrompt');
-                sessionStorage.removeItem('pendingPromptTimestamp');
-                
-                // Show success message and refresh the page
-                setTimeout(() => {
-                  setCreationProgress('Success! Opening your campaign...');
-                  console.log('🎯 [APP] Refreshing page to open campaign:', campaignData.campaign.campaignId);
-                  
-                  // Refresh the page with the campaign selected
-                  window.location.href = `/app?campaignId=${campaignData.campaign.campaignId}&projectId=${projectData.project.projectId}`;
-                }, 1000);
-                
-              } else {
-                console.error('🎯 [APP] ❌ Failed to create campaign:', campaignData);
-                setCreationProgress('');
-                setIsAutoCreating(false);
-                toast.error('Failed to create campaign. Please try again.');
-                // Clear pending prompt on campaign creation failure
-                sessionStorage.removeItem('pendingPrompt');
-                sessionStorage.removeItem('pendingPromptTimestamp');
-              }
-              
-            } else {
-              console.error('🎯 [APP] ❌ Failed to create project:', projectData);
-              setCreationProgress('');
-              setIsAutoCreating(false);
-              toast.error('Failed to create project. Please try again.');
-              // Clear pending prompt on project creation failure
-              sessionStorage.removeItem('pendingPrompt');
-              sessionStorage.removeItem('pendingPromptTimestamp');
-            }
-            
-          } catch (error) {
-            console.error('🎯 [APP] ❌ Error in auto-creation flow:', error);
-            setCreationProgress('');
-            setIsAutoCreating(false);
-            toast.error('Something went wrong. Please try again.');
-            // Clear pending prompt on error
-            sessionStorage.removeItem('pendingPrompt');
-            sessionStorage.removeItem('pendingPromptTimestamp');
-          }
+          // Trigger the message send flow after a short delay
+          setTimeout(() => {
+            handleSendMessage();
+          }, 500);
         } else {
-          console.log('🎯 [APP] Pending prompt expired, clearing');
+          console.log('⏰ Pending prompt expired, clearing');
           sessionStorage.removeItem('pendingPrompt');
           sessionStorage.removeItem('pendingPromptTimestamp');
         }
       }
     };
 
-    // Small delay to ensure auth state is settled
+    // Check for pending prompt after component mounts
     const timer = setTimeout(checkPendingPrompt, 1000);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [user, handleSendMessage]);
 
-  const [viewMode, setViewMode] = useState<'campaignExplorer' | 'createProject' | 'projectDetails'>('campaignExplorer');
-  useAutoCreateUser();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const projectExplorerRef = useRef<ProjectExplorerRef>(null);
-  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  // Helper function to render message content based on type
+  const renderMessageContent = (message: ChatMessage) => {
+    const messageType = message.messageType || 'default';
 
-  // Refresh sidebar when switching back to campaignExplorer view
-  useEffect(() => {
-    if (viewMode === 'campaignExplorer') {
-      console.log('🔄 Switched to campaignExplorer view, refreshing sidebar...');
-      // Small delay to ensure component is mounted
-      setTimeout(() => {
-        projectExplorerRef.current?.refreshData();
-      }, 100);
-    }
-  }, [viewMode]);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState<Record<number, string | string[]>>({});
-  const [, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    const loadQuestions = async () => {
-      try {
-        const response = await fetch('/create-project-questions.json');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: QuestionsData = await response.json();
-        setQuestions(data.questions);
-      } catch (error) {
-        console.error('Error loading questions:', error);
-      } finally {
-        setLoading(false);
+    // Helper function to safely extract score values - used by both ideas and critique components
+    const extractScore = (scoreValue: number | { score: number } | null | undefined): number => {
+      if (scoreValue !== null && typeof scoreValue === 'object' && 'score' in scoreValue) {
+        return (scoreValue as { score: number }).score;
       }
+      return typeof scoreValue === 'number' ? scoreValue : 0;
     };
 
-    loadQuestions();
-  }, []);
+    if (messageType === 'question-session' && message.sender === 'bot') {
+      return (
+        <div className="message-content">
+          <div className="question-header">
 
-  const currentQuestion = questions.find(q => q.step === currentStep);
-
-  const handleAnswerChange = (value: string | string[]) => {
-    setAnswers(prev => ({
-      ...prev,
-      [currentStep]: value
-    }));
-  };
-
-  const handleNext = () => {
-    if (currentStep < questions.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const validateRequiredFields = () => {
-    console.log('🔍 Validating all required fields...');
-    const missingRequired = [];
-    
-    for (const question of questions) {
-      if (question.required) {
-        const answer = answers[question.step];
-        const isEmpty = answer === undefined || answer === null || answer === '' || 
-                       (Array.isArray(answer) && answer.length === 0);
-        
-        if (isEmpty) {
-          missingRequired.push({
-            step: question.step,
-            title: question.sidebarTitle,
-            question: question.question
-          });
-          console.log(`❌ Missing required field - Step ${question.step}: ${question.sidebarTitle}`);
-        }
-      }
-    }
-
-    if (missingRequired.length > 0) {
-      console.log('❌ Validation failed:', missingRequired);
-      
-      // Show specific missing fields in toast
-      const firstMissing = missingRequired[0];
-      toast.error(`Please complete required field: "${firstMissing.title}"`, {
-        duration: 4000,
-      });
-      
-      // Navigate to first missing required field
-      setCurrentStep(firstMissing.step);
-      
-      return false;
-    }
-
-    console.log('✅ All required fields validated successfully');
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    console.log('📋 Create Project button clicked');
-    console.log('📋 Current answers:', answers);
-    
-    // Validate required fields first
-    if (!validateRequiredFields()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    const loadingToast = toast.loading('Creating your project...');
-
-    try {
-      console.log('🚀 Submitting project to API...');
-      
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          answers,
-          questions
-        }),
-      });
-
-      const data = await response.json();
-      console.log('📥 API Response:', data);
-
-      toast.dismiss(loadingToast);
-
-      if (response.ok && data.success) {
-        console.log('✅ Project created successfully:', data.project);
-        toast.success('🎉 Project created successfully!', {
-          duration: 5000,
-        });
-        
-        // Show project details in console and toast
-        console.log('📋 Project Details:', {
-          projectId: data.project.projectId,
-          userId: data.project.userId,
-          createdAt: data.project.createdAt
-        });
-
-        // Show project ID and redirect to app page
-        setTimeout(() => {
-          toast.success(`Project ID: ${data.project.projectId}`, {
-            duration: 4000,
-          });
-        }, 1000);
-
-        // Clear states and navigate back to project list view
-        console.log('🔄 Returning to project list...');
-        setViewMode('campaignExplorer');
-        setAnswers({});
-        setCurrentStep(1);
-        
-        // Force sidebar re-mount and refresh
-        setSidebarRefreshKey(prev => prev + 1);
-        setTimeout(() => {
-          projectExplorerRef.current?.refreshData();
-        }, 500);
-
-      } else {
-        console.error('❌ Project creation failed:', data);
-        
-        if (data.missingFields && data.missingFields.length > 0) {
-          console.log('❌ Missing required fields:', data.missingFields);
-          const firstMissing = data.missingFields[0];
-          toast.error(`Missing required field: "${firstMissing.title}"`, {
-            duration: 4000,
-          });
-          setCurrentStep(firstMissing.step);
-        } else {
-          toast.error(`❌ ${data.error || 'Failed to create project'}`, {
-            duration: 4000,
-          });
-        }
-      }
-
-    } catch (error) {
-      console.error('❌ Network error during project creation:', error);
-      toast.dismiss(loadingToast);
-      toast.error('❌ Network error. Please check your connection and try again.', {
-        duration: 4000,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getStepState = (question: Question) => {
-    const answer = answers[question.step];
-    const hasAnswer = answer !== undefined && answer !== null && answer !== '' && 
-                     (Array.isArray(answer) ? answer.length > 0 : true);
-    
-    if (question.step === currentStep) {
-      return 'active';
-    } else if (hasAnswer) {
-      return 'filled';
-    } else if (question.required) {
-      return 'required-unfilled';
-    } else {
-      return 'optional-unfilled';
-    }
-  };
-
-  const renderInput = (question: Question) => {
-    const currentAnswer = answers[currentStep] || '';
-
-    switch (question.answerType) {
-      case 'text':
-      case 'url':
-        return (
-          <input
-            type={question.answerType === 'url' ? 'url' : 'text'}
-            placeholder={question.placeholder}
-            value={currentAnswer}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            required={question.required}
-          />
-        );
-
-      case 'textarea':
-        return (
-          <textarea
-            placeholder={question.placeholder}
-            value={currentAnswer}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            required={question.required}
-            rows={4}
-          />
-        );
-
-      case 'select':
-        return (
-          <select
-            value={currentAnswer}
-            onChange={(e) => handleAnswerChange(e.target.value)}
-            required={question.required}
-          >
-            <option value="">Select an option...</option>
-            {question.options?.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        );
-
-      case 'multiselect':
-        return (
-          <div className="checkbox-group">
-            {question.options?.map((option) => (
-              <label key={option.value} className="checkbox-item">
-                <input
-                  type="checkbox"
-                  checked={currentAnswer?.includes(option.value) || false}
-                  onChange={(e) => {
-                    const newValue = currentAnswer || [];
-                    if (e.target.checked) {
-                      handleAnswerChange([...newValue, option.value]);
-                    } else {
-                      handleAnswerChange(Array.isArray(newValue) ? newValue.filter((v: string) => v !== option.value) : []);
-                    }
-                  }}
-                />
-                {option.label}
-              </label>
-            ))}
+            <h3 className="question-title">
+              {message.questionMetadata
+                ? `Question ${message.questionMetadata.currentQuestionIndex} out of ${message.questionMetadata.totalQuestions}`
+                : 'Question Session'
+              }
+            </h3>
           </div>
-        );
+          <div className="question-text">
+            {message.text.replace(/^.*?Question \d+ of \d+:\s*/, '')}
+          </div>
+        </div>
+      );
+    }
 
-      case 'file':
-        return (
-          <div className="file-input-wrapper">
-            <input
-              type="file"
-              accept={question.acceptedTypes?.join(',')}
-              multiple={question.maxFiles ? question.maxFiles > 1 : false}
-              onChange={(e) => handleAnswerChange(Array.from(e.target.files || []).map(f => f.name))}
+    // Loading message types
+    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts' || messageType === 'loading-followup') {
+      const loadingConfig = {
+        'loading-trends': {
+          gif: '/assets/loading/trends-loading.gif',
+          text: 'Analyzing market trends...'
+        },
+        'loading-competitors': {
+          gif: '/assets/loading/competitors-loading.gif',
+          text: 'Researching competitors...'
+        },
+        'loading-final-idea': {
+          gif: '/assets/loading/final-idea-loading.gif',
+          text: 'Generating final ideas...'
+        },
+        'loading-accounts': {
+          gif: '/assets/loading/accounts-loading.gif',
+          text: 'Finding successful competitor accounts...'
+        },
+        'loading-followup': {
+          gif: '/assets/loading/trends-loading.gif', // Reuse existing gif
+          text: 'Processing your follow-up question...'
+        }
+      };
+
+      const config = loadingConfig[messageType];
+
+      return (
+        <div className="message-content loading-message">
+          <div className="loading-gif-container">
+            <NextImage
+              src={config.gif}
+              alt={`Loading ${messageType.replace('loading-', '')}`}
+              width={48}
+              height={48}
+              className="loading-gif"
+              priority
             />
-            {question.acceptedTypes && (
-              <p className="file-info">
-                Accepted: {question.acceptedTypes.join(', ')} 
-                {question.maxSize && ` | Max size: ${question.maxSize}`}
-                {question.maxFiles && ` | Max files: ${question.maxFiles}`}
-              </p>
+          </div>
+          <div className="loading-text">
+            {config.text}
+          </div>
+        </div>
+      );
+    }
+
+    // Trend preview message type
+    if (messageType === 'trend-preview' && message.sender === 'bot' && (message.trendData || message.trendApiResponse)) {
+      const trend = message.trendApiResponse?.chosen_trend || message.trendData;
+      const reason = message.trendApiResponse?.reason;
+
+      // Debug logging for trend preview rendering
+      console.log('🔍 [DEBUG] Rendering trend preview message:');
+      console.log('🔍 [DEBUG] message.trendData:', JSON.stringify(message.trendData, null, 2));
+      console.log('🔍 [DEBUG] message.trendApiResponse:', JSON.stringify(message.trendApiResponse, null, 2));
+      console.log('🔍 [DEBUG] extracted trend:', JSON.stringify(trend, null, 2));
+      console.log('🔍 [DEBUG] extracted reason:', reason);
+      console.log('🔍 [DEBUG] reason truthy?', !!reason);
+
+      // Status icon mapping
+      const getStatusIcon = (status: string) => {
+        switch (status.toLowerCase()) {
+          case 'rising':
+            return (
+              <span className="trend-status-icon rising">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 6L18.29 8.29L13.41 13.17L9.41 9.17L2 16.59L3.41 18L9.41 12L13.41 16L19.71 9.71L22 12V6H16Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
+          case 'trending':
+            return (
+              <span className="trend-status-icon trending">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M13.5.67S10.25 3.88 10.25 8.25C10.25 12.5 13.5 15.75 13.5 15.75S16.75 12.5 16.75 8.25C16.75 3.88 13.5.67 13.5.67ZM13.5 11.25C12.25 11.25 11.25 10.25 11.25 9S12.25 6.75 13.5 6.75 15.75 7.75 15.75 9 14.75 11.25 13.5 11.25ZM7 14C7.01 17.73 8.78 21.08 11.65 23H4C2.9 23 2 22.1 2 21V17C2 15.9 2.9 15 4 15H7V14Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
+          case 'stable':
+            return (
+              <span className="trend-status-icon stable">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 21H2V19H4V3H6V19H10V9H12V19H16V6H18V19H20V21Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
+          case 'declining':
+            return (
+              <span className="trend-status-icon declining">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M16 18L18.29 15.71L13.41 10.83L9.41 14.83L2 7.41L3.41 6L9.41 12L13.41 8L19.71 14.29L22 12V18H16Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
+          default:
+            return (
+              <span className="trend-status-icon default">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="currentColor"/>
+                </svg>
+              </span>
+            );
+        }
+      };
+
+      return (
+        <div className="message-content trend-preview">
+          <div className="trend-intro">
+            {message.text}
+          </div>
+
+          <div className="trend-header">
+            <h3 className="trend-title">{trend.trend}</h3>
+            {getStatusIcon(trend.status)}
+          </div>
+
+          
+
+          <p className="trend-prompt">{trend.prompt}</p>
+          
+          {trend.examples && trend.examples.length > 0 && (
+            <ExampleCards
+              examples={trend.examples}
+              exampleMetadata={exampleMetadata}
+              onFetchMetadata={fetchExampleMetadata}
+            />
+          )}
+
+          {reason && (
+            <p className="trend-reason">
+              {(() => {
+                console.log('🔍 [DEBUG] Rendering reason paragraph with text:', reason);
+                return reason;
+              })()}
+            </p>
+          )}
+          {!reason && (() => {
+            console.log('🔍 [DEBUG] Reason is falsy, not rendering reason paragraph');
+            return null;
+          })()}
+        </div>
+      );
+    }
+
+    // Accounts preview message type
+    if (messageType === 'accounts-preview' && message.sender === 'bot' && message.accountsData) {
+      const accountsData = message.accountsData;
+
+      // Helper function to format engagement numbers
+      const formatEngagement = (num: number): string => {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + 'M';
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+      };
+
+      return (
+        <div className="message-content accounts-preview">
+          <div className="accounts-intro">
+            {message.text}
+          </div>
+
+          <div className="accounts-overview">
+            {Array.isArray(accountsData.selected_accounts) ? accountsData.selected_accounts.map((account, index) => (
+              <div key={index} className="account-card">
+                <div className="account-header">
+                  <div className="account-avatar">
+                    <div className="account-placeholder-avatar">
+                      {(account.handle || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="account-info">
+                    <h3 className="account-username">{account.handle || 'Unknown Account'}</h3>
+                    <p className="account-handle">@{account.handle?.toLowerCase() || 'unknown'}</p>
+                  </div>
+                </div>
+
+                <div className="account-stats">
+                  <div className="stat-item">
+                    <p className="stat-value">{account.summary?.niche || 'General'}</p>
+                    <p className="stat-label">Niche</p>
+                  </div>
+                  <div className="stat-item">
+                    <p className="stat-value">{account.summary?.content_style || 'Mixed'}</p>
+                    <p className="stat-label">Style</p>
+                  </div>
+                </div>
+
+                {(Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0) ||
+                 (Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0) ? (
+                  <div className="account-summary">
+                    {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 && (
+                      <div className="summary-section">
+                        <h4 className="summary-title">Strengths</h4>
+                        <ul className="summary-list">
+                          {account.summary.strengths.map((strength, idx) => (
+                            <li key={idx}>{strength}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 && (
+                      <div className="summary-section">
+                        <h4 className="summary-title">Weaknesses</h4>
+                        <ul className="summary-list">
+                          {account.summary.weaknesses.map((weakness, idx) => (
+                            <li key={idx}>{weakness}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                <div className="recent-posts">
+                  <h4 className="recent-posts-title">Recent Posts</h4>
+                  <div className="posts-grid">
+                    {Array.isArray(account.posts) ? account.posts.map((post, postIdx) => (
+                      <div key={postIdx} className="post-card">
+                        <div className="post-header">
+                          <span className="post-platform">{post.type || 'Social'}</span>
+                          <span className="post-date">{new Date().toLocaleDateString()}</span>
+                        </div>
+                        <div className="post-content">
+                          {post.caption || post.about || 'No content available'}
+                        </div>
+                        <div className="post-engagement">
+                          <div className="engagement-item">
+                            <span className="engagement-icon">❤️</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.likes || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">💬</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.comments || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">🔄</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.shares || 0)}</span>
+                          </div>
+                          <div className="engagement-item">
+                            <span className="engagement-icon">🔖</span>
+                            <span className="engagement-value">{formatEngagement(post.engagement?.saves || 0)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="no-posts">No posts available</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="selection-reasoning">
+                  <h4 className="reasoning-title">Selection Reasoning</h4>
+                  <p className="reasoning-content">{account.selection_reason || 'No reasoning provided'}</p>
+                </div>
+              </div>
+            )) : (
+              <div className="no-accounts">No accounts available</div>
             )}
           </div>
-          
-        );
 
-      default:
-        return null;
-    }
-  };
-
-  if (!currentQuestion) {
-    return <div>Question not found</div>;
-  }
-
-  // Show loading screen when auto-creating project/campaign
-  if (isAutoCreating) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        height: '100vh', 
-        backgroundColor: '#1a1a1a',
-        color: '#fff'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            border: '4px solid #333', 
-            borderTop: '4px solid #ff6600', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 2rem auto'
-          }}></div>
-          <h2 style={{ marginBottom: '1rem', fontSize: '1.5rem', fontWeight: '600' }}>
-            Getting your campaign ready...
-          </h2>
-          <p style={{ 
-            fontSize: '1rem', 
-            color: '#ccc', 
-            marginBottom: '1rem',
-            opacity: '0.8'
-          }}>
-            {creationProgress}
-          </p>
-          <p style={{ fontSize: '0.9rem', color: '#999' }}>
-            This will just take a moment
-          </p>
+          {accountsData.overall_reasoning && (
+            <div className="overall-reasoning">
+              <h4 className="reasoning-title">Overall Strategy:</h4>
+              <p className="reasoning-content">{accountsData.overall_reasoning}</p>
+            </div>
+          )}
         </div>
-        <style jsx>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+      );
+    }
+
+    // Idea preview message type
+    if (messageType === 'idea-preview' && message.sender === 'bot' && message.ideaData) {
+      const ideaData = message.ideaData;
+
+      // Helper function to render score bars
+      const renderScoreBar = (score: number, label: string) => {
+        const percentage = (score / 10) * 100; // Assuming scores are out of 10
+        const getScoreColor = (score: number) => {
+          if (score >= 8) return '#4CAF50'; // Green
+          if (score >= 6) return '#FF9800'; // Orange
+          return '#f44336'; // Red
+        };
+
+        return (
+          <div key={label} className="score-item">
+            <div className="score-label">{label}</div>
+            <div className="score-bar-container">
+              <div
+                className="score-bar-fill"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: getScoreColor(score)
+                }}
+              ></div>
+            </div>
+            <div className="score-value">{score}/10</div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="message-content idea-preview">
+          <div className="idea-intro">
+            {message.text}
+          </div>
+
+          {/* All Generated Ideas */}
+          <div className="all-ideas-section">
+            <h3 className="section-title">Generated Ideas</h3>
+            <div className="ideas-grid">
+              {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
+                <div key={index} className="idea-card">
+                  <div className="idea-header">
+                    <h4 className="idea-angle">{idea.angle}</h4>
+                  </div>
+                  <div className="idea-hook">
+                    <strong>Hook:</strong> "{idea.hook}"
+                  </div>
+                  <div className="idea-description">
+                    {idea.description}
+                  </div>
+                  {idea.execution_script && (
+                    <div className="idea-execution-script">
+                      <strong>Execution Script:</strong>
+                      <div className="execution-script-content">
+                        {idea.execution_script}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )) : (
+                <div className="no-ideas">No ideas available</div>
+              )}
+            </div>
+          </div>
+
+          {/* Selected Idea with Scores */}
+          {ideaData.selected_idea && (
+            <div className="selected-idea-section">
+              <h3 className="section-title">🎯 Recommended Idea</h3>
+              <div className="selected-idea-card">
+                <div className="selected-idea-header">
+                  <h4 className="selected-idea-angle">{ideaData.selected_idea.angle}</h4>
+                  <div className="idea-badge">Top Pick</div>
+                </div>
+
+                <div className="selected-idea-hook">
+                  <strong>Hook:</strong> "{ideaData.selected_idea.hook}"
+                </div>
+
+                <div className="selected-idea-description">
+                  {ideaData.selected_idea.description}
+                </div>
+
+                {ideaData.selected_idea.execution_script && (
+                  <div className="selected-idea-execution-script">
+                    <h5 className="execution-script-title">Execution Script</h5>
+                    <div className="execution-script-content">
+                      {ideaData.selected_idea.execution_script}
+                    </div>
+                  </div>
+                )}
+
+                {/* Scoring Section */}
+                {ideaData.selected_idea.scores && (
+                  <div className="idea-scores">
+                    <h5 className="scores-title">Performance Scores</h5>
+                    <div className="scores-grid">
+                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => {
+                        return renderScoreBar(extractScore(value), key);
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Rationale */}
+                {ideaData.selected_idea.rationale && (
+                  <div className="idea-rationale">
+                    <h5 className="rationale-title">Why This Idea Works</h5>
+                    <p className="rationale-content">{ideaData.selected_idea.rationale}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Overall Reasoning */}
+          {ideaData.reasoning && (
+            <div className="overall-reasoning">
+              <h4 className="reasoning-title">Analysis Summary</h4>
+              <p className="reasoning-content">{ideaData.reasoning}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Critique preview message type
+    if (messageType === 'critique-preview' && message.sender === 'bot' && message.critiqueData) {
+      const critiqueData = message.critiqueData;
+
+      // Helper function to render score bars
+      const renderCritiqueScoreBar = (score: number, label: string) => {
+        const percentage = (score / 10) * 100; // Assuming scores are out of 10
+        const getScoreColor = (score: number) => {
+          if (score >= 8) return '#4CAF50'; // Green
+          if (score >= 6) return '#FF9800'; // Orange
+          return '#f44336'; // Red
+        };
+
+        return (
+          <div key={label} className="score-item">
+            <div className="score-label">{label}</div>
+            <div className="score-bar-container">
+              <div
+                className="score-bar-fill"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: getScoreColor(score)
+                }}
+              />
+              <span className="score-value">{score}/10</span>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="message-content critique-preview">
+          <div className="critique-intro">
+            {message.text}
+          </div>
+
+          {/* Overall Score Section */}
+          {critiqueData.overall_score !== undefined && (
+            <div className="overall-score-section">
+              <h3 className="section-title">📊 Overall Performance Score</h3>
+              <div className="overall-score-card">
+                <div className="overall-score-number" style={{
+                  color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
+                         extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
+                }}>
+                  {extractScore(critiqueData.overall_score)}/10
+                </div>
+                <div className="overall-score-label">Overall Rating</div>
+              </div>
+            </div>
+          )}
+
+          {/* Individual Scores Section */}
+          <div className="scores-breakdown">
+            <h4 className="scores-title">Performance Breakdown</h4>
+            <div className="scores-grid">
+              {critiqueData.attention_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.attention_score),
+                  'Attention'
+                )
+              }
+              {critiqueData.relatability_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.relatability_score),
+                  'Relatability'
+                )
+              }
+              {critiqueData.originality_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.originality_score),
+                  'Originality'
+                )
+              }
+              {critiqueData.goal_alignment_score !== undefined &&
+                renderCritiqueScoreBar(
+                  extractScore(critiqueData.goal_alignment_score),
+                  'Goal Alignment'
+                )
+              }
+            </div>
+          </div>
+
+          {/* Detailed Feedback Section */}
+          {critiqueData.detailed_feedback && (
+            <div className="detailed-feedback">
+              <h4 className="feedback-title">Detailed Analysis</h4>
+              <div className="feedback-grid">
+                {critiqueData.detailed_feedback.attention && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🎯 Attention</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.attention}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.relatability && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🤝 Relatability</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.relatability}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.originality && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">💡 Originality</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.originality}</p>
+                  </div>
+                )}
+                {critiqueData.detailed_feedback.goal_alignment && (
+                  <div className="feedback-item">
+                    <h5 className="feedback-category">🎯 Goal Alignment</h5>
+                    <p className="feedback-content">{critiqueData.detailed_feedback.goal_alignment}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Follow-up Questions Section */}
+          {critiqueData.follow_up_questions && critiqueData.follow_up_questions.length > 0 && (
+            <div className="follow-up-questions">
+              <h4 className="questions-title">💭 Consider These Questions</h4>
+              <ul className="questions-list">
+                {critiqueData.follow_up_questions.map((question, index) => (
+                  <li key={index} className="question-item">{question}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Default message rendering
+    return (
+      <div className="message-content">
+        {message.text}
       </div>
     );
-  }
+  };
 
   return (
     <>
-      <header className="header">
-        <Link href="/" aria-label="Sreve home">
-          <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {!isStreaming && (
-            <button className="sidebar-toggle" onClick={() => {
-            const sidebar = document.querySelector('.file-sidebar');
-            sidebar?.classList.toggle('open');
-          }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-          )}
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="cta-button" style={{ margin: 0, padding: '0.75rem 1.5rem' }}>Sign In</button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-        </div>
-      </header>
       <div className="app-layout">
-        <aside 
-          className="file-sidebar" 
+        <aside
+          className="file-sidebar"
           id="sidebar"
-          style={{ 
-            display: isStreaming ? 'none' : 'block',
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
             transition: 'all 0.3s ease'
           }}
         >
-          <button className="collapse-btn" onClick={() => {
-            const sidebar = document.getElementById('sidebar');
-            const layout = document.querySelector('.app-layout');
-            sidebar?.classList.toggle('collapsed');
-            layout?.classList.toggle('sidebar-collapsed');
-          }}>
-            <svg fill="currentColor" height="12px" width="12px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 404.258 404.258" ><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <polygon points="289.927,18 265.927,0 114.331,202.129 265.927,404.258 289.927,386.258 151.831,202.129 "></polygon> </g></svg>
-          </button>
-          <SignedIn>
-            <ProjectExplorer 
-              key={sidebarRefreshKey}
-              ref={projectExplorerRef}
-              onCampaignSelect={(campaignId, projectId) => {
-                setSelectedCampaignId(campaignId);
-                setSelectedProjectId(projectId);
-                setViewMode('campaignExplorer');
-              }}
-              onProjectSelect={(projectId) => {
-                setSelectedProjectId(projectId);
-                setSelectedCampaignId(null); // Clear selected campaign when a project is selected
-                setViewMode('projectDetails');
-              }}
-              onCreateProjectClick={() => setViewMode('createProject')}
-              selectedProjectId={selectedProjectId}
-              selectedCampaignId={selectedCampaignId} 
-            />
-          </SignedIn>
-          <SignedOut>
-            <div style={{ padding: '1rem', color: '#ccc', textAlign: 'center' }}>
-              <p>Sign in to view your projects</p>
-            </div>
-          </SignedOut>
+          {/* Logo at top */}
+          <div className="sidebar-header">
+            <Link href="/" aria-label="Sreve home">
+              <NextImage src="/assets/logo.png" alt="Sreve Logo" className="logo" width={80} height={40} priority />
+            </Link>
+            <button className="sidebar-toggle" onClick={() => {
+              const sidebar = document.querySelector('.file-sidebar');
+              sidebar?.classList.toggle('open');
+            }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+
+          {/* Project explorer in middle - flex grow */}
+          <div className="sidebar-content">
+            <SignedIn>
+              <button className="new-project-button" onClick={() => {
+                console.log('New Project button clicked - clearing selections');
+                setSelectedCampaignId(null);
+                setSelectedProjectId(null);
+                setIsSequenceComplete(false); // Reset sequence state on new project
+              }}>
+                + New Project
+              </button>
+              <ProjectExplorer
+                onCampaignSelect={(campaignId, projectId) => {
+                  console.log('🎯 [APP] Campaign selected callback triggered:', { campaignId, projectId });
+                  console.log('🎯 [APP] Setting selectedCampaignId to:', campaignId);
+                  setSelectedCampaignId(campaignId);
+                  setSelectedProjectId(projectId);
+                }}
+                onProjectSelect={(projectId) => {
+                  console.log('Project selected:', projectId);
+                  setSelectedProjectId(projectId);
+                  // Clear campaign selection when switching projects
+                  setSelectedCampaignId(null);
+                  setIsSequenceComplete(false); // Reset sequence state when switching projects
+                }}
+                onCreateProjectClick={() => {
+                  console.log('Project creation not available in simplified interface');
+                }}
+                selectedCampaignId={selectedCampaignId}
+                selectedProjectId={selectedProjectId}
+              />
+            </SignedIn>
+            <SignedOut>
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                color: '#ccc',
+                textAlign: 'center'
+              }}>
+                <p>Sign in to view your projects</p>
+              </div>
+            </SignedOut>
+          </div>
+
+          {/* Auth at bottom */}
+          <div className="sidebar-footer">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="cta-button sign-in-sidebar">Sign In</button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <div className="user-info">
+                <UserButton />
+                <span className="username">{user?.firstName || user?.emailAddresses?.[0]?.emailAddress || 'User'}</span>
+              </div>
+            </SignedIn>
+          </div>
         </aside>
-        <main 
+        <main
           className="main-content"
           style={{
-            width: isStreaming ? '100%' : undefined,
             transition: 'width 0.3s ease'
           }}
         >
-          {viewMode === 'campaignExplorer' && selectedCampaignId ? (
-            <CampaignExplorer 
-              campaignId={selectedCampaignId} 
-              onStreamingStateChange={setIsStreaming}
-              onDataChange={() => {
-                // Refresh sidebar when campaign data changes (delete/edit)
-                setSidebarRefreshKey(prev => prev + 1);
-                setTimeout(() => {
-                  projectExplorerRef.current?.refreshData();
-                }, 100);
-              }}
-            />
-          ) : viewMode === 'createProject' ? (
-            <div className="overall">
-              <div className="create-project">
-                <h3>Create your project</h3>
-              </div>
-              <div className="question-section">
-                <aside className="question-sidebar">
-                  <ul>
-                    {questions.map((q) => (
-                      <li
-                        key={q.step}
-                        className={getStepState(q)}
-                        onClick={() => setCurrentStep(q.step)}
-                      >
-                        {q.step}. {q.sidebarTitle}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="progress-bar">
+          <div className="chat-ui-container">
+            <div className="chat-header">
+              <h1 className="project-name">
+                {selectedProject?.brand_name || 'New Project'}
+              </h1>
+              <button
+                className="edit-button"
+                aria-label="Edit project"
+                onClick={() => selectedProjectId && setShowProjectDetails(true)}
+                disabled={!selectedProjectId}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="chat-interface">
+              <div className="chat-messages">
+                {messages.map((message) => {
+                  const messageType = message.messageType || 'default';
+                  return (
                     <div
-                      className="progress-fill"
-                      style={{ width: `${(currentStep / questions.length) * 100}%` }}
-                    />
+                      key={message.id}
+                      className={`message ${message.sender === 'user' ? 'user-message' : 'assistant-message'} ${messageType}`}
+                    >
+                      {renderMessageContent(message)}
+                    </div>
+                  );
+                })}
+                {isCreatingProject && (
+                  <div className="message assistant-message">
+                    <div className="message-content">
+                      Creating your project and campaign...
+                    </div>
                   </div>
-                  <p className="progress-text">
-                    Step {currentStep} of {questions.length}
+                )}
+              </div>
+
+              {/* Retry Button for Sequence Errors */}
+              {sequenceError.hasError && (
+                <div className="retry-container" style={{
+                  padding: '16px',
+                  textAlign: 'center',
+                  borderTop: '1px solid #333',
+                  background: '#1a1a1a'
+                }}>
+                  <p style={{
+                    color: '#ff6b6b',
+                    marginBottom: '12px',
+                    fontSize: '14px'
+                  }}>
+                    {sequenceError.errorMessage}
                   </p>
-                </aside>
-                <main className="question-main">
-                  <h2>{currentQuestion.question}</h2>
-                  {renderInput(currentQuestion)}
-                  <div className="button-group">
-                    {currentStep > 1 && (
-                      <button className="prev-button" onClick={handlePrevious}>
-                        Previous
-                      </button>
-                    )}
-                    {currentStep < questions.length ? (
-                      <button
-                        className="next-button"
-                        onClick={handleNext}
-                        disabled={currentQuestion.required && !answers[currentStep]}
-                      >
-                        Next
-                      </button>
-                    ) : (
-                      <button
-                        className="submit-button"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Creating Project...' : 'Create Project'}
-                      </button>
-                    )}
-                  </div>
-                </main>
+                  <button
+                    onClick={retrySequence}
+                    disabled={isRetryingSequence}
+                    style={{
+                      background: '#ff6600',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 24px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: isRetryingSequence ? 'not-allowed' : 'pointer',
+                      opacity: isRetryingSequence ? 0.6 : 1,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {isRetryingSequence ? '🔄 Retrying...' : '🔄 Retry Analysis'}
+                  </button>
+                </div>
+              )}
+
+              <div className="chat-input-container">
+                <div className="chat-input-wrapper">
+                  <textarea
+                    className="chat-input"
+                    placeholder="Type your message here..."
+                    rows={1}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isCreatingProject}
+                  />
+                  <button
+                    className="send-button"
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isCreatingProject}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
-          ) : viewMode === 'projectDetails' && selectedProjectId ? (
-            <ProjectDetailsExplorer 
-              projectId={selectedProjectId}
-              onDataChange={() => {
-                // Refresh sidebar when project data changes (delete/edit)
-                setSidebarRefreshKey(prev => prev + 1);
-                setTimeout(() => {
-                  projectExplorerRef.current?.refreshData();
-                }, 100);
-              }}
-            />
-          ) : (
-            // Default empty state when nothing is selected
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: '#ccc',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <div style={{ maxWidth: '400px' }}>
-                <h2 style={{ 
-                  fontSize: '1.5rem', 
-                  marginBottom: '1rem',
-                  color: '#fff'
-                }}>
-                  Welcome to Sreve
-                </h2>
-                <p style={{ 
-                  fontSize: '1rem',
-                  lineHeight: '1.5',
-                  marginBottom: '2rem',
-                  opacity: '0.8'
-                }}>
-                  Select a project from the sidebar to get started, or create a new project to begin generating creative content.
-                </p>
-                <button 
-                  className="cta-button"
-                  onClick={() => setViewMode('createProject')}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    fontSize: '1rem'
-                  }}
-                >
-                  Create New Project
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </main>
       </div>
+
+      {/* Project Details Modal */}
+      {showProjectDetails && selectedProjectId && (
+        <ProjectDetails
+          projectId={selectedProjectId}
+          onClose={() => {
+            setShowProjectDetails(false);
+            // Refresh the app page to show changes
+            window.location.reload();
+          }}
+          onProjectUpdate={(updatedProject) => {
+            setSelectedProject(updatedProject);
+            setShowProjectDetails(false);
+            // Refresh the app page to show changes
+            window.location.reload();
+          }}
+        />
+      )}
     </>
   );
 }

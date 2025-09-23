@@ -43,51 +43,28 @@ export async function POST(request: NextRequest) {
 
     const requestData = await request.json();
     console.log('📋 Request data received:', {
-      dataKeys: Object.keys(requestData),
-      questionsCount: Object.keys(requestData.answers || {}).length
+      dataKeys: Object.keys(requestData)
     });
-    
-    const { answers, questions } = requestData;
 
-    if (!answers || !questions) {
-      console.log('❌ Missing required data:', { answers: !!answers, questions: !!questions });
-      return NextResponse.json({ 
-        error: 'Missing answers or questions data',
-        success: false 
-      }, { status: 400 });
-    }
+    const {
+      brand_name,
+      offering,
+      usp,
+      icp,
+      brand_voice,
+      competitors,
+      additional_information
+    } = requestData;
 
-    // Validate required fields
-    console.log('🔍 Validating required fields...');
-    const missingRequired = [];
-    
-    for (const question of questions) {
-      if (question.required) {
-        const answer = answers[question.step];
-        const isEmpty = answer === undefined || answer === null || answer === '' || 
-                       (Array.isArray(answer) && answer.length === 0);
-        
-        if (isEmpty) {
-          missingRequired.push({
-            step: question.step,
-            title: question.sidebarTitle,
-            question: question.question
-          });
-          console.log(`❌ Missing required field - Step ${question.step}: ${question.sidebarTitle}`);
-        }
-      }
-    }
-
-    if (missingRequired.length > 0) {
-      console.log('❌ Validation failed - missing required fields:', missingRequired);
+    if (!brand_name) {
+      console.log('❌ Missing required data: brand_name is required');
       return NextResponse.json({
-        error: 'Please fill in all required fields',
-        missingFields: missingRequired,
+        error: 'Brand name is required',
         success: false
       }, { status: 400 });
     }
 
-    console.log('✅ All required fields validated successfully');
+    console.log('✅ Brand name validated successfully');
 
     // Generate unique project ID
     const projectId = uuidv4();
@@ -97,7 +74,13 @@ export async function POST(request: NextRequest) {
     const projectData = {
       projectId,
       userId,
-      answers,
+      brand_name,
+      offering: offering || '',
+      usp: usp || '',
+      icp: icp || '',
+      brand_voice: brand_voice || '',
+      competitors: competitors || '',
+      additional_information: additional_information || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'created'
@@ -106,8 +89,8 @@ export async function POST(request: NextRequest) {
     console.log('💾 Attempting to save project to DynamoDB:', {
       projectId,
       userId,
-      tableName: TABLE_NAME,
-      answersCount: Object.keys(answers).length
+      brand_name,
+      tableName: TABLE_NAME
     });
 
     const putCommand = new PutCommand({

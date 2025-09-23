@@ -114,13 +114,38 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Update the project
+    // Extract individual fields from answers object
+    const brand_name = answers[1] || '';
+    const offering = answers[2] || '';
+    const usp = answers[3] || '';
+    const brand_voice = answers[4] || '';
+    const icp = answers[5] || '';
+    const competitors = answers[6] || '';
+    const additional_information = answers[7] || '';
+
+    // Update the project with both answers and individual fields
     const updateCommand = new UpdateCommand({
       TableName: PROJECTS_TABLE,
       Key: { projectId, userId },
-      UpdateExpression: 'SET answers = :answers, updatedAt = :updatedAt',
+      UpdateExpression: `SET
+        answers = :answers,
+        brand_name = :brand_name,
+        offering = :offering,
+        usp = :usp,
+        brand_voice = :brand_voice,
+        icp = :icp,
+        competitors = :competitors,
+        additional_information = :additional_information,
+        updatedAt = :updatedAt`,
       ExpressionAttributeValues: {
         ':answers': answers,
+        ':brand_name': brand_name,
+        ':offering': offering,
+        ':usp': usp,
+        ':brand_voice': brand_voice,
+        ':icp': icp,
+        ':competitors': competitors,
+        ':additional_information': additional_information,
         ':updatedAt': new Date().toISOString(),
       },
       ReturnValues: 'ALL_NEW',

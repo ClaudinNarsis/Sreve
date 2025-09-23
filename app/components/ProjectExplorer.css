@@ -1,14 +1,16 @@
 .project-explorer {
-  width: 200px;
+  width: 100%;
   /* background-color: #282c34; */
   color: #abb2bf;
   padding: 24px 8px;
   font-family: 'Arial', sans-serif;
-  height: 100vh;
+  height: 100%;
   overflow-y: auto;
   box-sizing: border-box;
   text-align: left;
   /* border-right: 1px solid #3e4451; */
+  display: flex;
+  flex-direction: column;
 }
 
 .explorer-header {
@@ -26,7 +28,7 @@
 }
 
 .create-btn {
-  background-color: #626262;
+  background-color: transparent;
   color: white;
   border: none;
   border-radius: 50%;
@@ -48,6 +50,14 @@
   width: 24px;
   height: 24px;
   font-size: 1em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.project-item.selected .create-btn.small {
+  opacity: 1;
+  visibility: visible;
 }
 
 .create-btn:disabled {
@@ -82,6 +92,8 @@
 
 .project-tree {
   margin-top: 10px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .project-item {
@@ -91,14 +103,16 @@
 }
 
 .project-item.selected > .project-header {
-  background-color: #3e4451;
+  background-color: #0f0f0f;
   color: #61afef;
 }
-
+.project-item.selected{
+  background-color: #121212;
+}
 .project-header {
   display: flex;
   align-items: center;
-  padding: 10px 0px;
+  padding: 10px 10px;
   cursor: pointer;
   transition: background-color 0.2s;
   user-select: none;
@@ -123,6 +137,24 @@
   transform: rotate(90deg);
 }
 
+.chevron-icon {
+  fill: none;
+  stroke: #abb2bf;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-right: 8px;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: #abb2bf;
+}
+
+.chevron-icon.expanded {
+  transform: rotate(90deg);
+}
+
+
 .project-icon {
   fill: none;
   stroke: #98c379;
@@ -142,14 +174,10 @@
 }
 
 .project-content {
-  padding-left: 10px;
-  border-left: 1px solid #3e4451;
-  margin-left: 8px;
+  padding: 10px 0px 10px 0px;
+
 }
 
-.campaigns-section {
-  margin-top: 10px;
-}
 
 .section-header {
   display: flex;
@@ -175,7 +203,7 @@
 .campaign-item {
   display: flex;
   align-items: center;
-  padding: 6px 10px;
+  padding: 10px 8px;
   cursor: pointer;
   transition: background-color 0.2s;
   border-radius: 3px;
@@ -187,7 +215,7 @@
 }
 
 .campaign-item.selected {
-  background-color: #4a505c;
+  background-color: #020202;
   color: #dbdbdb;
 }
 

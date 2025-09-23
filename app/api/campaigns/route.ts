@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
 
     const requestData = await request.json();
     console.log('🎯 [API-CAMPAIGNS] Request data:', requestData);
-    
-    const { projectId, name, description, fileUrl, fileName, fileType } = requestData;
+
+    const { projectId, name, description, goal, platform, fileUrl, fileName, fileType } = requestData;
 
     if (!projectId || !name) {
       console.log('🎯 [API-CAMPAIGNS] ❌ Missing required data:', { projectId: !!projectId, name: !!name });
@@ -59,6 +59,8 @@ export async function POST(request: NextRequest) {
       userId,
       name,
       description: description || '',
+      goal: goal || '',
+      platform: platform || '',
       fileUrl: fileUrl || '',
       fileName: fileName || '',
       fileType: fileType || '',
@@ -84,7 +86,7 @@ export async function POST(request: NextRequest) {
     const result = await docClient.send(putCommand);
     console.log('🎯 [API-CAMPAIGNS] ✅ Campaign created in DynamoDB successfully:', result);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Campaign created successfully',
       campaign: {
         campaignId,
@@ -92,6 +94,8 @@ export async function POST(request: NextRequest) {
         userId,
         name,
         description: campaignData.description,
+        goal: campaignData.goal,
+        platform: campaignData.platform,
         fileUrl: campaignData.fileUrl,
         fileName: campaignData.fileName,
         fileType: campaignData.fileType,

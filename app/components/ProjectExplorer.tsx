@@ -8,7 +8,13 @@ import toast from 'react-hot-toast';
 interface Project {
   projectId: string;
   userId: string;
-  answers: Record<string, unknown>;
+  brand_name: string;
+  offering: string;
+  usp: string;
+  icp: string;
+  brand_voice: string;
+  competitors: string;
+  additional_information: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -20,6 +26,8 @@ interface Campaign {
   userId: string;
   name: string;
   description: string;
+  goal: string;
+  platform: string;
   createdAt: string;
   updatedAt: string;
   status: string;
@@ -169,14 +177,14 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   const toggleProject = (projectId: string) => {
     const wasExpanded = expandedProjects.has(projectId);
-    
+
     setExpandedProjects(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(projectId)) {
-        newSet.delete(projectId);
-      } else {
+      const newSet = new Set<string>();
+      if (!prev.has(projectId)) {
+        // Only add the current project, ensuring single selection
         newSet.add(projectId);
       }
+      // If the project was expanded, newSet remains empty (collapses all)
       return newSet;
     });
 
@@ -199,7 +207,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   const getProjectName = (project: Project) => {
     // Get project name from answers (step 1 is usually project name)
-    return project.answers?.[1] || `Project ${project.projectId.slice(0, 8)}`;
+    return project.brand_name || `Project ${project.projectId.slice(0, 8)}`;
   };
 
   const handleCreateProject = () => {
@@ -259,25 +267,7 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
   return (
     <div className="project-explorer">
-      <div className="explorer-header">
-        <h3>Projects</h3>
-        <button 
-          className="create-btn" 
-          onClick={handleCreateProject}
-          title="Create New Project"
-        >
-          +
-        </button>
-      </div>
-
-      {projects.length === 0 ? (
-        <div className="empty-state">
-          <p>No projects yet</p>
-          <button className="create-project-btn" onClick={handleCreateProject}>
-            Create Your First Project
-          </button>
-        </div>
-      ) : (
+      {projects.length > 0 && (
         <div className="project-tree">
           {projects.map((project) => {
             const isExpanded = expandedProjects.has(project.projectId);
@@ -286,28 +276,25 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
 
             return (
               <div key={project.projectId} className={`project-item ${selectedProjectId === project.projectId ? 'selected' : ''}`}>
-                <div 
+                <div
                   className="project-header"
                   onClick={() => toggleProject(project.projectId)}
                 >
-                  <svg 
-                    className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
-                    width="16" height="16" viewBox="0 0 24 24"
+                  <svg
+                    className={`chevron-icon ${isExpanded ? 'expanded' : ''}`}
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <polyline points="9,6 15,12 9,18"></polyline>
-                  </svg>
-                  <svg className="project-icon" width="16" height="16" viewBox="0 0 24 24">
-                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"></path>
+                    <polyline points="9,18 15,12 9,6"></polyline>
                   </svg>
                   <span className="project-name">{getProjectName(project)}</span>
-                </div>
-
-                {isExpanded && (
-                  <div className="project-content">
-                    <div className="campaigns-section">
-                      <div className="section-header">
-                        <span>Campaigns</span>
-                        <button 
+                  <button
                           className="create-btn small"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -318,7 +305,12 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                         >
                           {creatingCampaign === project.projectId ? '...' : '+'}
                         </button>
-                      </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="project-content">
+                    <div className="campaigns-section">
+                      
 
                       {isLoadingCampaigns ? (
                         <div className="loading-item">Loading campaigns...</div>
@@ -327,16 +319,11 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
                       ) : (
                         <div className="campaigns-list">
                           {projectCampaigns.map((campaign) => (
-                            <div 
-                              key={campaign.campaignId} 
+                            <div
+                              key={campaign.campaignId}
                               className={`campaign-item ${selectedCampaignId === campaign.campaignId ? 'selected' : ''}`}
                               onClick={() => handleCampaignClick(campaign.campaignId, campaign.projectId)}
                             >
-                              <svg className="campaign-icon" width="14" height="14" viewBox="0 0 24 24">
-                                <path d="M9 2v6h6V2"></path>
-                                <path d="M9 18H5a2 2 0 01-2-2v-5h18v5a2 2 0 01-2 2h-4"></path>
-                                <path d="M5 8h14"></path>
-                              </svg>
                               <span className="campaign-name">{campaign.name}</span>
                             </div>
                           ))}
