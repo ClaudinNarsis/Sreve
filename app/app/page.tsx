@@ -123,7 +123,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -270,6 +270,9 @@ function AppContent() {
     campaignId: undefined
   });
   const [isRetryingSequence, setIsRetryingSequence] = useState(false);
+
+  // Follow-up flow state
+  const [isSequenceComplete, setIsSequenceComplete] = useState(false);
 
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
@@ -743,6 +746,10 @@ function AppContent() {
 
                     const totalFlowDuration = Date.now() - flowStartTime;
                     console.log(`✅ [SEQUENTIAL-FLOW] All 4 steps completed successfully in ${totalFlowDuration}ms!`);
+
+                    // Mark sequence as complete for follow-up functionality
+                    setIsSequenceComplete(true);
+                    console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete - follow-up mode enabled');
                   } else {
                     throw new Error(`Critique API failed: ${critiqueResult.message}`);
                   }
@@ -774,10 +781,18 @@ function AppContent() {
 
                   const totalFlowDuration = Date.now() - flowStartTime;
                   console.log(`✅ [SEQUENTIAL-FLOW] Flow completed with critique error in ${totalFlowDuration}ms`);
+
+                  // Mark sequence as complete even with critique error
+                  setIsSequenceComplete(true);
+                  console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete despite critique error - follow-up mode enabled');
                 }
               } else {
                 const totalFlowDuration = Date.now() - flowStartTime;
                 console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+
+                // Mark sequence as complete when ideas step is final
+                setIsSequenceComplete(true);
+                console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete after ideas step - follow-up mode enabled');
               }
             } else {
               throw new Error(`Ideas API failed: ${ideasResult.message}`);
@@ -967,6 +982,171 @@ function AppContent() {
     }
   };
 
+  // Helper function to get campaign details for follow-up context
+  const getCampaignDetailsForFollowUp = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`);
+      const data = await response.json();
+      return data.campaign || null;
+    } catch (error) {
+      console.warn('⚠️ Could not fetch campaign details for follow-up:', error);
+      return null;
+    }
+  };
+
+  // Helper function to handle follow-up messages
+  const handleFollowUpMessage = async (messageText: string) => {
+    if (!selectedCampaignId || !selectedProject) {
+      console.error('❌ [FOLLOW-UP] Missing campaign or project for follow-up');
+      return;
+    }
+
+    console.log('🎯 [FOLLOW-UP] Processing follow-up message');
+
+    // Add user message to chat immediately
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: messageText,
+      sender: 'user',
+      messageType: 'default',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+
+    // Add temporary loading message
+    const tempLoadingMessage: ChatMessage = {
+      id: 'temp-followup-loading-' + Date.now().toString(),
+      text: 'Processing your follow-up question...',
+      sender: 'bot',
+      messageType: 'loading-followup',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, tempLoadingMessage]);
+
+    try {
+      // Get campaign details
+      const campaignDetails = await getCampaignDetailsForFollowUp(selectedCampaignId);
+
+      // Get last 5 messages (excluding the temp loading message)
+      const lastMessages = messages.slice(-5).map(msg => ({
+        id: msg.id,
+        text: msg.text,
+        sender: msg.sender,
+        timestamp: msg.timestamp
+      }));
+
+      // Extract selected idea from messages
+      const ideaMessage = messages.find(msg =>
+        msg.messageType === 'idea-preview' && msg.ideaData?.selected_idea
+      );
+      const selectedIdea = ideaMessage?.ideaData?.selected_idea;
+
+      // Prepare context object
+      const context = {
+        projectDetails: selectedProject,
+        campaignDetails: campaignDetails,
+        selectedIdea: selectedIdea,
+        lastMessages: lastMessages
+      };
+
+      console.log('📋 [FOLLOW-UP] Context prepared:', {
+        hasProjectDetails: !!selectedProject,
+        hasCampaignDetails: !!campaignDetails,
+        hasSelectedIdea: !!selectedIdea,
+        messageCount: lastMessages.length
+      });
+
+      // Call follow-up API
+      const response = await fetch('/api/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: context,
+          query: messageText
+        })
+      });
+
+      const data = await response.json();
+      console.log('🔄 [FOLLOW-UP] API response:', data);
+
+      if (response.ok && data.success) {
+        // Replace temp loading message with response
+        const botMessage: ChatMessage = {
+          id: data.responseBotMessageId || (Date.now() + 1).toString(),
+          text: data.responseMessage || 'I processed your follow-up question.',
+          sender: 'bot',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = botMessage;
+            console.log('🔄 [FOLLOW-UP] Replaced temp loading with response');
+            return updatedMessages;
+          } else {
+            return [...prev, botMessage];
+          }
+        });
+      } else {
+        console.error('❌ [FOLLOW-UP] API error:', data.error);
+
+        // Replace temp loading with error message
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          text: 'I\'m having trouble processing your follow-up question right now. Please try again.',
+          sender: 'bot',
+          messageType: 'default',
+          timestamp: new Date()
+        };
+
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+          );
+
+          if (tempLoadingIndex !== -1) {
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = errorMessage;
+            return updatedMessages;
+          } else {
+            return [...prev, errorMessage];
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ [FOLLOW-UP] Network error:', error);
+
+      // Replace temp loading with network error message
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'Network error occurred. Please check your connection and try again.',
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => {
+        const tempLoadingIndex = prev.findIndex(msg =>
+          msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+        );
+
+        if (tempLoadingIndex !== -1) {
+          const updatedMessages = [...prev];
+          updatedMessages[tempLoadingIndex] = errorMessage;
+          return updatedMessages;
+        } else {
+          return [...prev, errorMessage];
+        }
+      });
+    }
+  };
+
   // Message sending logic with campaign validation
   const handleSendMessage = useCallback(async () => {
     console.log('🚀 handleSendMessage called');
@@ -993,6 +1173,7 @@ function AppContent() {
         // Create campaign
         const campaign = await createCampaign(project.projectId, messageText);
         setSelectedCampaignId(campaign.campaignId);
+        setIsSequenceComplete(false); // Reset sequence state for new campaign
 
         // Store initial prompt for the campaign
         sessionStorage.setItem(`initialPrompt_${campaign.campaignId}`, messageText);
@@ -1037,8 +1218,22 @@ function AppContent() {
         setIsCreatingProject(false);
       }
     } else {
-      // Campaign is selected, proceed with robust message sending via chat API
-      console.log('💬 Campaign selected, sending message to chat API:', selectedCampaignId);
+      // Campaign is selected, check if sequence is complete for follow-up routing
+      console.log('💬 Campaign selected, sending message:', selectedCampaignId);
+      console.log('🎯 [ROUTING] Sequence complete status:', isSequenceComplete);
+
+      // Clear input immediately for better UX
+      setInputMessage('');
+
+      // Route to follow-up if sequence is complete
+      if (isSequenceComplete) {
+        console.log('🎯 [ROUTING] Routing to follow-up handler');
+        await handleFollowUpMessage(messageText);
+        return;
+      }
+
+      // Otherwise proceed with main chat API
+      console.log('🎯 [ROUTING] Routing to main chat API');
 
       // Add user message to chat immediately for better UX
       const userMessage: ChatMessage = {
@@ -1050,7 +1245,6 @@ function AppContent() {
       };
 
       setMessages(prev => [...prev, userMessage]);
-      setInputMessage('');
 
       // Add temporary loading message that will be updated with the API response
       const tempLoadingMessage: ChatMessage = {
@@ -1145,7 +1339,7 @@ function AppContent() {
             const tempLoadingIndex = prev.findIndex(msg =>
               msg.sender === 'bot' &&
               msg.id.startsWith('temp-loading-') &&
-              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
+              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
             );
 
             if (tempLoadingIndex !== -1) {
@@ -1183,7 +1377,7 @@ function AppContent() {
           const tempLoadingIndex = prev.findIndex(msg =>
             msg.sender === 'bot' &&
             msg.id.startsWith('temp-loading-') &&
-            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
+            (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -1332,6 +1526,24 @@ function AppContent() {
 
         setMessages(chatMessages);
         console.log('✅ Loaded', chatMessages.length, 'chat messages');
+
+        // Check if sequence is already complete based on loaded messages
+        const hasCritiqueMessage = chatMessages.some(msg =>
+          msg.messageType === 'critique-preview' ||
+          (msg.sender === 'bot' && (
+            msg.text.includes('comprehensive insights for your marketing campaign') ||
+            msg.text.includes('campaign strategy is complete') ||
+            msg.text.includes('All 4 steps completed successfully')
+          ))
+        );
+
+        if (hasCritiqueMessage) {
+          console.log('🎯 [LOAD-MESSAGES] Sequence already complete - enabling follow-up mode');
+          setIsSequenceComplete(true);
+        } else {
+          console.log('🎯 [LOAD-MESSAGES] Sequence not complete - normal mode');
+          setIsSequenceComplete(false);
+        }
       } else {
         console.error('❌ Failed to load chat messages:', data.error);
       }
@@ -1450,7 +1662,7 @@ function AppContent() {
     }
 
     // Loading message types
-    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts') {
+    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts' || messageType === 'loading-followup') {
       const loadingConfig = {
         'loading-trends': {
           gif: '/assets/loading/trends-loading.gif',
@@ -1467,6 +1679,10 @@ function AppContent() {
         'loading-accounts': {
           gif: '/assets/loading/accounts-loading.gif',
           text: 'Finding successful competitor accounts...'
+        },
+        'loading-followup': {
+          gif: '/assets/loading/trends-loading.gif', // Reuse existing gif
+          text: 'Processing your follow-up question...'
         }
       };
 
@@ -2021,6 +2237,7 @@ function AppContent() {
                 console.log('New Project button clicked - clearing selections');
                 setSelectedCampaignId(null);
                 setSelectedProjectId(null);
+                setIsSequenceComplete(false); // Reset sequence state on new project
               }}>
                 + New Project
               </button>
@@ -2036,6 +2253,7 @@ function AppContent() {
                   setSelectedProjectId(projectId);
                   // Clear campaign selection when switching projects
                   setSelectedCampaignId(null);
+                  setIsSequenceComplete(false); // Reset sequence state when switching projects
                 }}
                 onCreateProjectClick={() => {
                   console.log('Project creation not available in simplified interface');
