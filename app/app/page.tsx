@@ -2405,10 +2405,16 @@ function AppContent() {
       {showProjectDetails && selectedProjectId && (
         <ProjectDetails
           projectId={selectedProjectId}
-          onClose={() => setShowProjectDetails(false)}
+          onClose={() => {
+            setShowProjectDetails(false);
+            // Refresh the app page to show changes
+            window.location.reload();
+          }}
           onProjectUpdate={(updatedProject) => {
             setSelectedProject(updatedProject);
             setShowProjectDetails(false);
+            // Refresh the app page to show changes
+            window.location.reload();
           }}
         />
       )}
