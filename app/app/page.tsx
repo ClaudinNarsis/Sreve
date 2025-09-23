@@ -84,6 +84,7 @@ interface IdeaData {
   angle: string;
   hook: string;
   description: string;
+  execution_script?: string;
 }
 
 interface SelectedIdea extends IdeaData {
@@ -1768,6 +1769,14 @@ function AppContent() {
                   <div className="idea-description">
                     {idea.description}
                   </div>
+                  {idea.execution_script && (
+                    <div className="idea-execution-script">
+                      <strong>Execution Script:</strong>
+                      <div className="execution-script-content">
+                        {idea.execution_script}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )) : (
                 <div className="no-ideas">No ideas available</div>
@@ -1792,6 +1801,15 @@ function AppContent() {
                 <div className="selected-idea-description">
                   {ideaData.selected_idea.description}
                 </div>
+
+                {ideaData.selected_idea.execution_script && (
+                  <div className="selected-idea-execution-script">
+                    <h5 className="execution-script-title">Execution Script</h5>
+                    <div className="execution-script-content">
+                      {ideaData.selected_idea.execution_script}
+                    </div>
+                  </div>
+                )}
 
                 {/* Scoring Section */}
                 {ideaData.selected_idea.scores && (
