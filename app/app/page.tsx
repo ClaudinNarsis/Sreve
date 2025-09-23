@@ -266,6 +266,310 @@ function AppContent() {
     }
   };
 
+  // Sequential flow handler for trends -> accounts -> ideas
+  const handleSequentialFlow = useCallback(async (step: string, brandDetails: Record<string, unknown>, campaignId: string) => {
+    const flowStartTime = Date.now();
+    console.log('🚀 [SEQUENTIAL-FLOW] Starting sequential flow:', { step, campaignId, brandName: brandDetails.brand_name });
+
+    let trendData = null;
+    let accountsData = null;
+
+    try {
+      // Step 1: Trends Analysis
+      if (step === 'trends') {
+        console.log('📈 [SEQUENTIAL-FLOW] Step 1/3: Starting trends analysis');
+
+        // Show loading message immediately in frontend
+        const trendsLoadingMessage: ChatMessage = {
+          id: `trends-loading-${Date.now()}`,
+          text: 'Analyzing current market trends for your brand...',
+          sender: 'bot',
+          messageType: 'loading-trends',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, trendsLoadingMessage]);
+
+        const trendsStartTime = Date.now();
+
+        const trendsResponse = await fetch('/api/chat/trends', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId,
+            brandDetails
+          })
+        });
+
+        const trendsResult = await trendsResponse.json();
+        const trendsDuration = Date.now() - trendsStartTime;
+        console.log(`📈 [SEQUENTIAL-FLOW] Trends API completed in ${trendsDuration}ms:`, {
+          success: trendsResult.success,
+          hasTrendData: !!trendsResult.trendData,
+          loadingMessageId: trendsResult.loadingBotMessageId
+        });
+
+        if (trendsResult.success) {
+          // Replace loading message or add new result message
+          if (trendsResult.trendData) {
+            trendData = trendsResult.trendData;
+            const trendMessage: ChatMessage = {
+              id: trendsResult.trendBotMessageId,
+              text: trendsResult.trendMessage,
+              sender: 'bot',
+              messageType: 'trend-preview',
+              timestamp: new Date(),
+              trendData: trendData.chosen_trend || trendData,
+              trendApiResponse: trendData.chosen_trend ? trendData : undefined
+            };
+
+            // Replace the frontend loading message with results
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.messageType === 'loading-trends' && msg.sender === 'bot'
+              );
+
+              if (loadingIndex !== -1) {
+                console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading message with results');
+                const updated = [...prev];
+                updated[loadingIndex] = trendMessage;
+                return updated;
+              } else {
+                console.log('➕ [SEQUENTIAL-FLOW] Adding new trends message');
+                return [...prev, trendMessage];
+              }
+            });
+          } else if (trendsResult.noTrendBotMessageId) {
+            // Handle no trends case
+            const noTrendMessage: ChatMessage = {
+              id: trendsResult.noTrendBotMessageId,
+              text: trendsResult.noTrendMessage,
+              sender: 'bot',
+              messageType: 'default',
+              timestamp: new Date()
+            };
+
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.messageType === 'loading-trends' && msg.sender === 'bot'
+              );
+
+              if (loadingIndex !== -1) {
+                console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading with no-trend message');
+                const updated = [...prev];
+                updated[loadingIndex] = noTrendMessage;
+                return updated;
+              } else {
+                return [...prev, noTrendMessage];
+              }
+            });
+          }
+
+          // Step 2: Accounts Analysis
+          console.log('🔍 [SEQUENTIAL-FLOW] Step 2/3: Starting accounts analysis');
+
+          // Show loading message immediately in frontend
+          const accountsLoadingMessage: ChatMessage = {
+            id: `accounts-loading-${Date.now()}`,
+            text: 'Finding successful competitor accounts that align with your brand strategy...',
+            sender: 'bot',
+            messageType: 'loading-accounts',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, accountsLoadingMessage]);
+
+          const accountsStartTime = Date.now();
+
+          const accountsResponse = await fetch('/api/chat/accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              campaignId,
+              brandDetails
+            })
+          });
+
+          const accountsResult = await accountsResponse.json();
+          const accountsDuration = Date.now() - accountsStartTime;
+          console.log(`🔍 [SEQUENTIAL-FLOW] Accounts API completed in ${accountsDuration}ms:`, {
+            success: accountsResult.success,
+            hasAccountsData: !!accountsResult.accountsData,
+            loadingMessageId: accountsResult.loadingBotMessageId
+          });
+
+          if (accountsResult.success) {
+            // Replace loading message or add new result message
+            if (accountsResult.accountsData) {
+              accountsData = accountsResult.accountsData;
+              const accountsMessage: ChatMessage = {
+                id: accountsResult.accountsBotMessageId,
+                text: accountsResult.accountsMessage,
+                sender: 'bot',
+                messageType: 'accounts-preview',
+                timestamp: new Date(),
+                accountsData: accountsData
+              };
+
+              setMessages(prev => {
+                const loadingIndex = prev.findIndex(msg =>
+                  msg.messageType === 'loading-accounts' && msg.sender === 'bot'
+                );
+
+                if (loadingIndex !== -1) {
+                  console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading message with results');
+                  const updated = [...prev];
+                  updated[loadingIndex] = accountsMessage;
+                  return updated;
+                } else {
+                  console.log('➕ [SEQUENTIAL-FLOW] Adding new accounts message');
+                  return [...prev, accountsMessage];
+                }
+              });
+            } else if (accountsResult.noAccountsBotMessageId) {
+              // Handle no accounts case
+              const noAccountsMessage: ChatMessage = {
+                id: accountsResult.noAccountsBotMessageId,
+                text: accountsResult.noAccountsMessage,
+                sender: 'bot',
+                messageType: 'default',
+                timestamp: new Date()
+              };
+
+              setMessages(prev => {
+                const loadingIndex = prev.findIndex(msg =>
+                  msg.messageType === 'loading-accounts' && msg.sender === 'bot'
+                );
+
+                if (loadingIndex !== -1) {
+                  console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading with no-accounts message');
+                  const updated = [...prev];
+                  updated[loadingIndex] = noAccountsMessage;
+                  return updated;
+                } else {
+                  return [...prev, noAccountsMessage];
+                }
+              });
+            }
+
+            // Step 3: Ideas Generation
+            console.log('💡 [SEQUENTIAL-FLOW] Step 3/3: Starting ideas generation');
+
+            // Show loading message immediately in frontend
+            const ideasLoadingMessage: ChatMessage = {
+              id: `ideas-loading-${Date.now()}`,
+              text: 'Generating creative content ideas based on the trends and competitor insights...',
+              sender: 'bot',
+              messageType: 'loading-final-idea',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, ideasLoadingMessage]);
+
+            const ideasStartTime = Date.now();
+
+            const ideasResponse = await fetch('/api/chat/ideas', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                campaignId,
+                brandDetails,
+                selectedAccounts: accountsData?.selected_accounts || [],
+                selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
+              })
+            });
+
+            const ideasResult = await ideasResponse.json();
+            const ideasDuration = Date.now() - ideasStartTime;
+            console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
+              success: ideasResult.success,
+              hasIdeaData: !!ideasResult.ideaData,
+              flowCompleted: ideasResult.flowCompleted,
+              loadingMessageId: ideasResult.loadingBotMessageId
+            });
+
+            if (ideasResult.success) {
+              // Replace loading message or add new result message
+              if (ideasResult.ideaData) {
+                const ideasMessage: ChatMessage = {
+                  id: ideasResult.ideasBotMessageId,
+                  text: ideasResult.ideasMessage,
+                  sender: 'bot',
+                  messageType: 'idea-preview',
+                  timestamp: new Date(),
+                  ideaData: ideasResult.ideaData
+                };
+
+                setMessages(prev => {
+                  const loadingIndex = prev.findIndex(msg =>
+                    msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
+                  );
+
+                  if (loadingIndex !== -1) {
+                    console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading message with results');
+                    const updated = [...prev];
+                    updated[loadingIndex] = ideasMessage;
+                    return updated;
+                  } else {
+                    console.log('➕ [SEQUENTIAL-FLOW] Adding new ideas message');
+                    return [...prev, ideasMessage];
+                  }
+                });
+              } else if (ideasResult.noIdeasBotMessageId) {
+                // Handle no ideas case
+                const noIdeasMessage: ChatMessage = {
+                  id: ideasResult.noIdeasBotMessageId,
+                  text: ideasResult.noIdeasMessage,
+                  sender: 'bot',
+                  messageType: 'default',
+                  timestamp: new Date()
+                };
+
+                setMessages(prev => {
+                  const loadingIndex = prev.findIndex(msg =>
+                    msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
+                  );
+
+                  if (loadingIndex !== -1) {
+                    console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading with completion message');
+                    const updated = [...prev];
+                    updated[loadingIndex] = noIdeasMessage;
+                    return updated;
+                  } else {
+                    return [...prev, noIdeasMessage];
+                  }
+                });
+              }
+
+              const totalFlowDuration = Date.now() - flowStartTime;
+              console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+            } else {
+              throw new Error(`Ideas API failed: ${ideasResult.message}`);
+            }
+          } else {
+            throw new Error(`Accounts API failed: ${accountsResult.message}`);
+          }
+        } else {
+          throw new Error(`Trends API failed: ${trendsResult.message}`);
+        }
+      }
+    } catch (error) {
+      const totalFlowDuration = Date.now() - flowStartTime;
+      console.error(`❌ [SEQUENTIAL-FLOW] Error in sequential flow after ${totalFlowDuration}ms:`, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        step,
+        campaignId
+      });
+
+      // Add error message to chat
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: 'There was an error processing your request. The analysis has been completed with the available information.',
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  }, []);
+
   // Function to fetch metadata for all examples in a trend
   const fetchExampleMetadata = useCallback(async (examples: Array<{ caption: string; url: string; }>) => {
     for (const example of examples) {
@@ -522,150 +826,44 @@ function AppContent() {
         if (response.ok && data.success) {
           // Determine message type based on response data
           const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
-          const isTrendPreview = data.trendData && data.trendData;
-          const isAccountsPreview = data.accountsData && data.accountsData;
 
-          // Debug logging for trend data
-          if (isTrendPreview) {
-            console.log('🔍 [DEBUG] Trend preview detected in API response:');
-            console.log('🔍 [DEBUG] data.trendData:', JSON.stringify(data.trendData, null, 2));
-            console.log('🔍 [DEBUG] Has chosen_trend?', !!data.trendData?.chosen_trend);
-            console.log('🔍 [DEBUG] Has reason?', !!data.trendData?.reason);
-            if (data.trendData?.reason) {
-              console.log('🔍 [DEBUG] Reason text:', data.trendData.reason);
-            }
-          }
-
-          // Debug logging for accounts data
-          if (isAccountsPreview) {
-            console.log('🔍 [DEBUG] Accounts preview detected in API response:');
-            console.log('🔍 [DEBUG] data.accountsData:', JSON.stringify(data.accountsData, null, 2));
-            console.log('🔍 [DEBUG] Has selected_accounts?', !!data.accountsData?.selected_accounts);
-          }
-
-          // Create main bot message object (trends/questions)
+          // Create main bot message
           const botMessage: ChatMessage = {
             id: data.botMessageId || (Date.now() + 1).toString(),
             text: data.botMessage || 'Message processed successfully.',
             sender: 'bot',
-            messageType: isTrendPreview ? 'trend-preview' : (isQuestionSession ? 'question-session' : 'default'),
+            messageType: isQuestionSession ? 'question-session' : 'default',
             timestamp: new Date(),
             questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
               currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
               totalQuestions: data.totalQuestions || 5
-            } : undefined,
-            trendData: isTrendPreview ? (data.trendData?.chosen_trend || data.trendData) : undefined,
-            trendApiResponse: isTrendPreview && data.trendData?.chosen_trend ? data.trendData : undefined
+            } : undefined
           };
 
-          // Create separate accounts bot message (just like trends)
-          let accountsBotMessage: ChatMessage | undefined;
-          if (data.accountsBotMessageId) {
-            console.log('🔍 [DEBUG] Creating separate accounts message:', data.accountsBotMessageId);
-            console.log('🔍 [DEBUG] Accounts data present:', !!data.accountsData);
-
-            accountsBotMessage = {
-              id: data.accountsBotMessageId,
-              text: data.accountsBotMessage || 'Analyzing competitor accounts...',
-              sender: 'bot',
-              messageType: isAccountsPreview ? 'accounts-preview' : 'loading-accounts',
-              timestamp: new Date(),
-              accountsData: data.accountsData
-            };
-            console.log('🔍 [DEBUG] Created accounts message with type:', accountsBotMessage.messageType);
-          }
-
-          // Create separate idea bot message (sequential step 4)
-          let ideaBotMessage: ChatMessage | undefined;
-          if (data.ideaBotMessageId) {
-            console.log('🔍 [DEBUG] Creating separate idea message:', data.ideaBotMessageId);
-            console.log('🔍 [DEBUG] Idea data present:', !!data.ideaData);
-
-            const isIdeaPreview = data.ideaData && data.ideaData;
-            ideaBotMessage = {
-              id: data.ideaBotMessageId,
-              text: data.ideaBotMessage || 'Generating creative ideas...',
-              sender: 'bot',
-              messageType: isIdeaPreview ? 'idea-preview' : 'loading-final-idea',
-              timestamp: new Date(),
-              ideaData: data.ideaData
-            };
-            console.log('🔍 [DEBUG] Created idea message with type:', ideaBotMessage.messageType);
-          }
-
-
-          // Debug logging for bot message creation
-          if (isTrendPreview || isAccountsPreview) {
-            console.log('🔍 [DEBUG] Created unified bot message:');
-            console.log('🔍 [DEBUG] Message type:', botMessage.messageType);
-            if (isTrendPreview) {
-              console.log('🔍 [DEBUG] botMessage.trendData:', JSON.stringify(botMessage.trendData, null, 2));
-              console.log('🔍 [DEBUG] botMessage.trendApiResponse:', JSON.stringify(botMessage.trendApiResponse, null, 2));
-            }
-            if (isAccountsPreview) {
-              console.log('🔍 [DEBUG] botMessage.accountsData:', JSON.stringify(botMessage.accountsData, null, 2));
-            }
-          }
-
-          // Handle both trend/main message and accounts message separately (like two separate API responses)
+          // Replace temporary loading message with the main response
           setMessages(prev => {
-            const updatedMessages = [...prev];
+            const tempLoadingIndex = prev.findIndex(msg =>
+              msg.sender === 'bot' &&
+              msg.id.startsWith('temp-loading-')
+            );
 
-            // Handle main message (trends/questions)
-            const existingMessageIndex = updatedMessages.findIndex(msg => msg.id === botMessage.id);
-            if (existingMessageIndex !== -1) {
-              // Update existing message (backend updated the same message)
-              updatedMessages[existingMessageIndex] = botMessage;
-              console.log(`🔄 Updated existing main message with ID: ${botMessage.id}`);
+            if (tempLoadingIndex !== -1) {
+              // Replace the temporary loading message with the real response
+              const updatedMessages = [...prev];
+              updatedMessages[tempLoadingIndex] = botMessage;
+              console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
+              return updatedMessages;
             } else {
-              // Check if we have a temporary loading message that needs to be replaced
-              const tempLoadingIndex = updatedMessages.findIndex(msg =>
-                msg.sender === 'bot' &&
-                msg.id.startsWith('temp-loading-') &&
-                (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts')
-              );
-
-              if (tempLoadingIndex !== -1) {
-                // Replace the temporary loading message with the real response
-                updatedMessages[tempLoadingIndex] = botMessage;
-                console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
-              } else {
-                // Add new message if no existing or temp message found
-                updatedMessages.push(botMessage);
-                console.log(`➕ Added new main message with ID: ${botMessage.id}`);
-              }
+              // Add new message if no temp message found
+              return [...prev, botMessage];
             }
-
-            // Handle accounts message if present (exactly like trends)
-            if (accountsBotMessage) {
-              const existingAccountsIndex = updatedMessages.findIndex(msg => msg.id === accountsBotMessage.id);
-              if (existingAccountsIndex !== -1) {
-                // Update existing accounts message (this is key for async updates!)
-                updatedMessages[existingAccountsIndex] = accountsBotMessage;
-                console.log(`🔄 Updated existing accounts message with ID: ${accountsBotMessage.id}`);
-              } else {
-                // Add new accounts message
-                updatedMessages.push(accountsBotMessage);
-                console.log(`➕ Added new accounts message with ID: ${accountsBotMessage.id}`);
-              }
-            }
-
-            // Handle idea message if present (sequential step 4)
-            if (ideaBotMessage) {
-              const existingIdeaIndex = updatedMessages.findIndex(msg => msg.id === ideaBotMessage.id);
-              if (existingIdeaIndex !== -1) {
-                // Update existing idea message
-                updatedMessages[existingIdeaIndex] = ideaBotMessage;
-                console.log(`🔄 Updated existing idea message with ID: ${ideaBotMessage.id}`);
-              } else {
-                // Add new idea message
-                updatedMessages.push(ideaBotMessage);
-                console.log(`➕ Added new idea message with ID: ${ideaBotMessage.id}`);
-              }
-            }
-
-            return updatedMessages;
           });
+
+          // Check if we need to start sequential flow
+          if (data.nextStep && data.brandDetails) {
+            console.log('🚀 Starting sequential flow with step:', data.nextStep);
+            await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
+          }
 
           // Handle special cases
           if (data.recovery) {
@@ -750,7 +948,7 @@ function AppContent() {
         toast.error('Network error. Please try again.');
       }
     }
-  }, [inputMessage, selectedCampaignId]);
+  }, [inputMessage, selectedCampaignId, handleSequentialFlow]);
 
   // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
