@@ -926,25 +926,48 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: unknown) {
-    console.error('❌ Error in POST /api/chat:', error);
+    const isDevelopment = process.env.ENVIRONMENT === 'Dev';
+
+    // Enhanced error logging for development
+    if (isDevelopment) {
+      console.error('❌ DEVELOPMENT ERROR DETAILS:', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        errorName: error instanceof Error ? error.name : undefined,
+        errorType: typeof error,
+        timestamp: new Date().toISOString(),
+        environment: process.env.ENVIRONMENT
+      });
+    } else {
+      console.error('❌ Error in POST /api/chat:', error);
+    }
 
     // Handle specific error types with appropriate responses
     if (error instanceof QuestioningSessionError) {
-      return NextResponse.json({
+      const response = {
         success: false,
         error: {
           code: error.code,
           message: error.message,
-          type: 'questioning_session_error'
+          type: 'questioning_session_error',
+          ...(isDevelopment && {
+            developerInfo: {
+              stack: error.stack,
+              originalError: error.cause,
+              timestamp: new Date().toISOString()
+            }
+          })
         }
-      }, { status: error.statusCode });
+      };
+      return NextResponse.json(response, { status: error.statusCode });
     }
 
     if (error instanceof ExtractPromptAPIError) {
       const isRetryable = error.statusCode >= 500 || error.statusCode === 408;
       const circuitBreakerState = extractPromptCircuitBreaker.getState();
 
-      return NextResponse.json({
+      const response = {
         success: false,
         error: {
           code: 'EXTRACT_PROMPT_API_ERROR',
@@ -954,48 +977,92 @@ export async function POST(request: NextRequest) {
           type: 'api_error',
           retryable: isRetryable && circuitBreakerState !== 'OPEN',
           retryAfter: circuitBreakerState === 'OPEN' ? 60 : (isRetryable ? 30 : undefined),
-          circuitBreakerState
+          circuitBreakerState,
+          ...(isDevelopment && {
+            developerInfo: {
+              stack: error.stack,
+              originalError: error.originalError,
+              statusCode: error.statusCode,
+              timestamp: new Date().toISOString()
+            }
+          })
         },
         context: {
           userMessageSaved: true,
           step: 'extract-prompt-call'
         }
-      }, { status: error.statusCode === 408 ? 408 : 503 });
+      };
+      return NextResponse.json(response, { status: error.statusCode === 408 ? 408 : 503 });
     }
 
     if (error instanceof DatabaseOperationError) {
-      return NextResponse.json({
+      const response = {
         success: false,
         error: {
           code: 'DATABASE_ERROR',
           message: 'Database operation failed. Please try again.',
           type: 'database_error',
-          operation: error.operation
+          operation: error.operation,
+          ...(isDevelopment && {
+            developerInfo: {
+              stack: error.stack,
+              originalError: error.originalError,
+              operation: error.operation,
+              timestamp: new Date().toISOString()
+            }
+          })
         }
-      }, { status: 500 });
+      };
+      return NextResponse.json(response, { status: 500 });
     }
 
     if (error instanceof SessionRecoveryError) {
-      return NextResponse.json({
+      const response = {
         success: false,
         error: {
           code: 'SESSION_RECOVERY_ERROR',
           message: error.message,
           type: 'session_error',
-          sessionId: error.sessionId
+          sessionId: error.sessionId,
+          ...(isDevelopment && {
+            developerInfo: {
+              stack: error.stack,
+              sessionId: error.sessionId,
+              timestamp: new Date().toISOString()
+            }
+          })
         }
-      }, { status: 400 });
+      };
+      return NextResponse.json(response, { status: 400 });
     }
 
-    // Generic error fallback
-    return NextResponse.json({
+    // Generic error fallback with development details
+    const response = {
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: 'An unexpected error occurred. Please try again.',
-        type: 'internal_error'
+        message: isDevelopment
+          ? `Development Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+          : 'An unexpected error occurred. Please try again.',
+        type: 'internal_error',
+        ...(isDevelopment && {
+          developerInfo: {
+            fullError: error instanceof Error ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+              cause: error.cause
+            } : error,
+            errorType: typeof error,
+            errorConstructor: error instanceof Error ? error.constructor.name : undefined,
+            timestamp: new Date().toISOString(),
+            environment: process.env.ENVIRONMENT,
+            nodeVersion: process.version
+          }
+        })
       }
-    }, { status: 500 });
+    };
+    return NextResponse.json(response, { status: 500 });
   }
 }
 
@@ -1056,7 +1123,43 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('❌ Error in GET /api/chat:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const isDevelopment = process.env.ENVIRONMENT === 'Dev';
+
+    // Enhanced error logging for development
+    if (isDevelopment) {
+      console.error('❌ DEVELOPMENT ERROR DETAILS (GET):', {
+        error: error,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : undefined,
+        errorName: error instanceof Error ? error.name : undefined,
+        errorType: typeof error,
+        timestamp: new Date().toISOString(),
+        environment: process.env.ENVIRONMENT
+      });
+    } else {
+      console.error('❌ Error in GET /api/chat:', error);
+    }
+
+    const response = {
+      error: isDevelopment
+        ? `Development Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
+        : 'Internal server error',
+      ...(isDevelopment && {
+        developerInfo: {
+          fullError: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            cause: error.cause
+          } : error,
+          errorType: typeof error,
+          errorConstructor: error instanceof Error ? error.constructor.name : undefined,
+          timestamp: new Date().toISOString(),
+          environment: process.env.ENVIRONMENT,
+          nodeVersion: process.version
+        }
+      })
+    };
+    return NextResponse.json(response, { status: 500 });
   }
 }
