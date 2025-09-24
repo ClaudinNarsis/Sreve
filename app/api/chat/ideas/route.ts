@@ -18,7 +18,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 // Helper function to save chat message
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, ideaData?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, ideaData?: unknown, isLoadingMessage = false) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -29,7 +29,9 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     messageType: messageType || 'default',
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    ...(ideaData && { ideaData })
+    ...(ideaData && { ideaData }),
+    // Add TTL for loading messages only (5 minutes expiration)
+    ...(isLoadingMessage && { ttl: Math.floor(Date.now() / 1000) + (5 * 60) })
   };
 
   try {
@@ -146,11 +148,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Show loading message
+    // Show loading message with TTL (will auto-expire in 5 minutes)
     console.log('💬 [IDEAS-API] Creating loading message for campaign:', campaignId);
     const loadingMessage = 'Generating creative content ideas based on the trends and competitor insights...';
-    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-final-idea');
-    console.log('✅ [IDEAS-API] Loading message created with ID:', loadingBotMessageId);
+    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-final-idea', undefined, true);
+    console.log('✅ [IDEAS-API] Loading message created with ID and TTL:', loadingBotMessageId);
 
     try {
       // Make generate_idea API call

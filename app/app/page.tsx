@@ -5,6 +5,7 @@ import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import ProjectExplorer from "../components/ProjectExplorer";
 import ProjectDetails from "../components/ProjectDetails";
+import SequentialFlowProgress from "../components/SequentialFlowProgress";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 
@@ -123,7 +124,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview';
+  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -133,6 +134,7 @@ interface ChatMessage {
   accountsData?: AccountsApiResponse;
   ideaData?: IdeaApiResponse;
   critiqueData?: CritiqueApiResponse;
+  questions?: string[];
 }
 
 interface Project {
@@ -255,6 +257,100 @@ function AppContent() {
   const [inputMessage, setInputMessage] = useState('');
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
+  // Function to handle clicking on critique question chips
+  const handleQuestionChipClick = (question: string) => {
+    if (!selectedCampaignId || !selectedProject) {
+      toast.error('Please select a project and campaign first');
+      return;
+    }
+
+    // Auto-send the question as a message
+    setInputMessage(question);
+
+    // Simulate clicking the send button
+    setTimeout(() => {
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        text: question,
+        sender: 'user',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, userMessage]);
+
+      // Clear input (chips remain available until user navigates away)
+      setInputMessage('');
+
+      // Send to backend - the API will handle saving the user message and bot response
+      handleSendFollowupMessage(question, selectedCampaignId);
+    }, 100);
+  };
+
+  // Function to send followup messages (using the follow-up API endpoint)
+  const handleSendFollowupMessage = async (message: string, campaignId: string) => {
+    try {
+      // Prepare context payload for the follow-up API
+      const contextPayload = {
+        projectDetails: selectedProject ? {
+          brand_name: selectedProject.brand_name,
+          offering: selectedProject.offering,
+          usp: selectedProject.usp,
+          icp: selectedProject.icp,
+          brand_voice: selectedProject.brand_voice,
+          competitors: selectedProject.competitors,
+          additional_information: selectedProject.additional_information
+        } : undefined,
+        campaignDetails: {
+          campaignId: campaignId,
+          name: 'Current Campaign', // Default name as we don't have full campaign details
+          description: 'Critique follow-up conversation',
+          goal: 'Content optimization',
+          platform: 'social_media'
+        },
+        lastMessages: messages.slice(-5).map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.text
+        }))
+      };
+
+      console.log('🔗 [FOLLOW-UP] Sending follow-up request to API');
+      const response = await fetch('/api/follow-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: contextPayload,
+          query: message
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // The API handles saving both user and bot messages to database
+        // Just update the UI with the bot response
+        if (data.responseMessage) {
+          const botMessage: ChatMessage = {
+            id: data.responseBotMessageId || `bot-${Date.now()}`,
+            text: data.responseMessage,
+            sender: 'bot',
+            messageType: 'default',
+            timestamp: new Date()
+          };
+
+          setMessages(prev => [...prev, botMessage]);
+        }
+      } else {
+        console.error('Follow-up API error:', data.error || 'Unknown error');
+        toast.error('Failed to process your question. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Error sending followup message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
+  };
+
   // Sequential flow error handling state
   const [sequenceError, setSequenceError] = useState<{
     hasError: boolean;
@@ -274,8 +370,47 @@ function AppContent() {
   // Follow-up flow state
   const [isSequenceComplete, setIsSequenceComplete] = useState(false);
 
+  // Sequential flow state for UX improvements
+  const [isSequentialFlowActive, setIsSequentialFlowActive] = useState(false);
+  const [currentFlowStep, setCurrentFlowStep] = useState<'trends' | 'accounts' | 'ideas' | 'critique' | null>(null);
+  const [flowProgress, setFlowProgress] = useState<{ current: number; total: number; stepName: string }>({
+    current: 0,
+    total: 4,
+    stepName: ''
+  });
+  const [flowStartTime, setFlowStartTime] = useState<number>(0);
+
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+
+  // Refresh warning effect for sequential flow
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSequentialFlowActive) {
+        e.preventDefault();
+        e.returnValue = 'Content analysis in progress. Leaving will cancel the process. Are you sure?';
+        return 'Content analysis in progress. Leaving will cancel the process. Are you sure?';
+      }
+    };
+
+    if (isSequentialFlowActive) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      // Store flow state in sessionStorage for recovery
+      sessionStorage.setItem('sequentialFlowActive', 'true');
+      sessionStorage.setItem('sequentialFlowStep', currentFlowStep || '');
+      sessionStorage.setItem('sequentialFlowStartTime', flowStartTime.toString());
+    } else {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Clear flow state from sessionStorage
+      sessionStorage.removeItem('sequentialFlowActive');
+      sessionStorage.removeItem('sequentialFlowStep');
+      sessionStorage.removeItem('sequentialFlowStartTime');
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isSequentialFlowActive, currentFlowStep, flowStartTime]);
 
   // Function to fetch URL metadata
   const fetchUrlMetadata = async (url: string): Promise<UrlMetadata | null> => {
@@ -326,6 +461,9 @@ function AppContent() {
       campaignId: undefined
     });
 
+    // Reset flow state for retry
+    setIsSequenceComplete(false);
+
     // Clear any loading messages from previous failed attempt
     setMessages(prev => prev.filter(msg => !msg.messageType?.startsWith('loading-')));
 
@@ -341,8 +479,18 @@ function AppContent() {
 
   // Sequential flow handler for trends -> accounts -> ideas -> critique
   const handleSequentialFlow = useCallback(async (step: string, brandDetails: Record<string, unknown>, campaignId: string) => {
-    const flowStartTime = Date.now();
+    const startTime = Date.now();
     console.log('🚀 [SEQUENTIAL-FLOW] Starting sequential flow:', { step, campaignId, brandName: brandDetails.brand_name });
+
+    // Activate sequential flow state
+    setIsSequentialFlowActive(true);
+    setFlowStartTime(startTime);
+    setCurrentFlowStep('trends');
+    setFlowProgress({
+      current: 1,
+      total: 4,
+      stepName: 'Analyzing Market Trends'
+    });
 
     let trendData = null;
     let accountsData = null;
@@ -445,7 +593,15 @@ function AppContent() {
           }
 
           // Step 2: Accounts Analysis
-          console.log('🔍 [SEQUENTIAL-FLOW] Step 2/3: Starting accounts analysis');
+          console.log('🔍 [SEQUENTIAL-FLOW] Step 2/4: Starting accounts analysis');
+
+          // Update flow progress
+          setCurrentFlowStep('accounts');
+          setFlowProgress({
+            current: 2,
+            total: 4,
+            stepName: 'Researching Competitor Accounts'
+          });
 
           // Show loading message immediately in frontend
           const accountsLoadingMessage: ChatMessage = {
@@ -538,7 +694,15 @@ function AppContent() {
             }
 
             // Step 3: Ideas Generation
-            console.log('💡 [SEQUENTIAL-FLOW] Step 3/3: Starting ideas generation');
+            console.log('💡 [SEQUENTIAL-FLOW] Step 3/4: Starting ideas generation');
+
+            // Update flow progress
+            setCurrentFlowStep('ideas');
+            setFlowProgress({
+              current: 3,
+              total: 4,
+              stepName: 'Generating Creative Ideas'
+            });
 
             // Show loading message immediately in frontend
             const ideasLoadingMessage: ChatMessage = {
@@ -637,6 +801,14 @@ function AppContent() {
                 // Step 4: Critique Analysis
                 console.log('🎯 [SEQUENTIAL-FLOW] Step 4/4: Starting critique analysis');
 
+                // Update flow progress
+                setCurrentFlowStep('critique');
+                setFlowProgress({
+                  current: 4,
+                  total: 4,
+                  stepName: 'Analyzing Performance'
+                });
+
                 // Show loading message immediately in frontend
                 const critiqueLoadingMessage: ChatMessage = {
                   id: `critique-loading-${Date.now()}`,
@@ -703,6 +875,19 @@ function AppContent() {
                         critiqueData: critiqueResult.critiqueData
                       };
 
+                      // Create separate questions message if follow-up questions exist
+                      let questionsMessage: ChatMessage | null = null;
+                      if (critiqueResult.critiqueData?.follow_up_questions && Array.isArray(critiqueResult.critiqueData.follow_up_questions) && critiqueResult.critiqueData.follow_up_questions.length > 0) {
+                        questionsMessage = {
+                          id: `questions-${Date.now()}`,
+                          text: 'Consider these follow-up questions to improve your content:',
+                          sender: 'bot',
+                          messageType: 'critique-questions',
+                          timestamp: new Date(),
+                          questions: critiqueResult.critiqueData.follow_up_questions
+                        };
+                      }
+
                       setMessages(prev => {
                         const loadingIndex = prev.findIndex(msg =>
                           msg.messageType === 'loading-critique' && msg.sender === 'bot'
@@ -712,10 +897,43 @@ function AppContent() {
                           console.log('🔄 [SEQUENTIAL-FLOW] Replacing critique loading message with results');
                           const updated = [...prev];
                           updated[loadingIndex] = critiqueMessage;
+
+                          // Add questions message if it exists
+                          if (questionsMessage) {
+                            updated.push(questionsMessage);
+
+                            // Save questions message to database
+                            fetch('/api/chat/save-message', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                campaignId: selectedCampaignId,
+                                message: questionsMessage
+                              }),
+                            }).catch(error => console.error('Error saving questions message:', error));
+                          }
+
                           return updated;
                         } else {
                           console.log('➕ [SEQUENTIAL-FLOW] Adding new critique message');
-                          return [...prev, critiqueMessage];
+                          const newMessages = [...prev, critiqueMessage];
+
+                          // Add questions message if it exists
+                          if (questionsMessage) {
+                            newMessages.push(questionsMessage);
+
+                            // Save questions message to database
+                            fetch('/api/chat/save-message', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                campaignId: selectedCampaignId,
+                                message: questionsMessage
+                              }),
+                            }).catch(error => console.error('Error saving questions message:', error));
+                          }
+
+                          return newMessages;
                         }
                       });
                     } else if (critiqueResult.noCritiqueBotMessageId) {
@@ -744,8 +962,17 @@ function AppContent() {
                       });
                     }
 
-                    const totalFlowDuration = Date.now() - flowStartTime;
+                    const totalFlowDuration = Date.now() - startTime;
                     console.log(`✅ [SEQUENTIAL-FLOW] All 4 steps completed successfully in ${totalFlowDuration}ms!`);
+
+                    // Complete sequential flow
+                    setIsSequentialFlowActive(false);
+                    setCurrentFlowStep(null);
+                    setFlowProgress({
+                      current: 4,
+                      total: 4,
+                      stepName: 'Analysis Complete'
+                    });
 
                     // Mark sequence as complete for follow-up functionality
                     setIsSequenceComplete(true);
@@ -779,16 +1006,34 @@ function AppContent() {
                     }
                   });
 
-                  const totalFlowDuration = Date.now() - flowStartTime;
+                  const totalFlowDuration = Date.now() - startTime;
                   console.log(`✅ [SEQUENTIAL-FLOW] Flow completed with critique error in ${totalFlowDuration}ms`);
+
+                  // Complete sequential flow even with critique error
+                  setIsSequentialFlowActive(false);
+                  setCurrentFlowStep(null);
+                  setFlowProgress({
+                    current: 4,
+                    total: 4,
+                    stepName: 'Analysis Complete'
+                  });
 
                   // Mark sequence as complete even with critique error
                   setIsSequenceComplete(true);
                   console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete despite critique error - follow-up mode enabled');
                 }
               } else {
-                const totalFlowDuration = Date.now() - flowStartTime;
+                const totalFlowDuration = Date.now() - startTime;
                 console.log(`✅ [SEQUENTIAL-FLOW] All steps completed successfully in ${totalFlowDuration}ms!`);
+
+                // Complete sequential flow when ideas step is final
+                setIsSequentialFlowActive(false);
+                setCurrentFlowStep(null);
+                setFlowProgress({
+                  current: 3,
+                  total: 3,
+                  stepName: 'Analysis Complete'
+                });
 
                 // Mark sequence as complete when ideas step is final
                 setIsSequenceComplete(true);
@@ -805,13 +1050,22 @@ function AppContent() {
         }
       }
     } catch (error) {
-      const totalFlowDuration = Date.now() - flowStartTime;
+      const totalFlowDuration = Date.now() - startTime;
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
 
       console.error(`❌ [SEQUENTIAL-FLOW] Error in sequential flow after ${totalFlowDuration}ms:`, {
         error: errorMsg,
         step,
         campaignId
+      });
+
+      // Complete/reset sequential flow state on error
+      setIsSequentialFlowActive(false);
+      setCurrentFlowStep(null);
+      setFlowProgress({
+        current: 0,
+        total: 4,
+        stepName: 'Error occurred'
       });
 
       // Clear any loading messages from the failed sequence
@@ -1444,6 +1698,7 @@ function AppContent() {
           accountsData?: AccountsApiResponse;
           ideaData?: IdeaApiResponse;
           critiqueData?: CritiqueApiResponse;
+          questions?: string[];
         }) => {
           // Extract question metadata from message text if it's a question session
           let questionMetadata: { currentQuestionIndex: number; totalQuestions: number; } | undefined;
@@ -1502,14 +1757,15 @@ function AppContent() {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
             questionMetadata,
             trendData,
             trendApiResponse,
             accountsData,
             ideaData,
-            critiqueData
+            critiqueData,
+            questions: dbMsg.questions
           };
         });
 
@@ -1526,6 +1782,8 @@ function AppContent() {
 
         setMessages(chatMessages);
         console.log('✅ Loaded', chatMessages.length, 'chat messages');
+
+        // Questions are now handled as separate 'critique-questions' messages
 
         // Check if sequence is already complete based on loaded messages
         const hasCritiqueMessage = chatMessages.some(msg =>
@@ -2177,17 +2435,64 @@ function AppContent() {
             </div>
           )}
 
-          {/* Follow-up Questions Section */}
-          {critiqueData.follow_up_questions && critiqueData.follow_up_questions.length > 0 && (
-            <div className="follow-up-questions">
-              <h4 className="questions-title">💭 Consider These Questions</h4>
-              <ul className="questions-list">
-                {critiqueData.follow_up_questions.map((question, index) => (
-                  <li key={index} className="question-item">{question}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Follow-up questions are now rendered as clickable chips outside the message */}
+        </div>
+      );
+    }
+
+    // Critique questions message type (clickable chips)
+    if (messageType === 'critique-questions' && message.sender === 'bot' && message.questions) {
+      return (
+        <div className="message-content critique-questions">
+          <div className="questions-intro">
+            {message.text}
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            marginTop: '12px'
+          }}>
+            {message.questions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handleQuestionChipClick(question)}
+                style={{
+                  background: 'linear-gradient(135deg, #0f0f0f, #1f1f1f)',
+                  border: '1px solid #333',
+                  borderRadius: '20px',
+                  padding: '10px 16px',
+                  color: '#cccccc',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left' as const,
+                  maxWidth: '100%',
+                  wordWrap: 'break-word' as const,
+                  whiteSpace: 'normal' as const
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.background = 'linear-gradient(135deg, #1f1f1f, #2f2f2f)';
+                  target.style.borderColor = '#ff6600';
+                  target.style.color = '#ffffff';
+                  target.style.transform = 'translateY(-2px)';
+                  target.style.boxShadow = '0 4px 12px rgba(255, 102, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.target as HTMLButtonElement;
+                  target.style.background = 'linear-gradient(135deg, #0f0f0f, #1f1f1f)';
+                  target.style.borderColor = '#333';
+                  target.style.color = '#cccccc';
+                  target.style.transform = 'translateY(0)';
+                  target.style.boxShadow = 'none';
+                }}
+                title="Click to ask this question"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
         </div>
       );
     }
@@ -2337,6 +2642,14 @@ function AppContent() {
                 )}
               </div>
 
+              {/* Sequential Flow Progress Indicator */}
+              <SequentialFlowProgress
+                isActive={isSequentialFlowActive}
+                currentStep={currentFlowStep}
+                progress={flowProgress}
+                startTime={flowStartTime}
+              />
+
               {/* Retry Button for Sequence Errors */}
               {sequenceError.hasError && (
                 <div className="retry-container" style={{
@@ -2373,21 +2686,30 @@ function AppContent() {
                 </div>
               )}
 
+
               <div className="chat-input-container">
-                <div className="chat-input-wrapper">
+                {/* Overlay for sequential flow blocking */}
+                {isSequentialFlowActive && (
+                  <div className="chat-input-overlay">
+                    
+                  </div>
+                )}
+
+                <div className={`chat-input-wrapper ${isSequentialFlowActive ? 'disabled' : ''}`}>
                   <textarea
                     className="chat-input"
-                    placeholder="Type your message here..."
+                    placeholder={isSequentialFlowActive ? "Analysis in progress..." : "Type your message here..."}
                     rows={1}
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={isCreatingProject}
+                    disabled={isCreatingProject || isSequentialFlowActive}
                   />
                   <button
                     className="send-button"
                     onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isCreatingProject}
+                    disabled={!inputMessage.trim() || isCreatingProject || isSequentialFlowActive}
+                    title={isSequentialFlowActive ? "Analysis in progress" : "Send message"}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="22" y1="2" x2="11" y2="13"></line>

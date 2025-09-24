@@ -18,7 +18,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 // Helper function to save chat message
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, critiqueData?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, critiqueData?: unknown, isLoadingMessage = false) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -29,7 +29,9 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     messageType: messageType || 'default',
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    ...(critiqueData && { critiqueData })
+    ...(critiqueData && { critiqueData }),
+    // Add TTL for loading messages only (5 minutes expiration)
+    ...(isLoadingMessage && { ttl: Math.floor(Date.now() / 1000) + (5 * 60) })
   };
 
   try {
@@ -147,11 +149,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Show loading message
+    // Show loading message with TTL (will auto-expire in 5 minutes)
     console.log('💬 [CRITIQUE-API] Creating loading message for campaign:', campaignId);
     const loadingMessage = 'Analyzing and critiquing the generated idea against your requirements...';
-    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-critique');
-    console.log('✅ [CRITIQUE-API] Loading message created with ID:', loadingBotMessageId);
+    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-critique', undefined, true);
+    console.log('✅ [CRITIQUE-API] Loading message created with ID and TTL:', loadingBotMessageId);
 
     try {
       // Make critique API call
