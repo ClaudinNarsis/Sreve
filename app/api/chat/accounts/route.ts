@@ -18,7 +18,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 // Helper function to save chat message
-async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, accountsData?: unknown) {
+async function saveChatMessage(campaignId: string, userId: string, message: string, sender: 'user' | 'bot', messageType?: string, accountsData?: unknown, isLoadingMessage = false) {
   const messageId = uuidv4();
   const messageData = {
     chatMessageId: messageId,
@@ -29,7 +29,9 @@ async function saveChatMessage(campaignId: string, userId: string, message: stri
     messageType: messageType || 'default',
     timestamp: new Date().toISOString(),
     createdAt: new Date().toISOString(),
-    ...(accountsData && { accountsData })
+    ...(accountsData && { accountsData }),
+    // Add TTL for loading messages only (5 minutes expiration)
+    ...(isLoadingMessage && { ttl: Math.floor(Date.now() / 1000) + (5 * 60) })
   };
 
   try {
@@ -144,11 +146,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Show loading message
+    // Show loading message with TTL (will auto-expire in 5 minutes)
     console.log('💬 [ACCOUNTS-API] Creating loading message for campaign:', campaignId);
     const loadingMessage = 'Finding successful competitor accounts that align with your brand strategy...';
-    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-accounts');
-    console.log('✅ [ACCOUNTS-API] Loading message created with ID:', loadingBotMessageId);
+    const loadingBotMessageId = await saveChatMessage(campaignId, userId, loadingMessage, 'bot', 'loading-accounts', undefined, true);
+    console.log('✅ [ACCOUNTS-API] Loading message created with ID and TTL:', loadingBotMessageId);
 
     try {
       // Make find-accounts API call

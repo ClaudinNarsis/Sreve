@@ -578,6 +578,56 @@
   margin-bottom: 1rem;
   background-color: #232323;
   border-radius: 1rem;
+  position: relative;
+}
+
+/* Sequential flow input blocking */
+.chat-input-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 1rem;
+}
+
+.overlay-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--darkness-level-2);
+  border: 1px solid var(--orange-primary);
+  border-radius: 12px;
+  color: var(--text-primary);
+  box-shadow: 0 0 20px var(--orange-glow);
+}
+
+.overlay-icon {
+  font-size: 2rem;
+  animation: pulse 2s infinite;
+}
+
+.overlay-text {
+  text-align: center;
+}
+
+.overlay-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--orange-primary);
+  margin-bottom: 0.25rem;
+}
+
+.overlay-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .chat-input-wrapper {
@@ -588,6 +638,12 @@
   border-radius: 1rem;
   padding: 0.25rem 0.75rem;
 
+}
+
+.chat-input-wrapper.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(50%);
 }
 
 .chat-input {
