@@ -480,7 +480,7 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     console.log('📋 Request data:', requestData);
 
-    const { campaignId, userMessage } = requestData;
+    const { campaignId, userMessage, skipUserMessageSave } = requestData;
 
     if (!campaignId || !userMessage) {
       console.log('❌ Missing required data:', { campaignId: !!campaignId, userMessage: !!userMessage });
@@ -490,8 +490,14 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Save user message first
-    const userMessageId = await saveChatMessage(campaignId, userId, userMessage, 'user');
+    // Save user message first (unless already saved)
+    let userMessageId = null;
+    if (!skipUserMessageSave) {
+      userMessageId = await saveChatMessage(campaignId, userId, userMessage, 'user');
+      console.log('💾 User message saved to database with ID:', userMessageId);
+    } else {
+      console.log('⏭️ Skipping user message save (already saved by caller)');
+    }
 
     // Check for active questioning session
     const activeSession = await getActiveQuestioningSession(campaignId, userId);
