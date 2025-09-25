@@ -3,14 +3,14 @@
 import Link from "next/link";
 import NextImage from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import ProjectExplorer from "../components/ProjectExplorer";
+import ProjectExplorer, { ProjectExplorerRef } from "../components/ProjectExplorer";
 import ProjectDetails from "../components/ProjectDetails";
 import SequentialFlowProgress from "../components/SequentialFlowProgress";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 
 import "./app.css";
-import React, { Suspense, useState, useEffect, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import toast from "react-hot-toast";
 
 interface UrlMetadata {
@@ -124,7 +124,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'welcome-no-selection' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
+  messageType?: 'default' | 'welcome-no-selection' | 'question-session' | 'loading-initial' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -245,6 +245,9 @@ function AppContent() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectDetails, setShowProjectDetails] = useState(false);
+
+  // Refs
+  const projectExplorerRef = useRef<ProjectExplorerRef>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -1426,14 +1429,18 @@ function AppContent() {
 
         // Create campaign
         const campaign = await createCampaign(project.projectId, messageText);
-        setSelectedCampaignId(campaign.campaignId);
-        setIsSequenceComplete(false); // Reset sequence state for new campaign
 
         // Store initial prompt for the campaign
         sessionStorage.setItem(`initialPrompt_${campaign.campaignId}`, messageText);
         sessionStorage.setItem(`initialPrompt_${campaign.campaignId}_timestamp`, Date.now().toString());
 
         toast.success('Project and campaign created!', { id: 'creating' });
+
+        // Refresh the project explorer to show the new project
+        if (projectExplorerRef.current) {
+          console.log('🔄 Refreshing project explorer after project creation');
+          projectExplorerRef.current.refreshData();
+        }
 
         // Add user message to chat
         const userMessage: ChatMessage = {
@@ -1447,23 +1454,119 @@ function AppContent() {
         setMessages(prev => [...prev, userMessage]);
         setInputMessage('');
 
-        // Save user message to database
+        // Save user message to database BEFORE setting the campaign ID
+        // This ensures the message is saved when loadChatMessages is triggered
         await saveMessageToDatabase(campaign.campaignId, userMessage);
+        console.log('✅ User message saved to database before setting campaign ID');
 
-        // Add bot response
-        setTimeout(async () => {
-          const botMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
-            sender: 'bot',
-            messageType: 'default',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, botMessage]);
+        // Now set the campaign ID - this will trigger loadChatMessages via useEffect
+        setSelectedCampaignId(campaign.campaignId);
+        setIsSequenceComplete(false); // Reset sequence state for new campaign
 
-          // Save bot message to database
-          await saveMessageToDatabase(campaign.campaignId, botMessage);
-        }, 1000);
+        // Process the initial prompt through the extract-prompt API
+        console.log('🚀 Processing initial prompt through chat API for new campaign:', campaign.campaignId);
+
+        // Add temporary loading message
+        const tempLoadingMessage: ChatMessage = {
+          id: `temp-loading-${Date.now()}`,
+          text: 'Processing your request...',
+          sender: 'bot',
+          messageType: 'loading-initial',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, tempLoadingMessage]);
+
+        try {
+          // Call the chat API to process the initial prompt
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              campaignId: campaign.campaignId,
+              userMessage: messageText,
+              skipUserMessageSave: true // User message already saved above
+            })
+          });
+
+          const data = await response.json();
+          console.log('🔄 Initial prompt chat API response:', data);
+
+          if (response.ok && data.success) {
+            // Remove the loading message and replace with the actual response
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
+              const updated = [...prev];
+
+              if (loadingIndex !== -1) {
+                updated.splice(loadingIndex, 1); // Remove loading message
+              }
+
+              // Add the bot response from the API
+              if (data.botMessage) {
+                const botMessage: ChatMessage = {
+                  id: data.botMessageId || (Date.now() + 1).toString(),
+                  text: data.botMessage,
+                  sender: 'bot',
+                  messageType: data.nextQuestion ? 'question-session' : 'default',
+                  timestamp: new Date(),
+                  questionMetadata: data.nextQuestion ? {
+                    currentQuestionIndex: data.currentQuestionIndex || 1,
+                    totalQuestions: data.totalQuestions || 1
+                  } : undefined
+                };
+                updated.push(botMessage);
+              }
+
+              return updated;
+            });
+
+            // If we have brandDetails and nextStep, start the sequential flow
+            if (data.nextStep && data.brandDetails) {
+              console.log('🚀 Starting sequential flow with step:', data.nextStep);
+              await handleSequentialFlow(data.nextStep, data.brandDetails, campaign.campaignId);
+            }
+          } else {
+            // Handle API error - show fallback message
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
+              const updated = [...prev];
+
+              if (loadingIndex !== -1) {
+                const fallbackMessage: ChatMessage = {
+                  id: (Date.now() + 1).toString(),
+                  text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
+                  sender: 'bot',
+                  messageType: 'default',
+                  timestamp: new Date()
+                };
+                updated[loadingIndex] = fallbackMessage;
+              }
+
+              return updated;
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error processing initial prompt:', error);
+
+          // Handle network/other errors - show fallback message
+          setMessages(prev => {
+            const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
+            const updated = [...prev];
+
+            if (loadingIndex !== -1) {
+              const fallbackMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
+                sender: 'bot',
+                messageType: 'default',
+                timestamp: new Date()
+              };
+              updated[loadingIndex] = fallbackMessage;
+            }
+
+            return updated;
+          });
+        }
 
       } catch (error) {
         console.error('❌ Error in project/campaign creation:', error);
@@ -1572,6 +1675,11 @@ function AppContent() {
           }
           if (data.questionsCompleted) {
             console.log('✅ All questions completed!');
+            // Refresh the project explorer since campaign/project data was updated with brand details
+            if (projectExplorerRef.current) {
+              console.log('🔄 Refreshing project explorer after extract-prompt completion');
+              projectExplorerRef.current.refreshData();
+            }
           }
           if (data.nextQuestion) {
             console.log('❓ Next question available:', data.nextQuestion);
@@ -1920,8 +2028,12 @@ function AppContent() {
     }
 
     // Loading message types
-    if (messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts' || messageType === 'loading-followup') {
+    if (messageType === 'loading-initial' || messageType === 'loading-trends' || messageType === 'loading-competitors' || messageType === 'loading-final-idea' || messageType === 'loading-accounts' || messageType === 'loading-followup') {
       const loadingConfig = {
+        'loading-initial': {
+          gif: '/assets/loading/trends-loading.gif', // Reuse existing gif
+          text: 'Processing your request...'
+        },
         'loading-trends': {
           gif: '/assets/loading/trends-loading.gif',
           text: 'Analyzing market trends...'
@@ -2587,6 +2699,7 @@ function AppContent() {
                 + New Project
               </button>
               <ProjectExplorer
+                ref={projectExplorerRef}
                 onCampaignSelect={(campaignId, projectId) => {
                   console.log('🎯 [APP] Campaign selected callback triggered:', { campaignId, projectId });
                   console.log('🎯 [APP] Setting selectedCampaignId to:', campaignId);
@@ -2769,14 +2882,20 @@ function AppContent() {
           projectId={selectedProjectId}
           onClose={() => {
             setShowProjectDetails(false);
-            // Refresh the app page to show changes
-            window.location.reload();
+            // Refresh the project explorer to show changes
+            if (projectExplorerRef.current) {
+              console.log('🔄 Refreshing project explorer after closing project details');
+              projectExplorerRef.current.refreshData();
+            }
           }}
           onProjectUpdate={(updatedProject) => {
             setSelectedProject(updatedProject);
             setShowProjectDetails(false);
-            // Refresh the app page to show changes
-            window.location.reload();
+            // Refresh the project explorer to show changes
+            if (projectExplorerRef.current) {
+              console.log('🔄 Refreshing project explorer after project update');
+              projectExplorerRef.current.refreshData();
+            }
           }}
         />
       )}
