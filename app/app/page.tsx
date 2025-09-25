@@ -124,7 +124,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
+  messageType?: 'default' | 'welcome-no-selection' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -1821,12 +1821,12 @@ function AppContent() {
       loadChatMessages(selectedCampaignId);
     } else {
       console.log('📝 No campaign selected, showing default message');
-      // Reset to default welcome message when no campaign selected
+      // Reset to welcome message when no campaign selected
       setMessages([{
         id: '1',
         text: 'Hello! I\'m your AI assistant. How can I help you create amazing marketing content today?',
         sender: 'bot',
-        messageType: 'default',
+        messageType: 'welcome-no-selection',
         timestamp: new Date()
       }]);
     }
@@ -2492,6 +2492,46 @@ function AppContent() {
                 {question}
               </button>
             ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Welcome message when no project/campaign selected - special styling
+    if (messageType === 'welcome-no-selection' && message.sender === 'bot') {
+      return (
+        <div className="welcome-message-container">
+          <div className="welcome-content">
+            <div className="welcome-icon">
+              <div className="ai-avatar">
+                🤖
+              </div>
+            </div>
+            <div className="welcome-text-section">
+              <h2 className="welcome-title">
+                Welcome to Sreve AI
+              </h2>
+              <p className="welcome-subtitle">
+                Your AI-powered marketing content creation assistant
+              </p>
+              <div className="welcome-features">
+                <div className="feature-item">
+                  <span className="feature-icon">✨</span>
+                  <span>Create scroll-stopping ads</span>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">📝</span>
+                  <span>Generate UGC scripts</span>
+                </div>
+                <div className="feature-item">
+                  <span className="feature-icon">🚀</span>
+                  <span>Build viral content that converts</span>
+                </div>
+              </div>
+              <div className="welcome-cta">
+                <p className="cta-text">Select a project to get started with AI-powered content creation</p>
+              </div>
+            </div>
           </div>
         </div>
       );
