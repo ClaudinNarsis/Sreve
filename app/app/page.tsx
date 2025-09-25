@@ -248,6 +248,13 @@ function AppContent() {
 
   // Refs
   const projectExplorerRef = useRef<ProjectExplorerRef>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const wasAtBottomRef = useRef<boolean>(true); // Track if user was at bottom before message update
+
+  // Debug ref attachment
+  useEffect(() => {
+    console.log('🔗 [REF-DEBUG] chatMessagesRef.current:', chatMessagesRef.current);
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -1940,6 +1947,71 @@ function AppContent() {
     }
   }, [selectedCampaignId, loadChatMessages]);
 
+  // Track user scroll position continuously
+  useEffect(() => {
+    if (!chatMessagesRef.current) return;
+
+    const chatContainer = chatMessagesRef.current;
+
+    const handleScroll = () => {
+      const scrollHeight = chatContainer.scrollHeight;
+      const scrollTop = chatContainer.scrollTop;
+      const clientHeight = chatContainer.clientHeight;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+      const isAtBottom = distanceFromBottom <= 100; // 100px threshold
+      wasAtBottomRef.current = isAtBottom;
+
+      console.log('📍 [SCROLL-TRACKER] User scroll position updated:', {
+        scrollHeight,
+        scrollTop,
+        clientHeight,
+        distanceFromBottom,
+        isAtBottom,
+        threshold: 100
+      });
+    };
+
+    // Initial check
+    handleScroll();
+
+    // Listen to scroll events
+    chatContainer.addEventListener('scroll', handleScroll);
+
+    return () => {
+      chatContainer.removeEventListener('scroll', handleScroll);
+    };
+  }, []); // Only run once to set up listener
+
+  // Auto-scroll to bottom when messages update and user was at bottom
+  useEffect(() => {
+    console.log('🔄 [AUTO-SCROLL] useEffect triggered, messages length:', messages.length);
+
+    if (!chatMessagesRef.current) {
+      console.log('❌ [AUTO-SCROLL] chatMessagesRef.current is null');
+      return;
+    }
+
+    const chatContainer = chatMessagesRef.current;
+    const wasAtBottom = wasAtBottomRef.current;
+
+    console.log('🎯 [AUTO-SCROLL] Should auto-scroll (was at bottom before):', wasAtBottom);
+
+    if (wasAtBottom) {
+      const scrollToBottom = () => {
+        console.log('⬇️ [AUTO-SCROLL] Scrolling to bottom...');
+        chatContainer.scrollTo({
+          top: chatContainer.scrollHeight,
+          behavior: 'smooth'
+        });
+      };
+
+      // Small delay to ensure DOM is updated with new message
+      requestAnimationFrame(scrollToBottom);
+    } else {
+      console.log('⏸️ [AUTO-SCROLL] User was not at bottom, skipping auto-scroll');
+    }
+  }, [messages]);
 
   // Fetch project data when project is selected
   useEffect(() => {
@@ -2774,7 +2846,7 @@ function AppContent() {
               </button>
             </div>
             <div className="chat-interface">
-              <div className="chat-messages">
+              <div className="chat-messages" ref={chatMessagesRef}>
                 {messages.map((message) => {
                   const messageType = message.messageType || 'default';
                   return (
