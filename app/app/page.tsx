@@ -265,7 +265,6 @@ function AppContent() {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   // Function to handle clicking on critique question chips
   const handleQuestionChipClick = (question: string) => {
@@ -1147,87 +1146,7 @@ function AppContent() {
 
 
 
-  // Message saving utility
-  const saveMessageToDatabase = async (campaignId: string, message: ChatMessage) => {
-    console.log('💾 Saving message to database:', { campaignId, message });
 
-    try {
-      const response = await fetch('/api/chat/save-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaignId,
-          message: {
-            id: message.id,
-            text: message.text,
-            sender: message.sender,
-            timestamp: message.timestamp.toISOString()
-          }
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.success) {
-        console.log('✅ Message saved to database successfully');
-        return true;
-      } else {
-        console.error('❌ Failed to save message:', data.error);
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ Error saving message to database:', error);
-      return false;
-    }
-  };
-
-  // Project and campaign creation utilities
-  const createProject = async (initialPrompt: string) => {
-    console.log('🔄 Creating project for prompt:', initialPrompt);
-
-    const response = await fetch('/api/projects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        brand_name: 'New Project',
-        offering: '',
-        usp: '',
-        icp: '',
-        brand_voice: '',
-        competitors: '',
-        additional_information: `Created from prompt: ${initialPrompt.substring(0, 200)}...`
-      })
-    });
-
-    const data = await response.json();
-    if (response.ok && data.success) {
-      console.log('✅ Project created:', data.project);
-      return data.project;
-    } else {
-      throw new Error(data.error || 'Failed to create project');
-    }
-  };
-
-  const createCampaign = async (projectId: string, initialPrompt: string) => {
-    console.log('🔄 Creating campaign for project:', projectId);
-
-    const response = await fetch('/api/campaigns', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        projectId,
-        name: 'New Campaign',
-        description: `Auto-created campaign from: ${initialPrompt.substring(0, 100)}...`
-      })
-    });
-
-    const data = await response.json();
-    if (response.ok && data.success) {
-      console.log('✅ Campaign created:', data.campaign);
-      return data.campaign;
-    } else {
-      throw new Error(data.error || 'Failed to create campaign');
-    }
-  };
 
   // Fetch project data
   const fetchProjectData = async (projectId: string) => {
@@ -1422,320 +1341,122 @@ function AppContent() {
 
     const messageText = inputMessage.trim();
 
-    // Check if campaign is selected
-    if (!selectedCampaignId) {
-      console.log('📝 No campaign selected, starting project/campaign creation flow');
-      setIsCreatingProject(true);
+    // Clear input immediately for better UX
+    setInputMessage('');
 
-      try {
-        toast.loading('Creating your project and campaign...', { id: 'creating' });
+    // Add user message to chat immediately for better UX
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: messageText,
+      sender: 'user',
+      messageType: 'default',
+      timestamp: new Date()
+    };
 
-        // Create project
-        const project = await createProject(messageText);
-        setSelectedProjectId(project.projectId);
+    setMessages(prev => [...prev, userMessage]);
 
-        // Create campaign
-        const campaign = await createCampaign(project.projectId, messageText);
+    // Add temporary loading message that will be updated with the API response
+    const tempLoadingMessage: ChatMessage = {
+      id: 'temp-loading-' + Date.now().toString(),
+      text: 'Processing your request...',
+      sender: 'bot',
+      messageType: 'loading-trends',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, tempLoadingMessage]);
 
-        // Store initial prompt for the campaign
-        sessionStorage.setItem(`initialPrompt_${campaign.campaignId}`, messageText);
-        sessionStorage.setItem(`initialPrompt_${campaign.campaignId}_timestamp`, Date.now().toString());
+    // Route to follow-up if sequence is complete and campaign is selected
+    if (selectedCampaignId && isSequenceComplete) {
+      console.log('🎯 [ROUTING] Routing to follow-up handler');
+      await handleFollowUpMessage(messageText);
+      return;
+    }
 
-        toast.success('Project and campaign created!', { id: 'creating' });
-
-        // Refresh the project explorer to show the new project
-        if (projectExplorerRef.current) {
-          console.log('🔄 Refreshing project explorer after project creation');
-          projectExplorerRef.current.refreshData();
-        }
-
-        // Add user message to chat
-        const userMessage: ChatMessage = {
-          id: Date.now().toString(),
-          text: messageText,
-          sender: 'user',
-          messageType: 'default',
-          timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, userMessage]);
-        setInputMessage('');
-
-        // Save user message to database BEFORE setting the campaign ID
-        // This ensures the message is saved when loadChatMessages is triggered
-        await saveMessageToDatabase(campaign.campaignId, userMessage);
-        console.log('✅ User message saved to database before setting campaign ID');
-
-        // Now set the campaign ID - this will trigger loadChatMessages via useEffect
-        setSelectedCampaignId(campaign.campaignId);
-        setIsSequenceComplete(false); // Reset sequence state for new campaign
-
-        // Process the initial prompt through the extract-prompt API
-        console.log('🚀 Processing initial prompt through chat API for new campaign:', campaign.campaignId);
-
-        // Add temporary loading message
-        const tempLoadingMessage: ChatMessage = {
-          id: `temp-loading-${Date.now()}`,
-          text: 'Processing your request...',
-          sender: 'bot',
-          messageType: 'loading-initial',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, tempLoadingMessage]);
-
-        try {
-          // Call the chat API to process the initial prompt
-          const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              campaignId: campaign.campaignId,
-              userMessage: messageText,
-              skipUserMessageSave: true // User message already saved above
-            })
-          });
-
-          const data = await response.json();
-          console.log('🔄 Initial prompt chat API response:', data);
-
-          if (response.ok && data.success) {
-            // Remove the loading message and replace with the actual response
-            setMessages(prev => {
-              const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
-              const updated = [...prev];
-
-              if (loadingIndex !== -1) {
-                updated.splice(loadingIndex, 1); // Remove loading message
-              }
-
-              // Add the bot response from the API
-              if (data.botMessage) {
-                const botMessage: ChatMessage = {
-                  id: data.botMessageId || (Date.now() + 1).toString(),
-                  text: data.botMessage,
-                  sender: 'bot',
-                  messageType: data.nextQuestion ? 'question-session' : 'default',
-                  timestamp: new Date(),
-                  questionMetadata: data.nextQuestion ? {
-                    currentQuestionIndex: data.currentQuestionIndex || 1,
-                    totalQuestions: data.totalQuestions || 1
-                  } : undefined
-                };
-                updated.push(botMessage);
-              }
-
-              return updated;
-            });
-
-            // If we have brandDetails and nextStep, start the sequential flow
-            if (data.nextStep && data.brandDetails) {
-              console.log('🚀 Starting sequential flow with step:', data.nextStep);
-              await handleSequentialFlow(data.nextStep, data.brandDetails, campaign.campaignId);
-            }
-          } else {
-            // Handle API error - show fallback message
-            setMessages(prev => {
-              const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
-              const updated = [...prev];
-
-              if (loadingIndex !== -1) {
-                const fallbackMessage: ChatMessage = {
-                  id: (Date.now() + 1).toString(),
-                  text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
-                  sender: 'bot',
-                  messageType: 'default',
-                  timestamp: new Date()
-                };
-                updated[loadingIndex] = fallbackMessage;
-              }
-
-              return updated;
-            });
-          }
-        } catch (error) {
-          console.error('❌ Error processing initial prompt:', error);
-
-          // Handle network/other errors - show fallback message
-          setMessages(prev => {
-            const loadingIndex = prev.findIndex(msg => msg.messageType === 'loading-initial' && msg.sender === 'bot');
-            const updated = [...prev];
-
-            if (loadingIndex !== -1) {
-              const fallbackMessage: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                text: `Great! I've created a new project and campaign for you. Let's start working on your content. What type of marketing content would you like me to help you create?`,
-                sender: 'bot',
-                messageType: 'default',
-                timestamp: new Date()
-              };
-              updated[loadingIndex] = fallbackMessage;
-            }
-
-            return updated;
-          });
-        }
-
-      } catch (error) {
-        console.error('❌ Error in project/campaign creation:', error);
-        toast.error('Failed to create project and campaign', { id: 'creating' });
-      } finally {
-        setIsCreatingProject(false);
-      }
+    // Proceed with main chat API (with or without campaign)
+    if (selectedCampaignId) {
+      console.log('🎯 [ROUTING] Routing to main chat API with campaign:', selectedCampaignId);
     } else {
-      // Campaign is selected, check if sequence is complete for follow-up routing
-      console.log('💬 Campaign selected, sending message:', selectedCampaignId);
-      console.log('🎯 [ROUTING] Sequence complete status:', isSequenceComplete);
+      console.log('🎯 [ROUTING] Routing to main chat API without campaign');
+    }
 
-      // Clear input immediately for better UX
-      setInputMessage('');
+    try {
+      // Call the robust chat API
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(selectedCampaignId && { campaignId: selectedCampaignId }),
+          userMessage: messageText
+        })
+      });
 
-      // Route to follow-up if sequence is complete
-      if (isSequenceComplete) {
-        console.log('🎯 [ROUTING] Routing to follow-up handler');
-        await handleFollowUpMessage(messageText);
-        return;
-      }
+      const data = await response.json();
+      console.log('🔄 Chat API response:', data);
 
-      // Otherwise proceed with main chat API
-      console.log('🎯 [ROUTING] Routing to main chat API');
+      if (response.ok && data.success) {
+        // Determine message type based on response data
+        const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
 
-      // Add user message to chat immediately for better UX
-      const userMessage: ChatMessage = {
-        id: Date.now().toString(),
-        text: messageText,
-        sender: 'user',
-        messageType: 'default',
-        timestamp: new Date()
-      };
+        // Create main bot message
+        const botMessage: ChatMessage = {
+          id: data.botMessageId || (Date.now() + 1).toString(),
+          text: data.botMessage || 'Message processed successfully.',
+          sender: 'bot',
+          messageType: isQuestionSession ? 'question-session' : 'default',
+          timestamp: new Date(),
+          questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
+            currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
+            totalQuestions: data.totalQuestions || 5
+          } : undefined
+        };
 
-      setMessages(prev => [...prev, userMessage]);
+        // Replace temporary loading message with the main response
+        setMessages(prev => {
+          const tempLoadingIndex = prev.findIndex(msg =>
+            msg.sender === 'bot' &&
+            msg.id.startsWith('temp-loading-')
+          );
 
-      // Add temporary loading message that will be updated with the API response
-      const tempLoadingMessage: ChatMessage = {
-        id: 'temp-loading-' + Date.now().toString(),
-        text: 'Processing your request...',
-        sender: 'bot',
-        messageType: 'loading-trends',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, tempLoadingMessage]);
-
-      try {
-        // Call the robust chat API
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            campaignId: selectedCampaignId,
-            userMessage: messageText
-          })
+          if (tempLoadingIndex !== -1) {
+            // Replace the temporary loading message with the real response
+            const updatedMessages = [...prev];
+            updatedMessages[tempLoadingIndex] = botMessage;
+            console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
+            return updatedMessages;
+          } else {
+            // Add new message if no temp message found
+            return [...prev, botMessage];
+          }
         });
 
-        const data = await response.json();
-        console.log('🔄 Chat API response:', data);
+        // Check if we need to start sequential flow
+        if (data.nextStep && data.brandDetails) {
+          console.log('🚀 Starting sequential flow with step:', data.nextStep);
+          await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
+        }
 
-        if (response.ok && data.success) {
-          // Determine message type based on response data
-          const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
-
-          // Create main bot message
-          const botMessage: ChatMessage = {
-            id: data.botMessageId || (Date.now() + 1).toString(),
-            text: data.botMessage || 'Message processed successfully.',
-            sender: 'bot',
-            messageType: isQuestionSession ? 'question-session' : 'default',
-            timestamp: new Date(),
-            questionMetadata: isQuestionSession && (data.currentQuestionIndex !== undefined || data.totalQuestions) ? {
-              currentQuestionIndex: data.currentQuestionIndex !== undefined ? data.currentQuestionIndex + 1 : 1,
-              totalQuestions: data.totalQuestions || 5
-            } : undefined
-          };
-
-          // Replace temporary loading message with the main response
-          setMessages(prev => {
-            const tempLoadingIndex = prev.findIndex(msg =>
-              msg.sender === 'bot' &&
-              msg.id.startsWith('temp-loading-')
-            );
-
-            if (tempLoadingIndex !== -1) {
-              // Replace the temporary loading message with the real response
-              const updatedMessages = [...prev];
-              updatedMessages[tempLoadingIndex] = botMessage;
-              console.log(`🔄 Replaced temporary loading message with main response: ${botMessage.id}`);
-              return updatedMessages;
-            } else {
-              // Add new message if no temp message found
-              return [...prev, botMessage];
-            }
-          });
-
-          // Check if we need to start sequential flow
-          if (data.nextStep && data.brandDetails) {
-            console.log('🚀 Starting sequential flow with step:', data.nextStep);
-            await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
-          }
-
-          // Handle special cases
-          if (data.recovery) {
-            console.log('🔄 Session recovery offered:', data.recovery);
-          }
-          if (data.questionsCompleted) {
-            console.log('✅ All questions completed!');
-            // Refresh the project explorer since campaign/project data was updated with brand details
-            if (projectExplorerRef.current) {
-              console.log('🔄 Refreshing project explorer after extract-prompt completion');
-              projectExplorerRef.current.refreshData();
-            }
-          }
-          if (data.nextQuestion) {
-            console.log('❓ Next question available:', data.nextQuestion);
-          }
-        } else {
-          console.error('❌ Chat API error:', data.error);
-
-          // Create error message
-          const errorMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
-            sender: 'bot',
-            messageType: 'default',
-            timestamp: new Date()
-          };
-
-          // Replace temporary loading message with error, or add new error message
-          setMessages(prev => {
-            const tempLoadingIndex = prev.findIndex(msg =>
-              msg.sender === 'bot' &&
-              msg.id.startsWith('temp-loading-') &&
-              (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
-            );
-
-            if (tempLoadingIndex !== -1) {
-              // Replace the temporary loading message with error
-              const updatedMessages = [...prev];
-              updatedMessages[tempLoadingIndex] = errorMessage;
-              console.log('🔄 Replaced temporary loading message with error message');
-              return updatedMessages;
-            }
-
-            // Add new error message if no temp message found
-            return [...prev, errorMessage];
-          });
-
-          // Show retry guidance if available
-          if (data.error?.retryable) {
-            const retryAfter = data.error.retryAfter || 30;
-            toast.error(`Service temporarily unavailable. Please try again in ${retryAfter} seconds.`);
+        // Handle special cases
+        if (data.recovery) {
+          console.log('🔄 Session recovery offered:', data.recovery);
+        }
+        if (data.questionsCompleted) {
+          console.log('✅ All questions completed!');
+          // Refresh the project explorer since campaign/project data was updated with brand details
+          if (projectExplorerRef.current) {
+            console.log('🔄 Refreshing project explorer after extract-prompt completion');
+            projectExplorerRef.current.refreshData();
           }
         }
-      } catch (error) {
-        console.error('❌ Network error calling chat API:', error);
+        if (data.nextQuestion) {
+          console.log('❓ Next question available:', data.nextQuestion);
+        }
+      } else {
+        console.error('❌ Chat API error:', data.error);
 
-        // Create network error message
+        // Create error message
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          text: 'Network error occurred. Please check your connection and try again.',
+          text: data.error?.message || 'Sorry, there was an error processing your message. Please try again.',
           sender: 'bot',
           messageType: 'default',
           timestamp: new Date()
@@ -1753,7 +1474,7 @@ function AppContent() {
             // Replace the temporary loading message with error
             const updatedMessages = [...prev];
             updatedMessages[tempLoadingIndex] = errorMessage;
-            console.log('🔄 Replaced temporary loading message with network error message');
+            console.log('🔄 Replaced temporary loading message with error message');
             return updatedMessages;
           }
 
@@ -1761,8 +1482,45 @@ function AppContent() {
           return [...prev, errorMessage];
         });
 
-        toast.error('Network error. Please try again.');
+        // Show retry guidance if available
+        if (data.error?.retryable) {
+          const retryAfter = data.error.retryAfter || 30;
+          toast.error(`Service temporarily unavailable. Please try again in ${retryAfter} seconds.`);
+        }
       }
+    } catch (error) {
+      console.error('❌ Network error calling chat API:', error);
+
+      // Create network error message
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        text: 'Network error occurred. Please check your connection and try again.',
+        sender: 'bot',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+
+      // Replace temporary loading message with error, or add new error message
+      setMessages(prev => {
+        const tempLoadingIndex = prev.findIndex(msg =>
+          msg.sender === 'bot' &&
+          msg.id.startsWith('temp-loading-') &&
+          (msg.messageType === 'loading-trends' || msg.messageType === 'loading-competitors' || msg.messageType === 'loading-final-idea' || msg.messageType === 'loading-accounts' || msg.messageType === 'loading-followup')
+        );
+
+        if (tempLoadingIndex !== -1) {
+          // Replace the temporary loading message with error
+          const updatedMessages = [...prev];
+          updatedMessages[tempLoadingIndex] = errorMessage;
+          console.log('🔄 Replaced temporary loading message with network error message');
+          return updatedMessages;
+        }
+
+        // Add new error message if no temp message found
+        return [...prev, errorMessage];
+      });
+
+      toast.error('Network error. Please try again.');
     }
   }, [inputMessage, selectedCampaignId, handleSequentialFlow]);
 
@@ -2858,13 +2616,6 @@ function AppContent() {
                     </div>
                   );
                 })}
-                {isCreatingProject && (
-                  <div className="message assistant-message">
-                    <div className="message-content">
-                      Creating your project and campaign...
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Sequential Flow Progress Indicator */}
@@ -2928,12 +2679,12 @@ function AppContent() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    disabled={isCreatingProject || isSequentialFlowActive}
+                    disabled={isSequentialFlowActive}
                   />
                   <button
                     className="send-button"
                     onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isCreatingProject || isSequentialFlowActive}
+                    disabled={!inputMessage.trim() || isSequentialFlowActive}
                     title={isSequentialFlowActive ? "Analysis in progress" : "Send message"}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
