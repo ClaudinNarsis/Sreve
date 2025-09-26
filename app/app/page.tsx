@@ -1394,6 +1394,24 @@ function AppContent() {
       console.log('🔄 Chat API response:', data);
 
       if (response.ok && data.success) {
+        // Handle newly created project and campaign IDs
+        if (data.createdProjectId && data.createdCampaignId) {
+          console.log('✅ New project and campaign created:', {
+            projectId: data.createdProjectId,
+            campaignId: data.createdCampaignId
+          });
+
+          // Update the selected project and campaign
+          setSelectedProjectId(data.createdProjectId);
+          setSelectedCampaignId(data.createdCampaignId);
+
+          // Refresh the project explorer to show the new project
+          if (projectExplorerRef.current) {
+            console.log('🔄 Refreshing project explorer after project/campaign creation');
+            projectExplorerRef.current.refreshData();
+          }
+        }
+
         // Determine message type based on response data
         const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
 
@@ -1432,7 +1450,9 @@ function AppContent() {
         // Check if we need to start sequential flow
         if (data.nextStep && data.brandDetails) {
           console.log('🚀 Starting sequential flow with step:', data.nextStep);
-          await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
+          // Use the campaign ID from the response if available, otherwise use selected campaign ID
+          const currentCampaignId = data.createdCampaignId || selectedCampaignId;
+          await handleSequentialFlow(data.nextStep, data.brandDetails, currentCampaignId);
         }
 
         // Handle special cases
@@ -2054,26 +2074,20 @@ function AppContent() {
                 {(Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0) ||
                  (Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0) ? (
                   <div className="account-summary">
-                    {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 && (
-                      <div className="summary-section">
-                        <h4 className="summary-title">Strengths</h4>
-                        <ul className="summary-list">
-                          {account.summary.strengths.map((strength, idx) => (
-                            <li key={idx}>{strength}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 && (
-                      <div className="summary-section">
-                        <h4 className="summary-title">Weaknesses</h4>
-                        <ul className="summary-list">
-                          {account.summary.weaknesses.map((weakness, idx) => (
-                            <li key={idx}>{weakness}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="summary-section">
+                      <ul className="summary-list">
+                        {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 &&
+                          account.summary.strengths.map((strength, idx) => (
+                            <li key={`strength-${idx}`} className="strength-chip">{strength}</li>
+                          ))
+                        }
+                        {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 &&
+                          account.summary.weaknesses.map((weakness, idx) => (
+                            <li key={`weakness-${idx}`} className="weakness-chip">{weakness}</li>
+                          ))
+                        }
+                      </ul>
+                    </div>
                   </div>
                 ) : null}
 

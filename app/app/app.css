@@ -1369,6 +1369,7 @@
 }
 
 .account-header {
+  display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
@@ -1501,6 +1502,27 @@
   background: var(--darkness-level-3, #1f1f1f);
   border-color: var(--orange-primary, #ff6600);
   color: var(--text-primary, #ffffff);
+}
+
+/* Strength and weakness chip color accents */
+.strength-chip {
+  border-color: #4ade80 !important; /* Green border for strengths */
+  color: #4ade80 !important; /* Green text for strengths */
+}
+
+.weakness-chip {
+  border-color: #f87171 !important; /* Red border for weaknesses */
+  color: #f87171 !important; /* Red text for weaknesses */
+}
+
+.strength-chip:hover {
+  background: rgba(74, 222, 128, 0.1) !important;
+  color: #4ade80 !important;
+}
+
+.weakness-chip:hover {
+  background: rgba(248, 113, 113, 0.1) !important;
+  color: #f87171 !important;
 }
 
 .recent-posts {
@@ -1763,11 +1785,11 @@
 
 /* Main idea preview container */
 .idea-preview {
-  background: var(--frost-background, rgba(15, 15, 15, 0.8));
-  border: 1px solid var(--frost-border, rgba(255, 255, 255, 0.08));
+  /* background: var(--frost-background, rgba(15, 15, 15, 0.8)); */
+  /* border: 1px solid var(--frost-border, rgba(255, 255, 255, 0.08)); */
   border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1rem 0;
+  /* padding: 1.5rem; */
+  /* margin: 1rem 0; */
   backdrop-filter: var(--glass-backdrop, blur(10px));
 }
 
