@@ -812,7 +812,7 @@
   flex-shrink: 0;
   width: 280px;
   height: 320px;
-  background: var(--darkness-level-3, #1f1f1f);
+  background: #3c3c3c30;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   cursor: pointer;
@@ -1386,6 +1386,17 @@
   margin-bottom: 2rem;
 }
 
+/* Single account card styling for individual messages */
+.single-account-card {
+  max-width: 100%;
+  margin: 0;
+}
+
+.accounts-overview:has(.single-account-card) {
+  display: block;
+  margin-bottom: 0;
+}
+
 .account-card {
   background: var(--darkness-level-3, #1f1f1f);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
@@ -1872,7 +1883,7 @@
 }
 
 .idea-card {
-  background: var(--darkness-level-3, #1f1f1f);
+  background: #3c3c3c30;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 1rem;
@@ -1982,9 +1993,8 @@
   margin-bottom: 1rem;
   font-style: italic;
   padding: 0.75rem;
-  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  background:#3c3c3c30;
   border-radius: 6px;
-  border-left: 4px solid var(--orange-primary, #ff6600);
 }
 
 .selected-idea-description {
@@ -1998,9 +2008,8 @@
 .selected-idea-execution-script {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: var(--glass-background, rgba(255, 255, 255, 0.05));
+  
   border-radius: 8px;
-  border-left: 4px solid var(--orange-primary, #ff6600);
 }
 
 .execution-script-title {

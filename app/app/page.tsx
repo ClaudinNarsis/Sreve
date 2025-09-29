@@ -630,6 +630,18 @@ function AppContent() {
               trendApiResponse: trendData.chosen_trend ? trendData : undefined
             };
 
+            // Create reasoning message if returned by API
+            let reasoningMessage = null;
+            if (trendsResult.reasoningBotMessageId && trendData.reason) {
+              reasoningMessage = {
+                id: trendsResult.reasoningBotMessageId,
+                text: trendData.reason,
+                sender: 'bot' as const,
+                messageType: 'default' as const,
+                timestamp: new Date()
+              };
+            }
+
             // Replace the frontend loading message with results
             setMessages(prev => {
               const loadingIndex = prev.findIndex(msg =>
@@ -640,10 +652,20 @@ function AppContent() {
                 console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading message with results');
                 const updated = [...prev];
                 updated[loadingIndex] = trendMessage;
+
+                // Add reasoning message if it exists
+                if (reasoningMessage) {
+                  updated.push(reasoningMessage);
+                }
+
                 return updated;
               } else {
                 console.log('➕ [SEQUENTIAL-FLOW] Adding new trends message');
-                return [...prev, trendMessage];
+                const newMessages = [trendMessage];
+                if (reasoningMessage) {
+                  newMessages.push(reasoningMessage);
+                }
+                return [...prev, ...newMessages];
               }
             });
           } else if (trendsResult.noTrendBotMessageId) {
@@ -732,6 +754,18 @@ function AppContent() {
                 accountsData: accountsData
               };
 
+              // Create reasoning message if returned by API
+              let reasoningMessage = null;
+              if (accountsResult.reasoningBotMessageId && accountsData.overall_reasoning) {
+                reasoningMessage = {
+                  id: accountsResult.reasoningBotMessageId,
+                  text: accountsData.overall_reasoning,
+                  sender: 'bot' as const,
+                  messageType: 'default' as const,
+                  timestamp: new Date()
+                };
+              }
+
               setMessages(prev => {
                 const loadingIndex = prev.findIndex(msg =>
                   msg.messageType === 'loading-accounts' && msg.sender === 'bot'
@@ -741,10 +775,20 @@ function AppContent() {
                   console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading message with results');
                   const updated = [...prev];
                   updated[loadingIndex] = accountsMessage;
+
+                  // Add reasoning message if it exists
+                  if (reasoningMessage) {
+                    updated.push(reasoningMessage);
+                  }
+
                   return updated;
                 } else {
                   console.log('➕ [SEQUENTIAL-FLOW] Adding new accounts message');
-                  return [...prev, accountsMessage];
+                  const newMessages = [accountsMessage];
+                  if (reasoningMessage) {
+                    newMessages.push(reasoningMessage);
+                  }
+                  return [...prev, ...newMessages];
                 }
               });
             } else if (accountsResult.noAccountsBotMessageId) {
@@ -835,6 +879,18 @@ function AppContent() {
                   ideaData: ideasResult.ideaData
                 };
 
+                // Create reasoning message if returned by API
+                let reasoningMessage = null;
+                if (ideasResult.reasoningBotMessageId && ideasResult.ideaData.reasoning) {
+                  reasoningMessage = {
+                    id: ideasResult.reasoningBotMessageId,
+                    text: ideasResult.ideaData.reasoning,
+                    sender: 'bot' as const,
+                    messageType: 'default' as const,
+                    timestamp: new Date()
+                  };
+                }
+
                 setMessages(prev => {
                   const loadingIndex = prev.findIndex(msg =>
                     msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
@@ -844,10 +900,20 @@ function AppContent() {
                     console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading message with results');
                     const updated = [...prev];
                     updated[loadingIndex] = ideasMessage;
+
+                    // Add reasoning message if it exists
+                    if (reasoningMessage) {
+                      updated.push(reasoningMessage);
+                    }
+
                     return updated;
                   } else {
                     console.log('➕ [SEQUENTIAL-FLOW] Adding new ideas message');
-                    return [...prev, ideasMessage];
+                    const newMessages = [ideasMessage];
+                    if (reasoningMessage) {
+                      newMessages.push(reasoningMessage);
+                    }
+                    return [...prev, ...newMessages];
                   }
                 });
               } else if (ideasResult.noIdeasBotMessageId) {
@@ -2110,18 +2176,6 @@ function AppContent() {
             />
           )}
 
-          {reason && (
-            <p className="trend-reason">
-              {(() => {
-                console.log('🔍 [DEBUG] Rendering reason paragraph with text:', reason);
-                return reason;
-              })()}
-            </p>
-          )}
-          {!reason && (() => {
-            console.log('🔍 [DEBUG] Reason is falsy, not rendering reason paragraph');
-            return null;
-          })()}
         </div>
       );
     }
@@ -2148,7 +2202,7 @@ function AppContent() {
 
           <div className="accounts-overview">
             {Array.isArray(accountsData.selected_accounts) ? accountsData.selected_accounts.map((account, index) => (
-              <div key={index} className="account-card">
+              <div key={index} className="account-card single-account-card">
                 <div className="account-header">
                   <div className="account-avatar">
                     <div className="account-placeholder-avatar">
@@ -2239,12 +2293,6 @@ function AppContent() {
             )}
           </div>
 
-          {accountsData.overall_reasoning && (
-            <div className="overall-reasoning">
-              <h4 className="reasoning-title">Overall Strategy:</h4>
-              <p className="reasoning-content">{accountsData.overall_reasoning}</p>
-            </div>
-          )}
         </div>
       );
     }
@@ -2365,13 +2413,6 @@ function AppContent() {
             </div>
           )}
 
-          {/* Overall Reasoning */}
-          {ideaData.reasoning && (
-            <div className="overall-reasoning">
-              <h4 className="reasoning-title">Analysis Summary</h4>
-              <p className="reasoning-content">{ideaData.reasoning}</p>
-            </div>
-          )}
         </div>
       );
     }

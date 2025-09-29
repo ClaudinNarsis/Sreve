@@ -290,10 +290,14 @@ const CampaignExplorer: React.FC<CampaignExplorerProps> = ({ campaignId, onDataC
     setInputMessage('');
 
     // Save user message to database
-    console.log('💾 [API] About to save user message:', userMessage);
-    saveChatMessageToDatabase(campaignId, userMessage).catch(error => {
-      console.error('❌ [API] Failed to save user message:', error);
-    });
+    if (campaignId) {
+      console.log('💾 [API] About to save user message:', userMessage);
+      saveChatMessageToDatabase(campaignId, userMessage).catch(error => {
+        console.error('❌ [API] Failed to save user message:', error);
+      });
+    } else {
+      console.log('⚠️ [API] No campaignId available, skipping user message save');
+    }
 
     // For now, just add a placeholder bot response
     // This will be replaced with actual API integration in the new version

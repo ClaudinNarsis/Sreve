@@ -198,6 +198,14 @@ export async function POST(request: NextRequest) {
           const trendBotMessageId = await saveChatMessage(campaignId, userId, trendMessage, 'bot', 'trend-preview', trendData);
           console.log('✅ [TRENDS-API] Trend results message saved with ID:', trendBotMessageId);
 
+          // Save reasoning message if reason exists
+          let reasoningBotMessageId = null;
+          if (trendData.reason) {
+            console.log('💾 [TRENDS-API] Saving trend reasoning message');
+            reasoningBotMessageId = await saveChatMessage(campaignId, userId, trendData.reason, 'bot', 'default');
+            console.log('✅ [TRENDS-API] Trend reasoning message saved with ID:', reasoningBotMessageId);
+          }
+
           // Delete the loading message from DynamoDB
           console.log('🗑️ [TRENDS-API] Deleting loading message from DynamoDB');
           await deleteChatMessage(loadingBotMessageId);
@@ -212,6 +220,7 @@ export async function POST(request: NextRequest) {
             trendBotMessageId,
             trendMessage,
             trendData,
+            reasoningBotMessageId,
             nextStep: 'accounts',
             success: true
           }, { status: 200 });
