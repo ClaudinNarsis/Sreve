@@ -878,6 +878,57 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Error and retry states for trend examples */
+.trend-example-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  color: var(--text-tertiary, #888888);
+}
+
+.trend-example-error span {
+  font-size: 0.8rem;
+  color: var(--text-tertiary, #888888);
+}
+
+.retry-metadata-button {
+  background: var(--orange-primary, #ff6600);
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+.retry-metadata-button:hover {
+  background: var(--orange-secondary, #ff8533);
+  transform: scale(1.05);
+}
+
+.retry-metadata-button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.trend-example-no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-tertiary, #888888);
+}
+
 /* Content section */
 .trend-example-content {
   padding: 1rem;
@@ -1785,11 +1836,7 @@
 
 /* Main idea preview container */
 .idea-preview {
-  /* background: var(--frost-background, rgba(15, 15, 15, 0.8)); */
-  /* border: 1px solid var(--frost-border, rgba(255, 255, 255, 0.08)); */
   border-radius: 12px;
-  /* padding: 1.5rem; */
-  /* margin: 1rem 0; */
   backdrop-filter: var(--glass-backdrop, blur(10px));
 }
 
@@ -1803,7 +1850,7 @@
 
 /* Section titles */
 .section-title {
-  color: var(--orange-primary, #ff6600);
+  color: white;
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
@@ -1895,10 +1942,8 @@
 
 .selected-idea-card {
   background: linear-gradient(135deg, var(--darkness-level-2, #0f0f0f), var(--darkness-level-3, #1f1f1f));
-  border: 2px solid var(--orange-primary, #ff6600);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 0 20px var(--orange-glow, rgba(255, 102, 0, 0.3));
   margin-top: 1rem;
 }
 
@@ -1920,8 +1965,8 @@
 }
 
 .idea-badge {
-  background: var(--gradient-orange, linear-gradient(135deg, #ff6600, #ff8533));
   color: var(--text-primary, #ffffff);
+  border: 1px solid #888888;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.8rem;
@@ -2242,6 +2287,9 @@
   margin: 0;
   line-height: 1.6;
   font-style: italic;
+}
+.critique-intro{
+  margin-bottom: 1rem;
 }
 
 /* Responsive styles for welcome message */

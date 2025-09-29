@@ -157,9 +157,10 @@ interface ExampleCardsProps {
   examples: Array<{ caption: string; url: string; }>;
   exampleMetadata: Record<string, ExampleWithMetadata>;
   onFetchMetadata: (examples: Array<{ caption: string; url: string; }>) => void;
+  onRetryMetadata: (url: string) => Promise<void>;
 }
 
-function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCardsProps) {
+function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetadata }: ExampleCardsProps) {
   useEffect(() => {
     // Fetch metadata when examples change
     if (examples && examples.length > 0) {
@@ -175,6 +176,12 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCar
           const metadata = exampleMetadata[example.url];
           const isLoading = metadata?.loading ?? false;
           const metaData = metadata?.metadata;
+          const hasError = metadata?.error ?? false;
+
+          const handleRetryMetadata = async (e: React.MouseEvent) => {
+            e.stopPropagation();
+            await onRetryMetadata(example.url);
+          };
 
           return (
             <div
@@ -199,10 +206,30 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCar
                   />
                 ) : (
                   <div className="trend-example-placeholder">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
-                      <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
-                    </svg>
+                    {hasError ? (
+                      <div className="trend-example-error">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#ff6600"/>
+                        </svg>
+                        <span>Preview not available</span>
+                        <button
+                          className="retry-metadata-button"
+                          onClick={handleRetryMetadata}
+                          title="Retry loading preview"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="trend-example-no-image">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                          <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -421,27 +448,71 @@ function AppContent() {
     };
   }, [isSequentialFlowActive, currentFlowStep, flowStartTime]);
 
-  // Function to fetch URL metadata
-  const fetchUrlMetadata = async (url: string): Promise<UrlMetadata | null> => {
+  // Function to fetch URL metadata with retry logic
+  const fetchUrlMetadata = async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
+    const maxRetries = 2;
+    const retryDelay = 1000 * (retryCount + 1); // Exponential backoff: 1s, 2s, 3s
+
     try {
-      console.log(`🔍 Fetching metadata for: ${url}`);
+      console.log(`🔍 Fetching metadata for: ${url}${retryCount > 0 ? ` (retry ${retryCount}/${maxRetries})` : ''}`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
       const response = await fetch('/api/url-metadata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        console.warn(`❌ Failed to fetch metadata for ${url}:`, response.status);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+        // Handle specific error types
+        if (response.status === 429) {
+          console.warn(`⚠️ Rate limited for ${url}, waiting before retry...`);
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds for rate limit
+            return fetchUrlMetadata(url, retryCount + 1);
+          }
+        } else if (response.status >= 500 && retryCount < maxRetries) {
+          console.warn(`⚠️ Server error for ${url}, retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return fetchUrlMetadata(url, retryCount + 1);
+        }
+
+        console.warn(`❌ Failed to fetch metadata for ${url}:`, {
+          status: response.status,
+          error: errorData.error || 'Unknown error',
+          errorType: errorData.errorType,
+          suggestion: errorData.suggestion
+        });
         return null;
       }
 
       const metadata = await response.json();
       console.log(`✅ Successfully fetched metadata for ${url}:`, metadata);
       return metadata;
+
     } catch (error) {
       console.error(`❌ Error fetching metadata for ${url}:`, error);
+
+      // Retry on network errors
+      if (retryCount < maxRetries && (
+        error instanceof Error && (
+          error.name === 'AbortError' ||
+          error.message.includes('fetch') ||
+          error.message.includes('network')
+        )
+      )) {
+        console.log(`🔄 Retrying ${url} in ${retryDelay}ms due to ${error.name || 'network error'}...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        return fetchUrlMetadata(url, retryCount + 1);
+      }
+
       return null;
     }
   };
@@ -1140,6 +1211,35 @@ function AppContent() {
       }));
     }
   }, []); // Remove exampleMetadata from dependencies
+
+  // Function to retry metadata for a single example
+  const retryExampleMetadata = useCallback(async (url: string) => {
+    console.log(`🔄 Retrying metadata fetch for: ${url}`);
+
+    // Set loading state
+    setExampleMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        loading: true,
+        error: false
+      }
+    }));
+
+    // Fetch metadata
+    const metadata = await fetchUrlMetadata(url);
+
+    // Update state with result
+    setExampleMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        metadata: metadata || undefined,
+        loading: false,
+        error: !metadata
+      }
+    }));
+  }, [fetchUrlMetadata]);
 
   // Message loading state
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -2006,6 +2106,7 @@ function AppContent() {
               examples={trend.examples}
               exampleMetadata={exampleMetadata}
               onFetchMetadata={fetchExampleMetadata}
+              onRetryMetadata={retryExampleMetadata}
             />
           )}
 
