@@ -399,6 +399,12 @@ async function updateCampaignData(campaignId: string, userId: string, extractedD
     }
   });
 
+  // Store prompt field as description in campaign
+  if (extractedData.prompt && typeof extractedData.prompt === 'string' && (extractedData.prompt as string).trim()) {
+    updateExpressions.push('description = :description');
+    expressionAttributeValues[':description'] = extractedData.prompt;
+  }
+
   if (updateExpressions.length > 0) {
     updateExpressions.push('updatedAt = :updatedAt');
     expressionAttributeValues[':updatedAt'] = new Date().toISOString();

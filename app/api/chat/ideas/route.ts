@@ -174,7 +174,8 @@ export async function POST(request: NextRequest) {
       const generateIdeaPayload = {
         brand_details: brandDetails,
         selected_accounts: selectedAccounts,
-        selected_trends: selectedTrends
+        selected_trends: selectedTrends,
+        prompt: brandDetails.description || ''
       };
 
       const apiCallStart = Date.now();
