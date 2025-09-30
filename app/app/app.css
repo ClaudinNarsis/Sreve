@@ -965,7 +965,7 @@
 }
 
 .trend-example-url {
-  color: var(--orange-primary, #ff6600);
+  
   font-size: 0.75rem;
   font-weight: 600;
   display: flex;
@@ -1956,6 +1956,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-top: 1rem;
+  border-left: 0.25rem solid #ef8550;
 }
 
 .selected-idea-header {
@@ -2046,14 +2047,13 @@
 .scores-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1rem 5rem;
 }
 
 .score-item {
   display: grid;
-  grid-template-columns: 1fr 2fr auto;
+  grid-template-columns: 1fr 5fr 2fr;
   align-items: center;
-  gap: 0.75rem;
 }
 
 .score-label {
@@ -2299,6 +2299,187 @@
 }
 .critique-intro{
   margin-bottom: 1rem;
+}
+
+/* Enhanced Overall Score Styling */
+.overall-score-section {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.overall-score-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  border-radius: 20px;
+  padding: 2rem 1rem;
+  background-color: #3c3c3c30;
+  max-width: 320px;
+  border: 1px solid var(--glass-border);
+  
+}
+
+.overall-score-progress {
+  position: relative;
+  padding: 2rem;
+  margin: 0 auto 1rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-circle {
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  left: 0;
+  z-index: 1;
+}
+
+.progress-background {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 8;
+}
+
+.progress-bar {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1.5s ease-in-out;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+.progress-bar.excellent {
+  stroke: #4CAF50;
+}
+
+.progress-bar.good {
+  stroke: #FF9800;
+}
+
+.progress-bar.needs-improvement {
+  stroke: #f44336;
+}
+
+.overall-score-number {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3.5rem;
+  font-weight: 800;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.overall-score-label {
+  color: var(--text-secondary, #cccccc);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.score-description {
+  color: var(--text-tertiary, #888888);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Score level indicators */
+.score-indicator {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border: 2px solid var(--darkness-level-1, #000000);
+  backdrop-filter: blur(10px);
+}
+
+.score-indicator.excellent {
+  background: linear-gradient(135deg, #0d8811, #66BB6A);
+  
+}
+
+.score-indicator.good {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  
+}
+
+.score-indicator.needs-improvement {
+  background: linear-gradient(135deg, #c61e12, #EF5350);
+  
+}
+
+/* Enhanced scores breakdown */
+.scores-breakdown {
+  margin-top: 2rem;
+  background: var(--darkness-level-2, #0f0f0f);
+  border-radius: 15px;
+  padding: 2rem;
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
+.scores-title {
+  color: var(--text-primary, #ffffff);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.scores-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: var(--orange-primary, #ff6600);
+  border-radius: 1px;
+}
+
+/* Mobile responsiveness for overall score */
+@media (max-width: 768px) {
+  .overall-score-card {
+    max-width: 280px;
+    padding: 2.5rem 1.5rem;
+    margin: 1rem auto;
+  }
+
+  .overall-score-progress {
+    width: 160px;
+    height: 100px;
+  }
+
+  .progress-circle {
+    width: 160px;
+    height: 160px;
+    top: -30px;
+  }
+
+  .overall-score-number {
+    font-size: 2.8rem;
+  }
+
+  .scores-breakdown {
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+  }
 }
 
 /* Responsive styles for welcome message */

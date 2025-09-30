@@ -14,7 +14,11 @@ const client = new DynamoDBClient({
   },
 });
 
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(client, {
+  marshallOptions: {
+    removeUndefinedValues: true,
+  },
+});
 const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 // Helper function to save chat message

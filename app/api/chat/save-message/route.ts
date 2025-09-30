@@ -14,7 +14,11 @@ const client = new DynamoDBClient({
   },
 });
 
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(client, {
+  marshallOptions: {
+    removeUndefinedValues: true,
+  },
+});
 const TABLE_NAME = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 console.log('🔧 DynamoDB ChatMessages table name:', TABLE_NAME);
@@ -57,7 +61,13 @@ export async function POST(request: NextRequest) {
       sender: string;
       timestamp: string;
       createdAt: string;
+      messageType?: string;
       apiResponse?: unknown;
+      questions?: string[];
+      trendData?: unknown;
+      accountsData?: unknown;
+      ideaData?: unknown;
+      critiqueData?: unknown;
     } = {
       chatMessageId: messageId, // Primary key expected by DynamoDB
       campaignId,
@@ -67,6 +77,31 @@ export async function POST(request: NextRequest) {
       timestamp: new Date(message.timestamp).toISOString(),
       createdAt: new Date().toISOString(),
     };
+
+    // Add messageType if provided
+    if (message.messageType) {
+      messageData.messageType = message.messageType;
+    }
+
+    // Add questions if provided (for critique-questions messages)
+    if (message.questions && Array.isArray(message.questions)) {
+      console.log('📋 Adding questions to messageData:', message.questions);
+      messageData.questions = message.questions;
+    }
+
+    // Add data fields if provided
+    if (message.trendData) {
+      messageData.trendData = message.trendData;
+    }
+    if (message.accountsData) {
+      messageData.accountsData = message.accountsData;
+    }
+    if (message.ideaData) {
+      messageData.ideaData = message.ideaData;
+    }
+    if (message.critiqueData) {
+      messageData.critiqueData = message.critiqueData;
+    }
 
     // Add apiResponse if it's a bot message with results
     if (message.sender === 'bot' && message.apiResponse) {

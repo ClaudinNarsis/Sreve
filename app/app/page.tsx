@@ -1053,7 +1053,7 @@ function AppContent() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                campaignId: selectedCampaignId,
+                                campaignId: campaignId,
                                 message: questionsMessage
                               }),
                             }).catch(error => console.error('Error saving questions message:', error));
@@ -1073,7 +1073,7 @@ function AppContent() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                campaignId: selectedCampaignId,
+                                campaignId: campaignId,
                                 message: questionsMessage
                               }),
                             }).catch(error => console.error('Error saving questions message:', error));
@@ -2311,17 +2311,10 @@ function AppContent() {
         };
 
         return (
-          <div key={label} className="score-item">
+          <div className="score-item">
             <div className="score-label">{label}</div>
-            <div className="score-bar-container">
-              <div
-                className="score-bar-fill"
-                style={{
-                  width: `${percentage}%`,
-                  backgroundColor: getScoreColor(score)
-                }}
-              ></div>
-            </div>
+
+
             <div className="score-value">{score}/10</div>
           </div>
         );
@@ -2395,9 +2388,11 @@ function AppContent() {
                   <div className="idea-scores">
                     <h5 className="scores-title">Performance Scores</h5>
                     <div className="scores-grid">
-                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => {
-                        return renderScoreBar(extractScore(value), key);
-                      })}
+                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => (
+                        <div key={key}>
+                          {renderScoreBar(extractScore(value), key)}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -2421,9 +2416,8 @@ function AppContent() {
     if (messageType === 'critique-preview' && message.sender === 'bot' && message.critiqueData) {
       const critiqueData = message.critiqueData;
 
-      // Helper function to render score bars
+      // Helper function to render score dots
       const renderCritiqueScoreBar = (score: number, label: string) => {
-        const percentage = (score / 10) * 100; // Assuming scores are out of 10
         const getScoreColor = (score: number) => {
           if (score >= 8) return '#4CAF50'; // Green
           if (score >= 6) return '#FF9800'; // Orange
@@ -2432,17 +2426,17 @@ function AppContent() {
 
         return (
           <div key={label} className="score-item">
+            <div className="score-dot" style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: getScoreColor(score),
+              display: 'inline-block',
+              marginRight: '8px'
+            }}></div>
             <div className="score-label">{label}</div>
-            <div className="score-bar-container">
-              <div
-                className="score-bar-fill"
-                style={{
-                  width: `${percentage}%`,
-                  backgroundColor: getScoreColor(score)
-                }}
-              />
-              <span className="score-value">{score}/10</span>
-            </div>
+            
+            <span className="score-value">{score}/10</span>
           </div>
         );
       };
@@ -2456,15 +2450,30 @@ function AppContent() {
           {/* Overall Score Section */}
           {critiqueData.overall_score !== undefined && (
             <div className="overall-score-section">
-              <h3 className="section-title">📊 Overall Performance Score</h3>
+              <h3 className="section-title">Overall Performance Score</h3>
               <div className="overall-score-card">
-                <div className="overall-score-number" style={{
-                  color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
-                         extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
-                }}>
-                  {extractScore(critiqueData.overall_score)}/10
+                <div className="overall-score-progress">
+                  
+                  <div className="overall-score-number" style={{
+                    color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
+                           extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
+                  }}>
+                    {extractScore(critiqueData.overall_score)}/10
+                  </div>
                 </div>
                 <div className="overall-score-label">Overall Rating</div>
+                <div className="score-description">
+                  {extractScore(critiqueData.overall_score) >= 8 ? 'Excellent content!' :
+                   extractScore(critiqueData.overall_score) >= 6 ? 'Good content with room for improvement' :
+                   'Needs significant improvement'}
+                </div>
+                <div className={`score-indicator ${
+                  extractScore(critiqueData.overall_score) >= 8 ? 'excellent' :
+                  extractScore(critiqueData.overall_score) >= 6 ? 'good' : 'needs-improvement'
+                }`}>
+                  {extractScore(critiqueData.overall_score) >= 8 ? '🌟' :
+                   extractScore(critiqueData.overall_score) >= 6 ? '👍' : '⚠️'}
+                </div>
               </div>
             </div>
           )}
