@@ -49,11 +49,14 @@ interface TrendApiResponse {
 
 interface PostData {
   post_id: string;
-  type: string;
-  tags: string[];
-  about: string;
-  caption: string;
-  engagement: {
+  post_url?: string;
+  post_description?: string;
+  post_caption?: string;
+  type?: string;
+  tags?: string[];
+  about?: string;
+  caption?: string;
+  engagement?: {
     likes: number;
     comments: number;
     shares: number;
@@ -150,6 +153,166 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   status: string;
+}
+
+// PostCards component for displaying account posts with metadata
+interface PostCardsProps {
+  posts: PostData[];
+  postMetadata: Record<string, ExampleWithMetadata>;
+  onFetchMetadata: (posts: PostData[]) => void;
+  onRetryMetadata: (url: string) => Promise<void>;
+  formatEngagement: (num: number) => string;
+}
+
+function PostCards({ posts, postMetadata, onFetchMetadata, onRetryMetadata, formatEngagement }: PostCardsProps) {
+  const initiatedFetchRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      // Filter posts that haven't been initiated for fetching yet
+      const postsToFetch = posts.filter(post => {
+        if (!post.post_url) return false;
+
+        // Check if we've already initiated fetch for this URL
+        if (initiatedFetchRef.current.has(post.post_url)) return false;
+
+        // Check if we already have metadata (loaded or error state)
+        const existing = postMetadata[post.post_url];
+        if (existing && (existing.metadata || existing.error || existing.loading)) return false;
+
+        return true;
+      });
+
+      if (postsToFetch.length > 0) {
+        // Mark these URLs as initiated
+        postsToFetch.forEach(post => {
+          if (post.post_url) {
+            initiatedFetchRef.current.add(post.post_url);
+          }
+        });
+
+        onFetchMetadata(postsToFetch);
+      }
+    }
+  }, [posts, postMetadata, onFetchMetadata]);
+
+  if (!posts || posts.length === 0) {
+    return <div className="no-posts">No posts available</div>;
+  }
+
+  return (
+    <div className="posts-grid">
+      {posts.map((post, index) => {
+        if (!post.post_url) return null;
+
+        const metadata = postMetadata[post.post_url];
+        const isLoading = metadata?.loading ?? false;
+        const metaData = metadata?.metadata;
+        const hasError = metadata?.error ?? false;
+
+        const handleRetryMetadata = async (e: React.MouseEvent) => {
+          e.stopPropagation();
+          await onRetryMetadata(post.post_url!);
+        };
+
+        return (
+          <div
+            key={post.post_id || index}
+            className="post-card"
+            onClick={() => window.open(post.post_url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+          >
+            {/* Image section */}
+            <div className="post-image-container">
+              {isLoading ? (
+                <div className="post-loading">
+                  <div className="loading-spinner"></div>
+                </div>
+              ) : metaData?.image ? (
+                <img
+                  src={metaData.image}
+                  alt={metaData.title || post.post_caption || 'Post'}
+                  className="post-image"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="post-placeholder">
+                  {hasError ? (
+                    <div className="post-error">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#ff6600"/>
+                      </svg>
+                      <span>Preview not available</span>
+                      <button
+                        className="retry-metadata-button"
+                        onClick={handleRetryMetadata}
+                        title="Retry loading preview"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="post-no-image">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                        <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Content section */}
+            <div className="post-content-section">
+              {metaData?.title && (
+                <div className="post-title">
+                  {metaData.title}
+                </div>
+              )}
+
+              <div className="post-caption">
+                {post.post_caption || post.post_description || 'No content available'}
+              </div>
+
+              {/* Engagement metrics */}
+              {post.engagement && (
+                <div className="post-engagement">
+                  <div className="engagement-item">
+                    <span className="engagement-icon">❤️</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.likes || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">💬</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.comments || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">🔄</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.shares || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">🔖</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.saves || 0)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="post-url">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
+                  <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                View Post
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 // ExampleCards component for displaying trend examples with metadata
@@ -418,6 +581,7 @@ function AppContent() {
 
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+  const [postMetadata, setPostMetadata] = useState<Record<string, ExampleWithMetadata>>({});
 
   // Refresh warning effect for sequential flow
   useEffect(() => {
@@ -1306,6 +1470,84 @@ function AppContent() {
       }
     }));
   }, [fetchUrlMetadata]);
+
+  // Function to fetch metadata for post URLs
+  const fetchPostMetadata = useCallback(async (posts: PostData[]) => {
+    for (const post of posts) {
+      if (!post.post_url) continue;
+
+      const key = post.post_url;
+
+      // Set loading state only if needed
+      setPostMetadata(prev => {
+        // Skip if we already have metadata for this URL
+        if (prev[key] && (prev[key].metadata || prev[key].error || prev[key].loading)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: post.post_caption || post.post_description || '',
+            url: post.post_url!,
+            loading: true,
+            error: false
+          }
+        };
+      });
+
+      // Fetch metadata
+      const metadata = await fetchUrlMetadata(post.post_url);
+
+      // Update state with result
+      setPostMetadata(prev => {
+        // Don't update if already has final state
+        if (prev[key] && prev[key].metadata && !prev[key].loading) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: post.post_caption || post.post_description || '',
+            url: post.post_url!,
+            metadata: metadata || undefined,
+            loading: false,
+            error: !metadata
+          }
+        };
+      });
+    }
+  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+
+  // Function to retry metadata for a single post
+  const retryPostMetadata = useCallback(async (url: string) => {
+    console.log(`🔄 Retrying metadata fetch for post: ${url}`);
+
+    // Set loading state
+    setPostMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        loading: true,
+        error: false
+      }
+    }));
+
+    // Fetch metadata
+    const metadata = await fetchUrlMetadata(url);
+
+    // Update state with result
+    setPostMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        metadata: metadata || undefined,
+        loading: false,
+        error: !metadata
+      }
+    }));
+  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
 
   // Message loading state
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -2211,20 +2453,11 @@ function AppContent() {
                   </div>
                   <div className="account-info">
                     <h3 className="account-username">{account.handle || 'Unknown Account'}</h3>
-                    <p className="account-handle">@{account.handle?.toLowerCase() || 'unknown'}</p>
+                    <p className="account-handle">{account.summary?.niche || 'unknown'}</p>
                   </div>
                 </div>
 
-                <div className="account-stats">
-                  <div className="stat-item">
-                    <p className="stat-value">{account.summary?.niche || 'General'}</p>
-                    <p className="stat-label">Niche</p>
-                  </div>
-                  <div className="stat-item">
-                    <p className="stat-value">{account.summary?.content_style || 'Mixed'}</p>
-                    <p className="stat-label">Style</p>
-                  </div>
-                </div>
+                
 
                 {(Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0) ||
                  (Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0) ? (
@@ -2248,45 +2481,10 @@ function AppContent() {
 
                 <div className="recent-posts">
                   <h4 className="recent-posts-title">Recent Posts</h4>
-                  <div className="posts-grid">
-                    {Array.isArray(account.posts) ? account.posts.map((post, postIdx) => (
-                      <div key={postIdx} className="post-card">
-                        <div className="post-header">
-                          <span className="post-platform">{post.type || 'Social'}</span>
-                          <span className="post-date">{new Date().toLocaleDateString()}</span>
-                        </div>
-                        <div className="post-content">
-                          {post.caption || post.about || 'No content available'}
-                        </div>
-                        <div className="post-engagement">
-                          <div className="engagement-item">
-                            <span className="engagement-icon">❤️</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.likes || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">💬</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.comments || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">🔄</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.shares || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">🔖</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.saves || 0)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="no-posts">No posts available</div>
-                    )}
-                  </div>
+                  <PostCards posts={account.posts || []} postMetadata={postMetadata} onFetchMetadata={fetchPostMetadata} onRetryMetadata={retryPostMetadata} formatEngagement={formatEngagement} />
                 </div>
 
-                <div className="selection-reasoning">
-                  <h4 className="reasoning-title">Selection Reasoning</h4>
-                  <p className="reasoning-content">{account.selection_reason || 'No reasoning provided'}</p>
-                </div>
+                
               </div>
             )) : (
               <div className="no-accounts">No accounts available</div>

@@ -1398,7 +1398,7 @@
 }
 
 .account-card {
-  background: var(--darkness-level-3, #1f1f1f);
+  background: #1f1f1f5e;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
   border-radius: 12px;
   padding: 1.25rem;
@@ -1420,11 +1420,6 @@
   transition: opacity 0.3s ease;
 }
 
-.account-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--orange-primary, #ff6600);
-  box-shadow: 0 8px 25px rgba(255, 102, 0, 0.15);
-}
 
 .account-card:hover::before {
   opacity: 1;
@@ -1621,76 +1616,160 @@
 }
 
 .post-card {
-  background: var(--darkness-level-2, #0f0f0f);
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
-  border-radius: 10px;
-  padding: 1rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
   flex-shrink: 0;
   width: 280px;
-  min-height: 200px;
+  height: 360px;
+  background: #3c3c3c30;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.post-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--glass-border, rgba(255, 255, 255, 0.2));
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
 
-.post-header {
+/* Image container for posts */
+.post-image-container {
+  width: 100%;
+  height: 140px;
+  background: var(--darkness-level-2, #0f0f0f);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
 }
 
-.post-platform {
-  background: var(--gradient-orange, linear-gradient(135deg, #ff6600, #ff8533));
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
 }
 
-.post-date {
+.post-placeholder {
   color: var(--text-tertiary, #888888);
-  font-size: 0.75rem;
-  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
-.post-content {
-  color: var(--text-secondary, #cccccc);
-  font-size: 0.875rem;
-  line-height: 1.4;
-  margin-bottom: 0.75rem;
+.post-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Error and retry states for posts */
+.post-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  color: var(--text-tertiary, #888888);
+}
+
+.post-error span {
+  font-size: 0.8rem;
+  color: var(--text-tertiary, #888888);
+}
+
+.post-no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-tertiary, #888888);
+}
+
+/* Content section for posts */
+.post-content-section {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.post-title {
+  color: var(--text-primary, #ffffff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-clamp: 3;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.post-engagement {
+.post-caption {
+  color: var(--text-secondary, #cccccc);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 0;
+}
+
+.post-url {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.post-url svg {
+  flex-shrink: 0;
+}
+
+/* Legacy post styles - kept for backward compatibility */
+
+.post-engagement {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  font-size: 0.7rem;
   color: var(--text-tertiary, #888888);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .engagement-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.15rem;
+}
+
+.engagement-icon {
+  font-size: 0.9rem;
 }
 
 .engagement-value {
   color: var(--text-secondary, #cccccc);
   font-weight: 600;
+  font-size: 0.7rem;
 }
 
 .selection-reasoning {
