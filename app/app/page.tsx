@@ -8,6 +8,8 @@ import ProjectDetails from "../components/ProjectDetails";
 import SequentialFlowProgress from "../components/SequentialFlowProgress";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -2842,10 +2844,12 @@ function AppContent() {
       );
     }
 
-    // Default message rendering
+    // Default message rendering with markdown support
     return (
-      <div className="message-content">
-        {message.text}
+      <div className="message-content markdown-content">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {message.text}
+        </ReactMarkdown>
       </div>
     );
   };
