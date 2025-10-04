@@ -352,7 +352,6 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetad
             <div
               key={index}
               className="trend-example-card"
-              onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
             >
               {/* Image section */}
               <div className="trend-example-image-container">
@@ -397,6 +396,16 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetad
                     )}
                   </div>
                 )}
+
+                {/* Button inside image container */}
+                <div
+                  className="trend-example-url"
+                  onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M8 5v14l11-7z" fill="currentColor"/>
+                  </svg>
+                </div>
               </div>
 
               {/* Content section */}
@@ -409,14 +418,6 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetad
 
                 <div className="trend-example-caption">
                   {example.caption}
-                </div>
-
-                <div className="trend-example-url">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
-                    <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                  View Example
                 </div>
               </div>
             </div>
@@ -1674,7 +1675,7 @@ function AppContent() {
 
         setMessages(prev => {
           const tempLoadingIndex = prev.findIndex(msg =>
-            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+            msg.sender === 'bot' && msg.id && typeof msg.id === 'string' && msg.id.startsWith('temp-followup-loading-')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -1700,7 +1701,7 @@ function AppContent() {
 
         setMessages(prev => {
           const tempLoadingIndex = prev.findIndex(msg =>
-            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+            msg.sender === 'bot' && msg.id && typeof msg.id === 'string' && msg.id.startsWith('temp-followup-loading-')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -2526,40 +2527,12 @@ function AppContent() {
             {message.text}
           </div>
 
-          {/* All Generated Ideas */}
-          <div className="all-ideas-section">
-            <h3 className="section-title">Generated Ideas</h3>
-            <div className="ideas-grid">
-              {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
-                <div key={index} className="idea-card">
-                  <div className="idea-header">
-                    <h4 className="idea-angle">{idea.angle}</h4>
-                  </div>
-                  <div className="idea-hook">
-                    <strong>Hook:</strong> "{idea.hook}"
-                  </div>
-                  <div className="idea-description">
-                    {idea.description}
-                  </div>
-                  {idea.execution_script && (
-                    <div className="idea-execution-script">
-                      <strong>Execution Script:</strong>
-                      <div className="execution-script-content">
-                        {idea.execution_script}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )) : (
-                <div className="no-ideas">No ideas available</div>
-              )}
-            </div>
-          </div>
+          
 
           {/* Selected Idea with Scores */}
           {ideaData.selected_idea && (
             <div className="selected-idea-section">
-              <h3 className="section-title">🎯 Recommended Idea</h3>
+              <h3 className="section-title">Recommended Idea</h3>
               <div className="selected-idea-card">
                 <div className="selected-idea-header">
                   <h4 className="selected-idea-angle">{ideaData.selected_idea.angle}</h4>
@@ -2578,25 +2551,15 @@ function AppContent() {
                   <div className="selected-idea-execution-script">
                     <h5 className="execution-script-title">Execution Script</h5>
                     <div className="execution-script-content">
-                      {ideaData.selected_idea.execution_script}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {ideaData.selected_idea.execution_script}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 )}
-
-                {/* Scoring Section */}
-                {ideaData.selected_idea.scores && (
-                  <div className="idea-scores">
-                    <h5 className="scores-title">Performance Scores</h5>
-                    <div className="scores-grid">
-                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => (
-                        <div key={key}>
-                          {renderScoreBar(extractScore(value), key)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                  
+                
+                
                 {/* Rationale */}
                 {ideaData.selected_idea.rationale && (
                   <div className="idea-rationale">
@@ -2605,7 +2568,39 @@ function AppContent() {
                   </div>
                 )}
               </div>
+              {/* All Generated Ideas */}
+              <div className="all-ideas-section">
+                  <h3 className="section-title">Other Ideas</h3>
+                  <div className="ideas-grid">
+                    {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
+                      <div key={index} className="idea-card">
+                        <div className="idea-header">
+                          <h4 className="idea-angle">{idea.angle}</h4>
+                        </div>
+                        <div className="idea-hook">
+                          <strong>Hook:</strong> "{idea.hook}"
+                        </div>
+                        <div className="idea-description">
+                          {idea.description}
+                        </div>
+                        {idea.execution_script && (
+                          <div className="idea-execution-script">
+                            <strong>Execution Script:</strong>
+                            <div className="execution-script-content">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {idea.execution_script}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )) : (
+                      <div className="no-ideas">No ideas available</div>
+                    )}
+                  </div>
+                </div>
             </div>
+            
           )}
 
         </div>
