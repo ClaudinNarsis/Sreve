@@ -2541,7 +2541,7 @@
   justify-content: center;
   
   border-radius: 20px;
-  padding: 2rem 1rem;
+  padding: 0.5rem 1rem;
   background-color: #3c3c3c30;
   max-width: 320px;
   border: 1px solid var(--glass-border);
@@ -2550,8 +2550,7 @@
 
 .overall-score-progress {
   position: relative;
-  padding: 2rem;
-  margin: 0 auto 1rem auto;
+  margin: 0.5rem auto 0rem auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2592,11 +2591,7 @@
 }
 
 .overall-score-number {
-  position: absolute;
-  top: 60%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 3.5rem;
+  font-size: 2.5rem;
   font-weight: 800;
   z-index: 2;
   pointer-events: none;
@@ -2652,7 +2647,6 @@
 /* Enhanced scores breakdown */
 .scores-breakdown {
   margin-top: 2rem;
-  background: var(--darkness-level-2, #0f0f0f);
   border-radius: 15px;
   padding: 2rem;
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
@@ -2683,14 +2677,10 @@
 @media (max-width: 768px) {
   .overall-score-card {
     max-width: 280px;
-    padding: 2.5rem 1.5rem;
+    padding: 0.5rem 1.5rem;
     margin: 1rem auto;
   }
 
-  .overall-score-progress {
-    width: 160px;
-    height: 100px;
-  }
 
   .progress-circle {
     width: 160px;
