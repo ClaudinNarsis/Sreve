@@ -2037,7 +2037,7 @@
 .execution-script-content {
   color: var(--text-secondary, #cccccc);
   font-size: 0.85rem;
-  line-height: 1.6;
+  line-height: 1.8;
 }
 
 .execution-script-content h1,
@@ -2047,28 +2047,51 @@
 .execution-script-content h5,
 .execution-script-content h6 {
   color: var(--text-primary, #ffffff);
-  margin: 1rem 0 0.5rem 0;
+  margin: 1.2rem 0 0.6rem 0;
   font-weight: 600;
+  line-height: 1.4;
+}
+
+.execution-script-content h1:first-child,
+.execution-script-content h2:first-child,
+.execution-script-content h3:first-child,
+.execution-script-content h4:first-child,
+.execution-script-content h5:first-child,
+.execution-script-content h6:first-child {
+  margin-top: 0;
 }
 
 .execution-script-content h1 { font-size: 1.5rem; }
 .execution-script-content h2 { font-size: 1.3rem; }
 .execution-script-content h3 { font-size: 1.1rem; }
 .execution-script-content h4 { font-size: 1rem; }
+.execution-script-content h5 { font-size: 0.95rem; }
+.execution-script-content h6 { font-size: 0.9rem; }
 
 .execution-script-content p {
-  margin: 0.5rem 0;
-  line-height: 1.6;
+  margin: 0.75rem 0;
+  line-height: 1.8;
 }
 
 .execution-script-content ul,
 .execution-script-content ol {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+  padding-left: 2rem;
+  line-height: 1.8;
 }
 
 .execution-script-content li {
+  margin: 0.5rem 0;
+  padding-left: 0.25rem;
+}
+
+.execution-script-content li > p {
   margin: 0.25rem 0;
+}
+
+.execution-script-content li > ul,
+.execution-script-content li > ol {
+  margin-top: 0.5rem;
 }
 
 .execution-script-content code {
@@ -2206,8 +2229,9 @@
 .selected-idea-execution-script {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  
+  background: var(--glass-background, rgba(255, 255, 255, 0.05));
   border-radius: 8px;
+  border-left: 3px solid var(--orange-primary, #ff6600);
 }
 
 .execution-script-title {
@@ -2219,6 +2243,15 @@
 
 .selected-idea-execution-script .execution-script-content {
   font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.selected-idea-execution-script .execution-script-content > *:first-child {
+  margin-top: 0;
+}
+
+.selected-idea-execution-script .execution-script-content > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Scoring section */

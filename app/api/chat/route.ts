@@ -819,7 +819,8 @@ export async function POST(request: NextRequest) {
           goal: finalApiResult.goal || campaignDetails?.goal || '',
           platform: finalApiResult.platform || campaignDetails?.platform || '',
           brand_voice: finalApiResult.brand_voice || projectDetails?.brand_voice || '',
-          competitors: finalApiResult.competitors || projectDetails?.competitors || ''
+          competitors: finalApiResult.competitors || projectDetails?.competitors || '',
+          format: campaignDetails?.description || finalApiResult.prompt || ''
         };
 
         console.log('📋 Structured brand_details payload:', brandDetails);
@@ -1021,7 +1022,8 @@ export async function POST(request: NextRequest) {
           goal: apiResult.goal || campaignDetails?.goal || '',
           platform: apiResult.platform || campaignDetails?.platform || '',
           brand_voice: apiResult.brand_voice || projectDetails?.brand_voice || '',
-          competitors: apiResult.competitors || projectDetails?.competitors || ''
+          competitors: apiResult.competitors || projectDetails?.competitors || '',
+          format: campaignDetails?.description || apiResult.prompt || ''
         };
 
         console.log('📋 Structured brand_details payload (direct flow):', brandDetails);
