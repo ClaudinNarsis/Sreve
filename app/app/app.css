@@ -2038,6 +2038,10 @@
   color: var(--text-secondary, #cccccc);
   font-size: 0.85rem;
   line-height: 1.8;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
 }
 
 .execution-script-content h1,
@@ -2046,10 +2050,12 @@
 .execution-script-content h4,
 .execution-script-content h5,
 .execution-script-content h6 {
-  color: var(--text-primary, #ffffff);
+  color: var(--text-primary, #ffffff) !important;
   margin: 1.2rem 0 0.6rem 0;
   font-weight: 600;
   line-height: 1.4;
+  display: block;
+  text-align: left;
 }
 
 .execution-script-content h1:first-child,
@@ -2061,9 +2067,20 @@
   margin-top: 0;
 }
 
-.execution-script-content h1 { font-size: 1.5rem; }
-.execution-script-content h2 { font-size: 1.3rem; }
-.execution-script-content h3 { font-size: 1.1rem; }
+.execution-script-content h1 {
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--orange-primary, #ff6600);
+  padding-bottom: 0.5rem;
+}
+.execution-script-content h2 {
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  padding-bottom: 0.4rem;
+}
+.execution-script-content h3 {
+  font-size: 1.1rem;
+  color: var(--orange-secondary, #ff8533) !important;
+}
 .execution-script-content h4 { font-size: 1rem; }
 .execution-script-content h5 { font-size: 0.95rem; }
 .execution-script-content h6 { font-size: 0.9rem; }
@@ -2071,6 +2088,8 @@
 .execution-script-content p {
   margin: 0.75rem 0;
   line-height: 1.8;
+  display: block;
+  color: var(--text-secondary, #cccccc);
 }
 
 .execution-script-content ul,
@@ -2078,11 +2097,23 @@
   margin: 0.75rem 0;
   padding-left: 2rem;
   line-height: 1.8;
+  display: block;
+  list-style-position: outside;
+}
+
+.execution-script-content ul {
+  list-style-type: disc;
+}
+
+.execution-script-content ol {
+  list-style-type: decimal;
 }
 
 .execution-script-content li {
   margin: 0.5rem 0;
   padding-left: 0.25rem;
+  display: list-item;
+  color: var(--text-secondary, #cccccc);
 }
 
 .execution-script-content li > p {
