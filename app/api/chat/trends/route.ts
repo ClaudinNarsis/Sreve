@@ -187,10 +187,14 @@ export async function POST(request: NextRequest) {
           trendId: trendData.chosen_trend?.trend_id,
           trendStatus: trendData.chosen_trend?.status,
           platform: trendData.chosen_trend?.platform,
-          examplesCount: trendData.chosen_trend?.examples?.length || 0
+          examplesCount: trendData.chosen_trend?.examples?.length || 0,
+          isEmptyObject: Object.keys(trendData).length === 0
         });
 
-        if (trendData.chosen_trend) {
+        // Check if trendData is empty JSON or has no chosen_trend
+        const isEmptyResponse = !trendData || Object.keys(trendData).length === 0 || !trendData.chosen_trend;
+
+        if (!isEmptyResponse && trendData.chosen_trend) {
           const trendMessage = `Great! I've found a trending opportunity for your brand. Here's what's working right now:`;
 
           // Save trend results message and delete loading message
@@ -225,24 +229,20 @@ export async function POST(request: NextRequest) {
             success: true
           }, { status: 200 });
         } else {
-          console.log('ℹ️ [TRENDS-API] No trends found in response');
-          const noTrendMessage = 'I\'ve analyzed the current trends. Moving on to the next step...';
-          const noTrendBotMessageId = await saveChatMessage(campaignId, userId, noTrendMessage, 'bot', 'default');
-          console.log('✅ [TRENDS-API] No-trend message saved with ID:', noTrendBotMessageId);
+          console.log('ℹ️ [TRENDS-API] No trends found in response (empty JSON or no chosen_trend)');
 
-          // Delete the loading message from DynamoDB
+          // Delete the loading message from DynamoDB without creating a replacement message
           console.log('🗑️ [TRENDS-API] Deleting loading message from DynamoDB');
           await deleteChatMessage(loadingBotMessageId);
           console.log('✅ [TRENDS-API] Loading message deleted from DynamoDB');
 
           const totalDuration = Date.now() - startTime;
-          console.log(`🎯 [TRENDS-API] No-trends response sent (${totalDuration}ms total)`);
+          console.log(`🎯 [TRENDS-API] Empty response - skipping to accounts (${totalDuration}ms total)`);
 
           return NextResponse.json({
             message: 'Trends analysis completed (no trends found)',
             loadingBotMessageId,
-            noTrendBotMessageId,
-            noTrendMessage,
+            trendData: null,
             nextStep: 'accounts',
             success: true
           }, { status: 200 });

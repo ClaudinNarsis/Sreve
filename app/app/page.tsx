@@ -615,6 +615,120 @@ function AppContent() {
     };
   }, [isSequentialFlowActive, currentFlowStep, flowStartTime]);
 
+  // Auto-send pending prompt from landing page
+  useEffect(() => {
+    console.log('🎯 [APP] Checking for pendingPrompt on mount');
+
+    const pendingPrompt = sessionStorage.getItem('pendingPrompt');
+    const pendingTimestamp = sessionStorage.getItem('pendingPromptTimestamp');
+
+    if (pendingPrompt && pendingTimestamp) {
+      console.log('🎯 [APP] Found pendingPrompt:', pendingPrompt);
+
+      // Check if prompt is still fresh (5 minutes)
+      const timestamp = parseInt(pendingTimestamp);
+      const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+
+      if (timestamp > fiveMinutesAgo) {
+        console.log('🎯 [APP] Prompt is fresh, auto-sending...');
+
+        // Clear from sessionStorage immediately to prevent re-triggering
+        sessionStorage.removeItem('pendingPrompt');
+        sessionStorage.removeItem('pendingPromptTimestamp');
+
+        // Auto-send after a brief delay
+        setTimeout(() => {
+          console.log('🎯 [APP] Auto-triggering send for prompt:', pendingPrompt);
+          // We'll need to trigger the send manually since handleSendMessage depends on inputMessage state
+          // which may not be updated yet. So we'll create a simpler direct send.
+          const sendPendingPrompt = async () => {
+            const messageText = pendingPrompt.trim();
+
+            // Add user message to chat
+            const userMessage: ChatMessage = {
+              id: Date.now().toString(),
+              text: messageText,
+              sender: 'user',
+              messageType: 'default',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, userMessage]);
+
+            // Add loading message
+            const tempLoadingMessage: ChatMessage = {
+              id: 'temp-loading-' + Date.now().toString(),
+              text: 'Processing your request...',
+              sender: 'bot',
+              messageType: 'loading-trends',
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, tempLoadingMessage]);
+
+            // Call chat API
+            try {
+              const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userMessage: messageText })
+              });
+
+              const data = await response.json();
+              console.log('🎯 [APP] Auto-send chat API response:', data);
+
+              if (response.ok && data.success) {
+                // Handle newly created project and campaign IDs
+                if (data.createdProjectId && data.createdCampaignId) {
+                  console.log('✅ [APP] New project and campaign created:', {
+                    projectId: data.createdProjectId,
+                    campaignId: data.createdCampaignId
+                  });
+
+                  setSelectedProjectId(data.createdProjectId);
+                  setSelectedCampaignId(data.createdCampaignId);
+
+                  if (projectExplorerRef.current) {
+                    projectExplorerRef.current.refreshData();
+                  }
+                }
+
+                // Remove temp loading message and add bot response
+                setMessages(prev => prev.filter(msg => msg.id !== tempLoadingMessage.id));
+
+                const botMessage: ChatMessage = {
+                  id: data.botMessageId || (Date.now() + 1).toString(),
+                  text: data.botMessage || 'Message processed successfully.',
+                  sender: 'bot',
+                  messageType: 'default',
+                  timestamp: new Date()
+                };
+                setMessages(prev => [...prev, botMessage]);
+              } else {
+                console.error('🎯 [APP] Auto-send failed:', data);
+                setMessages(prev => prev.filter(msg => msg.id !== tempLoadingMessage.id));
+                setMessages(prev => [...prev, {
+                  id: (Date.now() + 1).toString(),
+                  text: 'Sorry, there was an error processing your request.',
+                  sender: 'bot',
+                  messageType: 'default',
+                  timestamp: new Date()
+                }]);
+              }
+            } catch (error) {
+              console.error('🎯 [APP] Auto-send error:', error);
+              setMessages(prev => prev.filter(msg => msg.id !== tempLoadingMessage.id));
+            }
+          };
+
+          sendPendingPrompt();
+        }, 500);
+      } else {
+        console.log('🎯 [APP] Prompt expired, clearing');
+        sessionStorage.removeItem('pendingPrompt');
+        sessionStorage.removeItem('pendingPromptTimestamp');
+      }
+    }
+  }, []); // Only run once on mount
+
   // Function to fetch URL metadata with retry logic
   const fetchUrlMetadata = async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
     const maxRetries = 2;
@@ -785,7 +899,8 @@ function AppContent() {
 
         if (trendsResult.success) {
           // Replace loading message or add new result message
-          if (trendsResult.trendData) {
+          // Handle case where trendData might be empty JSON or null - still proceed to next step
+          if (trendsResult.trendData && Object.keys(trendsResult.trendData).length > 0) {
             trendData = trendsResult.trendData;
             const trendMessage: ChatMessage = {
               id: trendsResult.trendBotMessageId,
@@ -835,30 +950,10 @@ function AppContent() {
                 return [...prev, ...newMessages];
               }
             });
-          } else if (trendsResult.noTrendBotMessageId) {
-            // Handle no trends case
-            const noTrendMessage: ChatMessage = {
-              id: trendsResult.noTrendBotMessageId,
-              text: trendsResult.noTrendMessage,
-              sender: 'bot',
-              messageType: 'default',
-              timestamp: new Date()
-            };
-
-            setMessages(prev => {
-              const loadingIndex = prev.findIndex(msg =>
-                msg.messageType === 'loading-trends' && msg.sender === 'bot'
-              );
-
-              if (loadingIndex !== -1) {
-                console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading with no-trend message');
-                const updated = [...prev];
-                updated[loadingIndex] = noTrendMessage;
-                return updated;
-              } else {
-                return [...prev, noTrendMessage];
-              }
-            });
+          } else {
+            // Handle empty trendData (empty JSON or null) - remove loading message and continue to next step
+            console.log('⚠️ [SEQUENTIAL-FLOW] Trends API returned empty/null data, removing loading and proceeding to accounts');
+            setMessages(prev => prev.filter(msg => msg.messageType !== 'loading-trends'));
           }
 
           // Step 2: Accounts Analysis
@@ -2343,6 +2438,11 @@ function AppContent() {
       const trend = message.trendApiResponse?.chosen_trend || message.trendData;
       const reason = message.trendApiResponse?.reason;
 
+      // Don't render if trend is empty or doesn't have chosen_trend
+      if (!trend || !trend.trend) {
+        return null;
+      }
+
       // Debug logging for trend preview rendering
       console.log('🔍 [DEBUG] Rendering trend preview message:');
       console.log('🔍 [DEBUG] message.trendData:', JSON.stringify(message.trendData, null, 2));
@@ -2352,7 +2452,17 @@ function AppContent() {
       console.log('🔍 [DEBUG] reason truthy?', !!reason);
 
       // Status icon mapping
-      const getStatusIcon = (status: string) => {
+      const getStatusIcon = (status?: string) => {
+        if (!status) {
+          return (
+            <span className="trend-status-icon default">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" fill="currentColor"/>
+              </svg>
+            </span>
+          );
+        }
+
         switch (status.toLowerCase()) {
           case 'rising':
             return (
@@ -2502,24 +2612,6 @@ function AppContent() {
     if (messageType === 'idea-preview' && message.sender === 'bot' && message.ideaData) {
       const ideaData = message.ideaData;
 
-      // Helper function to render score bars
-      const renderScoreBar = (score: number, label: string) => {
-        const percentage = (score / 10) * 100; // Assuming scores are out of 10
-        const getScoreColor = (score: number) => {
-          if (score >= 8) return '#4CAF50'; // Green
-          if (score >= 6) return '#FF9800'; // Orange
-          return '#f44336'; // Red
-        };
-
-        return (
-          <div className="score-item">
-            <div className="score-label">{label}</div>
-
-
-            <div className="score-value">{score}/10</div>
-          </div>
-        );
-      };
 
       return (
         <div className="message-content idea-preview">
