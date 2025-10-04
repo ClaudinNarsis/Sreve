@@ -399,6 +399,12 @@ async function updateCampaignData(campaignId: string, userId: string, extractedD
     }
   });
 
+  // Store prompt field as description in campaign
+  if (extractedData.prompt && typeof extractedData.prompt === 'string' && (extractedData.prompt as string).trim()) {
+    updateExpressions.push('description = :description');
+    expressionAttributeValues[':description'] = extractedData.prompt;
+  }
+
   if (updateExpressions.length > 0) {
     updateExpressions.push('updatedAt = :updatedAt');
     expressionAttributeValues[':updatedAt'] = new Date().toISOString();
@@ -480,14 +486,88 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json();
     console.log('📋 Request data:', requestData);
 
-    const { campaignId, userMessage, skipUserMessageSave } = requestData;
+    let { campaignId } = requestData;
+    const { userMessage, skipUserMessageSave } = requestData;
 
-    if (!campaignId || !userMessage) {
-      console.log('❌ Missing required data:', { campaignId: !!campaignId, userMessage: !!userMessage });
+    if (!userMessage) {
+      console.log('❌ Missing user message');
       return NextResponse.json({
-        error: 'Campaign ID and user message are required',
+        error: 'User message is required',
         success: false
       }, { status: 400 });
+    }
+
+    // If no campaignId provided, create project and campaign automatically
+    let projectId = null;
+    if (!campaignId) {
+      console.log('📝 No campaign ID provided, creating project and campaign automatically');
+
+      try {
+        // Create project
+        console.log('🔄 Creating new project...');
+        const projectData = {
+          brand_name: 'New Project',
+          offering: '',
+          usp: '',
+          icp: '',
+          brand_voice: '',
+          competitors: '',
+          additional_information: `Created from prompt: ${userMessage.substring(0, 200)}...`
+        };
+
+        const project = {
+          projectId: uuidv4(),
+          userId: userId,
+          brand_name: projectData.brand_name,
+          offering: projectData.offering || '',
+          usp: projectData.usp || '',
+          icp: projectData.icp || '',
+          brand_voice: projectData.brand_voice || '',
+          competitors: projectData.competitors || '',
+          additional_information: projectData.additional_information || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const putProjectCommand = new PutCommand({
+          TableName: PROJECTS_TABLE,
+          Item: project
+        });
+
+        await docClient.send(putProjectCommand);
+        console.log('✅ Project created:', project.projectId);
+        projectId = project.projectId;
+
+        // Create campaign
+        console.log('🔄 Creating new campaign...');
+        const campaign = {
+          campaignId: uuidv4(),
+          userId: userId,
+          projectId: projectId,
+          name: 'New Campaign',
+          description: `Auto-created campaign from: ${userMessage.substring(0, 100)}...`,
+          goal: '',
+          platform: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const putCampaignCommand = new PutCommand({
+          TableName: CAMPAIGNS_TABLE,
+          Item: campaign
+        });
+
+        await docClient.send(putCampaignCommand);
+        console.log('✅ Campaign created:', campaign.campaignId);
+        campaignId = campaign.campaignId;
+
+      } catch (error) {
+        console.error('❌ Error creating project/campaign:', error);
+        return NextResponse.json({
+          error: 'Failed to create project and campaign',
+          success: false
+        }, { status: 500 });
+      }
     }
 
     // Save user message first (unless already saved)
@@ -753,6 +833,8 @@ export async function POST(request: NextRequest) {
           brandDetails: brandDetails,
           questionsCompleted: true,
           nextStep: 'trends',
+          ...(projectId && { createdProjectId: projectId }),
+          ...(campaignId && { createdCampaignId: campaignId }),
           success: true
         }, { status: 201 });
 
@@ -773,6 +855,8 @@ export async function POST(request: NextRequest) {
           nextQuestion,
           currentQuestionIndex: currentIndex,
           totalQuestions,
+          ...(projectId && { createdProjectId: projectId }),
+          ...(campaignId && { createdCampaignId: campaignId }),
           success: true
         }, { status: 201 });
       }
@@ -896,6 +980,8 @@ export async function POST(request: NextRequest) {
           questioningSessionId: sessionResult.session.questioningSessionId,
           firstQuestion,
           totalQuestions,
+          ...(projectId && { createdProjectId: projectId }),
+          ...(campaignId && { createdCampaignId: campaignId }),
           success: true
         }, { status: 201 });
 
@@ -948,6 +1034,8 @@ export async function POST(request: NextRequest) {
           extractedData: apiResult,
           brandDetails: brandDetails,
           nextStep: 'trends',
+          ...(projectId && { createdProjectId: projectId }),
+          ...(campaignId && { createdCampaignId: campaignId }),
           success: true
         }, { status: 201 });
       }

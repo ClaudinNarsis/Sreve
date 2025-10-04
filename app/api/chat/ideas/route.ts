@@ -174,7 +174,8 @@ export async function POST(request: NextRequest) {
       const generateIdeaPayload = {
         brand_details: brandDetails,
         selected_accounts: selectedAccounts,
-        selected_trends: selectedTrends
+        selected_trends: selectedTrends,
+        prompt: brandDetails.description || ''
       };
 
       const apiCallStart = Date.now();
@@ -206,6 +207,14 @@ export async function POST(request: NextRequest) {
           const ideasBotMessageId = await saveChatMessage(campaignId, userId, ideasMessage, 'bot', 'idea-preview', ideaData);
           console.log('✅ [IDEAS-API] Ideas results message saved with ID:', ideasBotMessageId);
 
+          // Save reasoning message if reasoning exists
+          let reasoningBotMessageId = null;
+          if (ideaData.reasoning) {
+            console.log('💾 [IDEAS-API] Saving ideas reasoning message');
+            reasoningBotMessageId = await saveChatMessage(campaignId, userId, ideaData.reasoning, 'bot', 'default');
+            console.log('✅ [IDEAS-API] Ideas reasoning message saved with ID:', reasoningBotMessageId);
+          }
+
           // Delete the loading message from DynamoDB
           console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
           await deleteChatMessage(loadingBotMessageId);
@@ -220,6 +229,7 @@ export async function POST(request: NextRequest) {
             ideasBotMessageId,
             ideasMessage,
             ideaData,
+            reasoningBotMessageId,
             nextStep: 'critique',
             success: true
           }, { status: 200 });

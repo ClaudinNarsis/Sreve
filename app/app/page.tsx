@@ -8,6 +8,8 @@ import ProjectDetails from "../components/ProjectDetails";
 import SequentialFlowProgress from "../components/SequentialFlowProgress";
 import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -49,11 +51,14 @@ interface TrendApiResponse {
 
 interface PostData {
   post_id: string;
-  type: string;
-  tags: string[];
-  about: string;
-  caption: string;
-  engagement: {
+  post_url?: string;
+  post_description?: string;
+  post_caption?: string;
+  type?: string;
+  tags?: string[];
+  about?: string;
+  caption?: string;
+  engagement?: {
     likes: number;
     comments: number;
     shares: number;
@@ -152,14 +157,175 @@ interface Project {
   status: string;
 }
 
+// PostCards component for displaying account posts with metadata
+interface PostCardsProps {
+  posts: PostData[];
+  postMetadata: Record<string, ExampleWithMetadata>;
+  onFetchMetadata: (posts: PostData[]) => void;
+  onRetryMetadata: (url: string) => Promise<void>;
+  formatEngagement: (num: number) => string;
+}
+
+function PostCards({ posts, postMetadata, onFetchMetadata, onRetryMetadata, formatEngagement }: PostCardsProps) {
+  const initiatedFetchRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      // Filter posts that haven't been initiated for fetching yet
+      const postsToFetch = posts.filter(post => {
+        if (!post.post_url) return false;
+
+        // Check if we've already initiated fetch for this URL
+        if (initiatedFetchRef.current.has(post.post_url)) return false;
+
+        // Check if we already have metadata (loaded or error state)
+        const existing = postMetadata[post.post_url];
+        if (existing && (existing.metadata || existing.error || existing.loading)) return false;
+
+        return true;
+      });
+
+      if (postsToFetch.length > 0) {
+        // Mark these URLs as initiated
+        postsToFetch.forEach(post => {
+          if (post.post_url) {
+            initiatedFetchRef.current.add(post.post_url);
+          }
+        });
+
+        onFetchMetadata(postsToFetch);
+      }
+    }
+  }, [posts, postMetadata, onFetchMetadata]);
+
+  if (!posts || posts.length === 0) {
+    return <div className="no-posts">No posts available</div>;
+  }
+
+  return (
+    <div className="posts-grid">
+      {posts.map((post, index) => {
+        if (!post.post_url) return null;
+
+        const metadata = postMetadata[post.post_url];
+        const isLoading = metadata?.loading ?? false;
+        const metaData = metadata?.metadata;
+        const hasError = metadata?.error ?? false;
+
+        const handleRetryMetadata = async (e: React.MouseEvent) => {
+          e.stopPropagation();
+          await onRetryMetadata(post.post_url!);
+        };
+
+        return (
+          <div
+            key={post.post_id || index}
+            className="post-card"
+            onClick={() => window.open(post.post_url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+          >
+            {/* Image section */}
+            <div className="post-image-container">
+              {isLoading ? (
+                <div className="post-loading">
+                  <div className="loading-spinner"></div>
+                </div>
+              ) : metaData?.image ? (
+                <img
+                  src={metaData.image}
+                  alt={metaData.title || post.post_caption || 'Post'}
+                  className="post-image"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="post-placeholder">
+                  {hasError ? (
+                    <div className="post-error">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#ff6600"/>
+                      </svg>
+                      <span>Preview not available</span>
+                      <button
+                        className="retry-metadata-button"
+                        onClick={handleRetryMetadata}
+                        title="Retry loading preview"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="post-no-image">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                        <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Content section */}
+            <div className="post-content-section">
+              {metaData?.title && (
+                <div className="post-title">
+                  {metaData.title}
+                </div>
+              )}
+
+              <div className="post-caption">
+                {post.post_caption || post.post_description || 'No content available'}
+              </div>
+
+              {/* Engagement metrics */}
+              {post.engagement && (
+                <div className="post-engagement">
+                  <div className="engagement-item">
+                    <span className="engagement-icon">❤️</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.likes || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">💬</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.comments || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">🔄</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.shares || 0)}</span>
+                  </div>
+                  <div className="engagement-item">
+                    <span className="engagement-icon">🔖</span>
+                    <span className="engagement-value">{formatEngagement(post.engagement.saves || 0)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="post-url">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
+                  <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                View Post
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ExampleCards component for displaying trend examples with metadata
 interface ExampleCardsProps {
   examples: Array<{ caption: string; url: string; }>;
   exampleMetadata: Record<string, ExampleWithMetadata>;
   onFetchMetadata: (examples: Array<{ caption: string; url: string; }>) => void;
+  onRetryMetadata: (url: string) => Promise<void>;
 }
 
-function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCardsProps) {
+function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetadata }: ExampleCardsProps) {
   useEffect(() => {
     // Fetch metadata when examples change
     if (examples && examples.length > 0) {
@@ -175,12 +341,17 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCar
           const metadata = exampleMetadata[example.url];
           const isLoading = metadata?.loading ?? false;
           const metaData = metadata?.metadata;
+          const hasError = metadata?.error ?? false;
+
+          const handleRetryMetadata = async (e: React.MouseEvent) => {
+            e.stopPropagation();
+            await onRetryMetadata(example.url);
+          };
 
           return (
             <div
               key={index}
               className="trend-example-card"
-              onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
             >
               {/* Image section */}
               <div className="trend-example-image-container">
@@ -199,12 +370,42 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCar
                   />
                 ) : (
                   <div className="trend-example-placeholder">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
-                      <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
-                    </svg>
+                    {hasError ? (
+                      <div className="trend-example-error">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#ff6600"/>
+                        </svg>
+                        <span>Preview not available</span>
+                        <button
+                          className="retry-metadata-button"
+                          onClick={handleRetryMetadata}
+                          title="Retry loading preview"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="trend-example-no-image">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                          <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor"/>
+                          <path d="M13.96 12.17L11.06 14.38L9.23 12.17L5.5 17H18.5L13.96 12.17Z" fill="currentColor"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                {/* Button inside image container */}
+                <div
+                  className="trend-example-url"
+                  onClick={() => window.open(example.url, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M8 5v14l11-7z" fill="currentColor"/>
+                  </svg>
+                </div>
               </div>
 
               {/* Content section */}
@@ -217,14 +418,6 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata }: ExampleCar
 
                 <div className="trend-example-caption">
                   {example.caption}
-                </div>
-
-                <div className="trend-example-url">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                    <path d="M13 3L16.293 6.293L6.293 16.293L3 13L13 3Z" fill="currentColor"/>
-                    <path d="M19 14V19C19 20.1 18.1 21 17 21H5C3.9 21 3 20.1 3 19V7C3 5.9 3.9 5 5 5H10" fill="none" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                  View Example
                 </div>
               </div>
             </div>
@@ -391,6 +584,7 @@ function AppContent() {
 
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+  const [postMetadata, setPostMetadata] = useState<Record<string, ExampleWithMetadata>>({});
 
   // Refresh warning effect for sequential flow
   useEffect(() => {
@@ -421,27 +615,71 @@ function AppContent() {
     };
   }, [isSequentialFlowActive, currentFlowStep, flowStartTime]);
 
-  // Function to fetch URL metadata
-  const fetchUrlMetadata = async (url: string): Promise<UrlMetadata | null> => {
+  // Function to fetch URL metadata with retry logic
+  const fetchUrlMetadata = async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
+    const maxRetries = 2;
+    const retryDelay = 1000 * (retryCount + 1); // Exponential backoff: 1s, 2s, 3s
+
     try {
-      console.log(`🔍 Fetching metadata for: ${url}`);
+      console.log(`🔍 Fetching metadata for: ${url}${retryCount > 0 ? ` (retry ${retryCount}/${maxRetries})` : ''}`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
 
       const response = await fetch('/api/url-metadata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        console.warn(`❌ Failed to fetch metadata for ${url}:`, response.status);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+        // Handle specific error types
+        if (response.status === 429) {
+          console.warn(`⚠️ Rate limited for ${url}, waiting before retry...`);
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds for rate limit
+            return fetchUrlMetadata(url, retryCount + 1);
+          }
+        } else if (response.status >= 500 && retryCount < maxRetries) {
+          console.warn(`⚠️ Server error for ${url}, retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return fetchUrlMetadata(url, retryCount + 1);
+        }
+
+        console.warn(`❌ Failed to fetch metadata for ${url}:`, {
+          status: response.status,
+          error: errorData.error || 'Unknown error',
+          errorType: errorData.errorType,
+          suggestion: errorData.suggestion
+        });
         return null;
       }
 
       const metadata = await response.json();
       console.log(`✅ Successfully fetched metadata for ${url}:`, metadata);
       return metadata;
+
     } catch (error) {
       console.error(`❌ Error fetching metadata for ${url}:`, error);
+
+      // Retry on network errors
+      if (retryCount < maxRetries && (
+        error instanceof Error && (
+          error.name === 'AbortError' ||
+          error.message.includes('fetch') ||
+          error.message.includes('network')
+        )
+      )) {
+        console.log(`🔄 Retrying ${url} in ${retryDelay}ms due to ${error.name || 'network error'}...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        return fetchUrlMetadata(url, retryCount + 1);
+      }
+
       return null;
     }
   };
@@ -559,6 +797,18 @@ function AppContent() {
               trendApiResponse: trendData.chosen_trend ? trendData : undefined
             };
 
+            // Create reasoning message if returned by API
+            let reasoningMessage = null;
+            if (trendsResult.reasoningBotMessageId && trendData.reason) {
+              reasoningMessage = {
+                id: trendsResult.reasoningBotMessageId,
+                text: trendData.reason,
+                sender: 'bot' as const,
+                messageType: 'default' as const,
+                timestamp: new Date()
+              };
+            }
+
             // Replace the frontend loading message with results
             setMessages(prev => {
               const loadingIndex = prev.findIndex(msg =>
@@ -569,10 +819,20 @@ function AppContent() {
                 console.log('🔄 [SEQUENTIAL-FLOW] Replacing trends loading message with results');
                 const updated = [...prev];
                 updated[loadingIndex] = trendMessage;
+
+                // Add reasoning message if it exists
+                if (reasoningMessage) {
+                  updated.push(reasoningMessage);
+                }
+
                 return updated;
               } else {
                 console.log('➕ [SEQUENTIAL-FLOW] Adding new trends message');
-                return [...prev, trendMessage];
+                const newMessages = [trendMessage];
+                if (reasoningMessage) {
+                  newMessages.push(reasoningMessage);
+                }
+                return [...prev, ...newMessages];
               }
             });
           } else if (trendsResult.noTrendBotMessageId) {
@@ -661,6 +921,18 @@ function AppContent() {
                 accountsData: accountsData
               };
 
+              // Create reasoning message if returned by API
+              let reasoningMessage = null;
+              if (accountsResult.reasoningBotMessageId && accountsData.overall_reasoning) {
+                reasoningMessage = {
+                  id: accountsResult.reasoningBotMessageId,
+                  text: accountsData.overall_reasoning,
+                  sender: 'bot' as const,
+                  messageType: 'default' as const,
+                  timestamp: new Date()
+                };
+              }
+
               setMessages(prev => {
                 const loadingIndex = prev.findIndex(msg =>
                   msg.messageType === 'loading-accounts' && msg.sender === 'bot'
@@ -670,10 +942,20 @@ function AppContent() {
                   console.log('🔄 [SEQUENTIAL-FLOW] Replacing accounts loading message with results');
                   const updated = [...prev];
                   updated[loadingIndex] = accountsMessage;
+
+                  // Add reasoning message if it exists
+                  if (reasoningMessage) {
+                    updated.push(reasoningMessage);
+                  }
+
                   return updated;
                 } else {
                   console.log('➕ [SEQUENTIAL-FLOW] Adding new accounts message');
-                  return [...prev, accountsMessage];
+                  const newMessages = [accountsMessage];
+                  if (reasoningMessage) {
+                    newMessages.push(reasoningMessage);
+                  }
+                  return [...prev, ...newMessages];
                 }
               });
             } else if (accountsResult.noAccountsBotMessageId) {
@@ -764,6 +1046,18 @@ function AppContent() {
                   ideaData: ideasResult.ideaData
                 };
 
+                // Create reasoning message if returned by API
+                let reasoningMessage = null;
+                if (ideasResult.reasoningBotMessageId && ideasResult.ideaData.reasoning) {
+                  reasoningMessage = {
+                    id: ideasResult.reasoningBotMessageId,
+                    text: ideasResult.ideaData.reasoning,
+                    sender: 'bot' as const,
+                    messageType: 'default' as const,
+                    timestamp: new Date()
+                  };
+                }
+
                 setMessages(prev => {
                   const loadingIndex = prev.findIndex(msg =>
                     msg.messageType === 'loading-final-idea' && msg.sender === 'bot'
@@ -773,10 +1067,20 @@ function AppContent() {
                     console.log('🔄 [SEQUENTIAL-FLOW] Replacing ideas loading message with results');
                     const updated = [...prev];
                     updated[loadingIndex] = ideasMessage;
+
+                    // Add reasoning message if it exists
+                    if (reasoningMessage) {
+                      updated.push(reasoningMessage);
+                    }
+
                     return updated;
                   } else {
                     console.log('➕ [SEQUENTIAL-FLOW] Adding new ideas message');
-                    return [...prev, ideasMessage];
+                    const newMessages = [ideasMessage];
+                    if (reasoningMessage) {
+                      newMessages.push(reasoningMessage);
+                    }
+                    return [...prev, ...newMessages];
                   }
                 });
               } else if (ideasResult.noIdeasBotMessageId) {
@@ -916,7 +1220,7 @@ function AppContent() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                campaignId: selectedCampaignId,
+                                campaignId: campaignId,
                                 message: questionsMessage
                               }),
                             }).catch(error => console.error('Error saving questions message:', error));
@@ -936,7 +1240,7 @@ function AppContent() {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
-                                campaignId: selectedCampaignId,
+                                campaignId: campaignId,
                                 message: questionsMessage
                               }),
                             }).catch(error => console.error('Error saving questions message:', error));
@@ -1141,6 +1445,113 @@ function AppContent() {
     }
   }, []); // Remove exampleMetadata from dependencies
 
+  // Function to retry metadata for a single example
+  const retryExampleMetadata = useCallback(async (url: string) => {
+    console.log(`🔄 Retrying metadata fetch for: ${url}`);
+
+    // Set loading state
+    setExampleMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        loading: true,
+        error: false
+      }
+    }));
+
+    // Fetch metadata
+    const metadata = await fetchUrlMetadata(url);
+
+    // Update state with result
+    setExampleMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        metadata: metadata || undefined,
+        loading: false,
+        error: !metadata
+      }
+    }));
+  }, [fetchUrlMetadata]);
+
+  // Function to fetch metadata for post URLs
+  const fetchPostMetadata = useCallback(async (posts: PostData[]) => {
+    for (const post of posts) {
+      if (!post.post_url) continue;
+
+      const key = post.post_url;
+
+      // Set loading state only if needed
+      setPostMetadata(prev => {
+        // Skip if we already have metadata for this URL
+        if (prev[key] && (prev[key].metadata || prev[key].error || prev[key].loading)) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: post.post_caption || post.post_description || '',
+            url: post.post_url!,
+            loading: true,
+            error: false
+          }
+        };
+      });
+
+      // Fetch metadata
+      const metadata = await fetchUrlMetadata(post.post_url);
+
+      // Update state with result
+      setPostMetadata(prev => {
+        // Don't update if already has final state
+        if (prev[key] && prev[key].metadata && !prev[key].loading) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [key]: {
+            caption: post.post_caption || post.post_description || '',
+            url: post.post_url!,
+            metadata: metadata || undefined,
+            loading: false,
+            error: !metadata
+          }
+        };
+      });
+    }
+  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+
+  // Function to retry metadata for a single post
+  const retryPostMetadata = useCallback(async (url: string) => {
+    console.log(`🔄 Retrying metadata fetch for post: ${url}`);
+
+    // Set loading state
+    setPostMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        loading: true,
+        error: false
+      }
+    }));
+
+    // Fetch metadata
+    const metadata = await fetchUrlMetadata(url);
+
+    // Update state with result
+    setPostMetadata(prev => ({
+      ...prev,
+      [url]: {
+        ...prev[url],
+        metadata: metadata || undefined,
+        loading: false,
+        error: !metadata
+      }
+    }));
+  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+
   // Message loading state
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
@@ -1264,7 +1675,7 @@ function AppContent() {
 
         setMessages(prev => {
           const tempLoadingIndex = prev.findIndex(msg =>
-            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+            msg.sender === 'bot' && msg.id && typeof msg.id === 'string' && msg.id.startsWith('temp-followup-loading-')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -1290,7 +1701,7 @@ function AppContent() {
 
         setMessages(prev => {
           const tempLoadingIndex = prev.findIndex(msg =>
-            msg.sender === 'bot' && msg.id.startsWith('temp-followup-loading-')
+            msg.sender === 'bot' && msg.id && typeof msg.id === 'string' && msg.id.startsWith('temp-followup-loading-')
           );
 
           if (tempLoadingIndex !== -1) {
@@ -1394,6 +1805,24 @@ function AppContent() {
       console.log('🔄 Chat API response:', data);
 
       if (response.ok && data.success) {
+        // Handle newly created project and campaign IDs
+        if (data.createdProjectId && data.createdCampaignId) {
+          console.log('✅ New project and campaign created:', {
+            projectId: data.createdProjectId,
+            campaignId: data.createdCampaignId
+          });
+
+          // Update the selected project and campaign
+          setSelectedProjectId(data.createdProjectId);
+          setSelectedCampaignId(data.createdCampaignId);
+
+          // Refresh the project explorer to show the new project
+          if (projectExplorerRef.current) {
+            console.log('🔄 Refreshing project explorer after project/campaign creation');
+            projectExplorerRef.current.refreshData();
+          }
+        }
+
         // Determine message type based on response data
         const isQuestionSession = data.nextQuestion || data.firstQuestion || data.recovery || data.sessionRecovered;
 
@@ -1432,7 +1861,9 @@ function AppContent() {
         // Check if we need to start sequential flow
         if (data.nextStep && data.brandDetails) {
           console.log('🚀 Starting sequential flow with step:', data.nextStep);
-          await handleSequentialFlow(data.nextStep, data.brandDetails, selectedCampaignId);
+          // Use the campaign ID from the response if available, otherwise use selected campaign ID
+          const currentCampaignId = data.createdCampaignId || selectedCampaignId;
+          await handleSequentialFlow(data.nextStep, data.brandDetails, currentCampaignId);
         }
 
         // Handle special cases
@@ -1986,21 +2417,10 @@ function AppContent() {
               examples={trend.examples}
               exampleMetadata={exampleMetadata}
               onFetchMetadata={fetchExampleMetadata}
+              onRetryMetadata={retryExampleMetadata}
             />
           )}
 
-          {reason && (
-            <p className="trend-reason">
-              {(() => {
-                console.log('🔍 [DEBUG] Rendering reason paragraph with text:', reason);
-                return reason;
-              })()}
-            </p>
-          )}
-          {!reason && (() => {
-            console.log('🔍 [DEBUG] Reason is falsy, not rendering reason paragraph');
-            return null;
-          })()}
         </div>
       );
     }
@@ -2027,7 +2447,7 @@ function AppContent() {
 
           <div className="accounts-overview">
             {Array.isArray(accountsData.selected_accounts) ? accountsData.selected_accounts.map((account, index) => (
-              <div key={index} className="account-card">
+              <div key={index} className="account-card single-account-card">
                 <div className="account-header">
                   <div className="account-avatar">
                     <div className="account-placeholder-avatar">
@@ -2036,100 +2456,44 @@ function AppContent() {
                   </div>
                   <div className="account-info">
                     <h3 className="account-username">{account.handle || 'Unknown Account'}</h3>
-                    <p className="account-handle">@{account.handle?.toLowerCase() || 'unknown'}</p>
+                    <p className="account-handle">{account.summary?.niche || 'unknown'}</p>
                   </div>
                 </div>
 
-                <div className="account-stats">
-                  <div className="stat-item">
-                    <p className="stat-value">{account.summary?.niche || 'General'}</p>
-                    <p className="stat-label">Niche</p>
-                  </div>
-                  <div className="stat-item">
-                    <p className="stat-value">{account.summary?.content_style || 'Mixed'}</p>
-                    <p className="stat-label">Style</p>
-                  </div>
-                </div>
+                
 
                 {(Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0) ||
                  (Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0) ? (
                   <div className="account-summary">
-                    {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 && (
-                      <div className="summary-section">
-                        <h4 className="summary-title">Strengths</h4>
-                        <ul className="summary-list">
-                          {account.summary.strengths.map((strength, idx) => (
-                            <li key={idx}>{strength}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 && (
-                      <div className="summary-section">
-                        <h4 className="summary-title">Weaknesses</h4>
-                        <ul className="summary-list">
-                          {account.summary.weaknesses.map((weakness, idx) => (
-                            <li key={idx}>{weakness}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="summary-section">
+                      <ul className="summary-list">
+                        {Array.isArray(account.summary?.strengths) && account.summary.strengths.length > 0 &&
+                          account.summary.strengths.map((strength, idx) => (
+                            <li key={`strength-${idx}`} className="strength-chip">{strength}</li>
+                          ))
+                        }
+                        {Array.isArray(account.summary?.weaknesses) && account.summary.weaknesses.length > 0 &&
+                          account.summary.weaknesses.map((weakness, idx) => (
+                            <li key={`weakness-${idx}`} className="weakness-chip">{weakness}</li>
+                          ))
+                        }
+                      </ul>
+                    </div>
                   </div>
                 ) : null}
 
                 <div className="recent-posts">
                   <h4 className="recent-posts-title">Recent Posts</h4>
-                  <div className="posts-grid">
-                    {Array.isArray(account.posts) ? account.posts.map((post, postIdx) => (
-                      <div key={postIdx} className="post-card">
-                        <div className="post-header">
-                          <span className="post-platform">{post.type || 'Social'}</span>
-                          <span className="post-date">{new Date().toLocaleDateString()}</span>
-                        </div>
-                        <div className="post-content">
-                          {post.caption || post.about || 'No content available'}
-                        </div>
-                        <div className="post-engagement">
-                          <div className="engagement-item">
-                            <span className="engagement-icon">❤️</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.likes || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">💬</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.comments || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">🔄</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.shares || 0)}</span>
-                          </div>
-                          <div className="engagement-item">
-                            <span className="engagement-icon">🔖</span>
-                            <span className="engagement-value">{formatEngagement(post.engagement?.saves || 0)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="no-posts">No posts available</div>
-                    )}
-                  </div>
+                  <PostCards posts={account.posts || []} postMetadata={postMetadata} onFetchMetadata={fetchPostMetadata} onRetryMetadata={retryPostMetadata} formatEngagement={formatEngagement} />
                 </div>
 
-                <div className="selection-reasoning">
-                  <h4 className="reasoning-title">Selection Reasoning</h4>
-                  <p className="reasoning-content">{account.selection_reason || 'No reasoning provided'}</p>
-                </div>
+                
               </div>
             )) : (
               <div className="no-accounts">No accounts available</div>
             )}
           </div>
 
-          {accountsData.overall_reasoning && (
-            <div className="overall-reasoning">
-              <h4 className="reasoning-title">Overall Strategy:</h4>
-              <p className="reasoning-content">{accountsData.overall_reasoning}</p>
-            </div>
-          )}
         </div>
       );
     }
@@ -2148,17 +2512,10 @@ function AppContent() {
         };
 
         return (
-          <div key={label} className="score-item">
+          <div className="score-item">
             <div className="score-label">{label}</div>
-            <div className="score-bar-container">
-              <div
-                className="score-bar-fill"
-                style={{
-                  width: `${percentage}%`,
-                  backgroundColor: getScoreColor(score)
-                }}
-              ></div>
-            </div>
+
+
             <div className="score-value">{score}/10</div>
           </div>
         );
@@ -2170,40 +2527,12 @@ function AppContent() {
             {message.text}
           </div>
 
-          {/* All Generated Ideas */}
-          <div className="all-ideas-section">
-            <h3 className="section-title">Generated Ideas</h3>
-            <div className="ideas-grid">
-              {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
-                <div key={index} className="idea-card">
-                  <div className="idea-header">
-                    <h4 className="idea-angle">{idea.angle}</h4>
-                  </div>
-                  <div className="idea-hook">
-                    <strong>Hook:</strong> "{idea.hook}"
-                  </div>
-                  <div className="idea-description">
-                    {idea.description}
-                  </div>
-                  {idea.execution_script && (
-                    <div className="idea-execution-script">
-                      <strong>Execution Script:</strong>
-                      <div className="execution-script-content">
-                        {idea.execution_script}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )) : (
-                <div className="no-ideas">No ideas available</div>
-              )}
-            </div>
-          </div>
+          
 
           {/* Selected Idea with Scores */}
           {ideaData.selected_idea && (
             <div className="selected-idea-section">
-              <h3 className="section-title">🎯 Recommended Idea</h3>
+              <h3 className="section-title">Recommended Idea</h3>
               <div className="selected-idea-card">
                 <div className="selected-idea-header">
                   <h4 className="selected-idea-angle">{ideaData.selected_idea.angle}</h4>
@@ -2222,23 +2551,15 @@ function AppContent() {
                   <div className="selected-idea-execution-script">
                     <h5 className="execution-script-title">Execution Script</h5>
                     <div className="execution-script-content">
-                      {ideaData.selected_idea.execution_script}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {ideaData.selected_idea.execution_script}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 )}
-
-                {/* Scoring Section */}
-                {ideaData.selected_idea.scores && (
-                  <div className="idea-scores">
-                    <h5 className="scores-title">Performance Scores</h5>
-                    <div className="scores-grid">
-                      {Object.entries(ideaData.selected_idea.scores).map(([key, value]) => {
-                        return renderScoreBar(extractScore(value), key);
-                      })}
-                    </div>
-                  </div>
-                )}
-
+                  
+                
+                
                 {/* Rationale */}
                 {ideaData.selected_idea.rationale && (
                   <div className="idea-rationale">
@@ -2247,16 +2568,41 @@ function AppContent() {
                   </div>
                 )}
               </div>
+              {/* All Generated Ideas */}
+              <div className="all-ideas-section">
+                  <h3 className="section-title">Other Ideas</h3>
+                  <div className="ideas-grid">
+                    {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
+                      <div key={index} className="idea-card">
+                        <div className="idea-header">
+                          <h4 className="idea-angle">{idea.angle}</h4>
+                        </div>
+                        <div className="idea-hook">
+                          <strong>Hook:</strong> "{idea.hook}"
+                        </div>
+                        <div className="idea-description">
+                          {idea.description}
+                        </div>
+                        {idea.execution_script && (
+                          <div className="idea-execution-script">
+                            <strong>Execution Script:</strong>
+                            <div className="execution-script-content">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {idea.execution_script}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )) : (
+                      <div className="no-ideas">No ideas available</div>
+                    )}
+                  </div>
+                </div>
             </div>
+            
           )}
 
-          {/* Overall Reasoning */}
-          {ideaData.reasoning && (
-            <div className="overall-reasoning">
-              <h4 className="reasoning-title">Analysis Summary</h4>
-              <p className="reasoning-content">{ideaData.reasoning}</p>
-            </div>
-          )}
         </div>
       );
     }
@@ -2265,9 +2611,8 @@ function AppContent() {
     if (messageType === 'critique-preview' && message.sender === 'bot' && message.critiqueData) {
       const critiqueData = message.critiqueData;
 
-      // Helper function to render score bars
+      // Helper function to render score dots
       const renderCritiqueScoreBar = (score: number, label: string) => {
-        const percentage = (score / 10) * 100; // Assuming scores are out of 10
         const getScoreColor = (score: number) => {
           if (score >= 8) return '#4CAF50'; // Green
           if (score >= 6) return '#FF9800'; // Orange
@@ -2276,17 +2621,17 @@ function AppContent() {
 
         return (
           <div key={label} className="score-item">
+            <div className="score-dot" style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: getScoreColor(score),
+              display: 'inline-block',
+              marginRight: '8px'
+            }}></div>
             <div className="score-label">{label}</div>
-            <div className="score-bar-container">
-              <div
-                className="score-bar-fill"
-                style={{
-                  width: `${percentage}%`,
-                  backgroundColor: getScoreColor(score)
-                }}
-              />
-              <span className="score-value">{score}/10</span>
-            </div>
+            
+            <span className="score-value">{score}/10</span>
           </div>
         );
       };
@@ -2300,15 +2645,30 @@ function AppContent() {
           {/* Overall Score Section */}
           {critiqueData.overall_score !== undefined && (
             <div className="overall-score-section">
-              <h3 className="section-title">📊 Overall Performance Score</h3>
+              <h3 className="section-title">Overall Performance Score</h3>
               <div className="overall-score-card">
-                <div className="overall-score-number" style={{
-                  color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
-                         extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
-                }}>
-                  {extractScore(critiqueData.overall_score)}/10
+                <div className="overall-score-progress">
+                  
+                  <div className="overall-score-number" style={{
+                    color: extractScore(critiqueData.overall_score) >= 8 ? '#4CAF50' :
+                           extractScore(critiqueData.overall_score) >= 6 ? '#FF9800' : '#f44336'
+                  }}>
+                    {extractScore(critiqueData.overall_score)}/10
+                  </div>
                 </div>
                 <div className="overall-score-label">Overall Rating</div>
+                <div className="score-description">
+                  {extractScore(critiqueData.overall_score) >= 8 ? 'Excellent content!' :
+                   extractScore(critiqueData.overall_score) >= 6 ? 'Good content with room for improvement' :
+                   'Needs significant improvement'}
+                </div>
+                <div className={`score-indicator ${
+                  extractScore(critiqueData.overall_score) >= 8 ? 'excellent' :
+                  extractScore(critiqueData.overall_score) >= 6 ? 'good' : 'needs-improvement'
+                }`}>
+                  {extractScore(critiqueData.overall_score) >= 8 ? '🌟' :
+                   extractScore(critiqueData.overall_score) >= 6 ? '👍' : '⚠️'}
+                </div>
               </div>
             </div>
           )}
@@ -2479,10 +2839,12 @@ function AppContent() {
       );
     }
 
-    // Default message rendering
+    // Default message rendering with markdown support
     return (
-      <div className="message-content">
-        {message.text}
+      <div className="message-content markdown-content">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {message.text}
+        </ReactMarkdown>
       </div>
     );
   };

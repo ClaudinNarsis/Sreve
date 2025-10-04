@@ -14,7 +14,11 @@ const client = new DynamoDBClient({
   },
 });
 
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(client, {
+  marshallOptions: {
+    removeUndefinedValues: true,
+  },
+});
 const CHAT_MESSAGES_TABLE = `ChatMessages_${process.env.ENVIRONMENT}`;
 
 // Helper function to save chat message
@@ -190,17 +194,42 @@ export async function POST(request: NextRequest) {
         });
 
         if (accountsData?.selected_accounts && accountsData.selected_accounts.length > 0) {
-          const accountsMessage = `Great! I've found some successful competitor accounts that align with your brand strategy. Here are the top accounts to study:`;
+          const introMessage = `Great! I've found some successful competitor accounts that align with your brand strategy. Here are the top accounts to study:`;
 
-          // Save accounts results and delete loading message
-          console.log('💾 [ACCOUNTS-API] Saving accounts results message');
-          const accountsBotMessageId = await saveChatMessage(campaignId, userId, accountsMessage, 'bot', 'accounts-preview', accountsData);
-          console.log('✅ [ACCOUNTS-API] Accounts results message saved with ID:', accountsBotMessageId);
+          // Save intro message and delete loading message
+          console.log('💾 [ACCOUNTS-API] Saving accounts intro message');
+          const introMessageId = await saveChatMessage(campaignId, userId, introMessage, 'bot', 'default');
+          console.log('✅ [ACCOUNTS-API] Accounts intro message saved with ID:', introMessageId);
 
           // Delete the loading message from DynamoDB
           console.log('🗑️ [ACCOUNTS-API] Deleting loading message from DynamoDB');
           await deleteChatMessage(loadingBotMessageId);
           console.log('✅ [ACCOUNTS-API] Loading message deleted from DynamoDB');
+
+          // Create separate messages for each account
+          const accountMessageIds = [];
+          console.log(`💾 [ACCOUNTS-API] Creating ${accountsData.selected_accounts.length} separate account messages`);
+
+          for (let i = 0; i < accountsData.selected_accounts.length; i++) {
+            const account = accountsData.selected_accounts[i];
+            const accountData = {
+              selected_accounts: [account], // Single account
+              overall_reasoning: undefined // Remove overall reasoning from account messages
+            };
+
+            const accountMessage = `Account ${i + 1} of ${accountsData.selected_accounts.length}:`;
+            const accountMessageId = await saveChatMessage(campaignId, userId, accountMessage, 'bot', 'accounts-preview', accountData);
+            accountMessageIds.push(accountMessageId);
+            console.log(`✅ [ACCOUNTS-API] Account ${i + 1} message saved with ID:`, accountMessageId);
+          }
+
+          // Save overall reasoning as a separate message if it exists
+          let reasoningBotMessageId = null;
+          if (accountsData.overall_reasoning) {
+            console.log('💾 [ACCOUNTS-API] Saving accounts reasoning message');
+            reasoningBotMessageId = await saveChatMessage(campaignId, userId, accountsData.overall_reasoning, 'bot', 'default');
+            console.log('✅ [ACCOUNTS-API] Accounts reasoning message saved with ID:', reasoningBotMessageId);
+          }
 
           const totalDuration = Date.now() - startTime;
           console.log(`🎯 [ACCOUNTS-API] Success response sent (${totalDuration}ms total)`);
@@ -208,9 +237,11 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({
             message: 'Accounts analysis completed',
             loadingBotMessageId,
-            accountsBotMessageId,
-            accountsMessage,
+            introMessageId,
+            accountMessageIds,
+            introMessage,
             accountsData,
+            reasoningBotMessageId,
             nextStep: 'ideas',
             success: true
           }, { status: 200 });
