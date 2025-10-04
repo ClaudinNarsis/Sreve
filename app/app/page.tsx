@@ -1144,6 +1144,13 @@ function AppContent() {
                 // Create reasoning message if returned by API
                 let reasoningMessage = null;
                 if (ideasResult.reasoningBotMessageId && ideasResult.ideaData.reasoning) {
+                  console.log('🔍 [DEBUG-MARKDOWN] Reasoning text received:', {
+                    length: ideasResult.ideaData.reasoning.length,
+                    startsWithHash: ideasResult.ideaData.reasoning.startsWith('#'),
+                    firstChars: ideasResult.ideaData.reasoning.substring(0, 100),
+                    hasNewlines: ideasResult.ideaData.reasoning.includes('\n'),
+                    newlineCount: (ideasResult.ideaData.reasoning.match(/\n/g) || []).length
+                  });
                   reasoningMessage = {
                     id: ideasResult.reasoningBotMessageId,
                     text: ideasResult.ideaData.reasoning,
@@ -2352,6 +2359,73 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, [user, handleSendMessage]);
 
+  // Helper function to normalize markdown text for proper rendering
+  const normalizeMarkdown = (text: string): string => {
+    if (!text) return text;
+
+    // CRITICAL FIX: If the text has NO newlines at all, it means the API sent
+    // markdown as a single line with markup but no line breaks
+    // We need to add newlines at markdown boundaries
+    if (!text.includes('\n')) {
+      console.log('🔧 [MARKDOWN-FIX] Text has no newlines - adding them at markdown boundaries');
+
+      // Add newlines before headings (but not at the start)
+      let fixed = text.replace(/(.)(#{1,6}\s)/g, '$1\n\n$2');
+
+      // Add newlines after headings (before next content)
+      fixed = fixed.replace(/(#{1,6}\s[^\n#]+?)([A-Z*#])/g, '$1\n\n$2');
+
+      // Add newlines before list items
+      fixed = fixed.replace(/([^*\n])(\*\s)/g, '$1\n$2');
+
+      // Add newlines after sentences/periods before next sentence (for paragraphs)
+      fixed = fixed.replace(/\.\s+([A-Z])/g, '.\n\n$1');
+
+      // Add newlines before strong emphasis at start of sentences
+      fixed = fixed.replace(/([.!?])\s+(\*\*)/g, '$1\n\n$2');
+
+      return fixed;
+    }
+
+    // Original logic for text that already has some newlines
+    // 1. Ensure headings have proper spacing (double newline before, single after)
+    const normalized = text.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
+
+    // 2. Ensure paragraphs are separated by double newlines
+    const lines = normalized.split('\n');
+    const processedLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      const nextLine = i < lines.length - 1 ? lines[i + 1].trim() : '';
+
+      // Skip empty lines
+      if (!line) {
+        processedLines.push('');
+        continue;
+      }
+
+      // Check if current line is a heading, list item, or special markdown
+      const isHeading = /^#{1,6}\s/.test(line);
+      const isListItem = /^[-*+]\s/.test(line) || /^\d+\.\s/.test(line);
+      const isCodeBlock = line.startsWith('```');
+      const isNextListItem = /^[-*+]\s/.test(nextLine) || /^\d+\.\s/.test(nextLine);
+
+      processedLines.push(line);
+
+      // Add proper spacing after this line
+      if (isHeading && nextLine && !isCodeBlock) {
+        processedLines.push('');
+      } else if (isListItem && isNextListItem) {
+        // Single newline between list items (don't add extra)
+      } else if (nextLine && !isCodeBlock && !isListItem) {
+        processedLines.push('');
+      }
+    }
+
+    return processedLines.join('\n');
+  };
+
   // Helper function to render message content based on type
   const renderMessageContent = (message: ChatMessage) => {
     const messageType = message.messageType || 'default';
@@ -2639,20 +2713,33 @@ function AppContent() {
                   {ideaData.selected_idea.description}
                 </div>
 
-                {ideaData.selected_idea.execution_script && (
-                  <div className="selected-idea-execution-script">
-                    <h5 className="execution-script-title">Execution Script</h5>
-                    <div className="execution-script-content">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        children={String(ideaData.selected_idea.execution_script)
-                          .trim()
-                          .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-                          .replace(/[^\x20-\x7E\n\r\t]/g, '')}
-                      />
+                {ideaData.selected_idea.execution_script && (() => {
+                  const rawScript = ideaData.selected_idea.execution_script;
+                  console.log('🔍 [DEBUG-MARKDOWN] Execution script received:', {
+                    length: rawScript.length,
+                    startsWithHash: rawScript.startsWith('#'),
+                    firstChars: rawScript.substring(0, 100),
+                    hasNewlines: rawScript.includes('\n'),
+                    newlineCount: (rawScript.match(/\n/g) || []).length,
+                    firstLine: rawScript.split('\n')[0]
+                  });
+                  const normalizedScript = normalizeMarkdown(rawScript);
+                  console.log('🔍 [DEBUG-MARKDOWN] After normalization:', {
+                    length: normalizedScript.length,
+                    firstChars: normalizedScript.substring(0, 100),
+                    newlineCount: (normalizedScript.match(/\n/g) || []).length
+                  });
+                  return (
+                    <div className="selected-idea-execution-script">
+                      <h5 className="execution-script-title">Execution Script</h5>
+                      <div className="execution-script-content">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {normalizedScript}
+                        </ReactMarkdown>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                   
                 
                 
@@ -2683,13 +2770,9 @@ function AppContent() {
                           <div className="idea-execution-script">
                             <strong>Execution Script:</strong>
                             <div className="execution-script-content">
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                children={String(idea.execution_script)
-                                  .trim()
-                                  .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
-                                  .replace(/[^\x20-\x7E\n\r\t]/g, '')}
-                              />
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {normalizeMarkdown(idea.execution_script)}
+                              </ReactMarkdown>
                             </div>
                           </div>
                         )}
@@ -2940,10 +3023,17 @@ function AppContent() {
     }
 
     // Default message rendering with markdown support
+    const normalizedText = normalizeMarkdown(message.text);
+    console.log('🔍 [DEBUG-MARKDOWN] Default message rendering:', {
+      messageType: message.messageType,
+      originalLength: message.text.length,
+      normalizedLength: normalizedText.length,
+      firstChars: normalizedText.substring(0, 100)
+    });
     return (
       <div className="message-content markdown-content">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {message.text}
+          {normalizedText}
         </ReactMarkdown>
       </div>
     );
