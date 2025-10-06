@@ -1144,13 +1144,7 @@ function AppContent() {
                 // Create reasoning message if returned by API
                 let reasoningMessage = null;
                 if (ideasResult.reasoningBotMessageId && ideasResult.ideaData.reasoning) {
-                  console.log('🔍 [DEBUG-MARKDOWN] Reasoning text received:', {
-                    length: ideasResult.ideaData.reasoning.length,
-                    startsWithHash: ideasResult.ideaData.reasoning.startsWith('#'),
-                    firstChars: ideasResult.ideaData.reasoning.substring(0, 100),
-                    hasNewlines: ideasResult.ideaData.reasoning.includes('\n'),
-                    newlineCount: (ideasResult.ideaData.reasoning.match(/\n/g) || []).length
-                  });
+                  
                   reasoningMessage = {
                     id: ideasResult.reasoningBotMessageId,
                     text: ideasResult.ideaData.reasoning,
@@ -2123,7 +2117,6 @@ function AppContent() {
           let trendApiResponse: TrendApiResponse | undefined;
 
           if (dbMsg.trendData) {
-            console.log('🔍 [DEBUG] Processing DB message with trendData:', JSON.stringify(dbMsg.trendData, null, 2));
 
             // Check if it's the new API response format (has chosen_trend property)
             if ('chosen_trend' in dbMsg.trendData) {
@@ -2253,14 +2246,7 @@ function AppContent() {
       const isAtBottom = distanceFromBottom <= 100; // 100px threshold
       wasAtBottomRef.current = isAtBottom;
 
-      console.log('📍 [SCROLL-TRACKER] User scroll position updated:', {
-        scrollHeight,
-        scrollTop,
-        clientHeight,
-        distanceFromBottom,
-        isAtBottom,
-        threshold: 100
-      });
+      
     };
 
     // Initial check
@@ -2367,7 +2353,7 @@ function AppContent() {
     // markdown as a single line with markup but no line breaks
     // We need to add newlines at markdown boundaries
     if (!text.includes('\n')) {
-      console.log('🔧 [MARKDOWN-FIX] Text has no newlines - adding them at markdown boundaries');
+      
 
       // Add newlines before headings (but not at the start)
       let fixed = text.replace(/(.)(#{1,6}\s)/g, '$1\n\n$2');
@@ -2715,20 +2701,9 @@ function AppContent() {
 
                 {ideaData.selected_idea.execution_script && (() => {
                   const rawScript = ideaData.selected_idea.execution_script;
-                  console.log('🔍 [DEBUG-MARKDOWN] Execution script received:', {
-                    length: rawScript.length,
-                    startsWithHash: rawScript.startsWith('#'),
-                    firstChars: rawScript.substring(0, 100),
-                    hasNewlines: rawScript.includes('\n'),
-                    newlineCount: (rawScript.match(/\n/g) || []).length,
-                    firstLine: rawScript.split('\n')[0]
-                  });
+                  
                   const normalizedScript = normalizeMarkdown(rawScript);
-                  console.log('🔍 [DEBUG-MARKDOWN] After normalization:', {
-                    length: normalizedScript.length,
-                    firstChars: normalizedScript.substring(0, 100),
-                    newlineCount: (normalizedScript.match(/\n/g) || []).length
-                  });
+                  
                   return (
                     <div className="selected-idea-execution-script">
                       <h5 className="execution-script-title">Execution Script</h5>
@@ -3024,12 +2999,7 @@ function AppContent() {
 
     // Default message rendering with markdown support
     const normalizedText = normalizeMarkdown(message.text);
-    console.log('🔍 [DEBUG-MARKDOWN] Default message rendering:', {
-      messageType: message.messageType,
-      originalLength: message.text.length,
-      normalizedLength: normalizedText.length,
-      firstChars: normalizedText.substring(0, 100)
-    });
+    
     return (
       <div className="message-content markdown-content">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -3159,12 +3129,19 @@ function AppContent() {
               <div className="chat-messages" ref={chatMessagesRef}>
                 {messages.map((message) => {
                   const messageType = message.messageType || 'default';
+                  const content = renderMessageContent(message);
+
+                  // Don't render the message wrapper if content is null
+                  if (content === null) {
+                    return null;
+                  }
+
                   return (
                     <div
                       key={message.id}
                       className={`message ${message.sender === 'user' ? 'user-message' : 'assistant-message'} ${messageType}`}
                     >
-                      {renderMessageContent(message)}
+                      {content}
                     </div>
                   );
                 })}
