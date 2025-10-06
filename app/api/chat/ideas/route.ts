@@ -175,8 +175,13 @@ export async function POST(request: NextRequest) {
         brand_details: brandDetails,
         selected_accounts: selectedAccounts,
         selected_trends: selectedTrends,
-        prompt: brandDetails.description || ''
+        prompt: brandDetails.format || ''
       };
+
+      // Log complete request payload for verification
+      console.log('📦 [IDEAS-API] Complete request payload:');
+      console.log(JSON.stringify(generateIdeaPayload, null, 2));
+      console.log('📦 [IDEAS-API] Payload size:', JSON.stringify(generateIdeaPayload).length, 'bytes');
 
       const apiCallStart = Date.now();
       const generateIdeaResponse = await makeAPICallWithRetry(
