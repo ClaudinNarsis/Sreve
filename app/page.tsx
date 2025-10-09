@@ -289,6 +289,7 @@ export default function HomePage() {
           <a href="#features">Product</a>
           <Link href="/tools">Tools</Link>
           <a href="#pricing">Pricing</a>
+          <Link href="/resources">Resources</Link>
           <Link href="/blog">Blog</Link>
           <a href="#contact-us">Contact Us</a>
         </nav>
@@ -421,7 +422,7 @@ export default function HomePage() {
         <div className="footer-content">
           <div className="container">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
-              
+
               {/* AI Tools Section */}
               <div>
                 <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>AI Content Creation Tools</h4>
@@ -433,6 +434,17 @@ export default function HomePage() {
                   <li><Link href="/tools/ai-sentence-rewriter" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Sentence Rewriter</Link></li>
                   <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Post Generator</Link></li>
                   <li><Link href="/tools/blog-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>AI Blog Generator</Link></li>
+                </ul>
+              </div>
+
+              {/* Free Resources Section */}
+              <div>
+                <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Free Resources</h4>
+                <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                  <li><Link href="/resources/viral-audios-missing-out" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Viral Audio Finder</Link></li>
+                  <li><Link href="/resources" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All Resources</Link></li>
+                  <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Marketing Blog</Link></li>
+                  <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All AI Tools</Link></li>
                 </ul>
               </div>
 
