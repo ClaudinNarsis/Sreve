@@ -43,6 +43,14 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: 'create-viral-posts-with-ai',
+      title: 'Create Viral Posts with AI: Best Tools & Strategies for 2025',
+      description: 'Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.',
+      date: 'January 15, 2025',
+      readTime: '12 min read',
+      tags: ['Viral Content', 'AI Tools', 'Social Media']
+    },
+    {
       slug: 'cheaper-jasper-alternative-2025',
       title: 'Best Cheaper Jasper AI Alternative in 2025 - Save 90% on AI Copywriting',
       description: 'Discover why Sreve is the best affordable alternative to Jasper AI. Compare pricing, features, and see how agencies save $1,200+ yearly.',
@@ -147,10 +155,10 @@ export default async function BlogPage() {
             <div>
               <h4 style={{ color: 'var(--orange-primary)', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 'bold' }}>Latest Marketing Guides</h4>
               <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/create-viral-posts-with-ai" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Create Viral Posts with AI</Link></li>
                 <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Jasper AI Alternative Guide</Link></li>
                 <li><Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Top 5 AI Tools for Agencies</Link></li>
                 <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Social Media AI Tools 2025</Link></li>
-                <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Content Marketing AI Guide</Link></li>
                 <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>All Blog Posts</Link></li>
               </ul>
             </div>
@@ -199,12 +207,12 @@ export default async function BlogPage() {
           <div style={{ borderTop: '1px solid var(--darkness-level-3)', paddingTop: '2rem', marginTop: '2rem' }}>
             <h4 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem', textAlign: 'center' }}>Most Popular Marketing Articles</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem 2rem' }}>
+              <Link href="/blog/create-viral-posts-with-ai" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Create Viral Posts with AI</Link>
               <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Save 90% vs Jasper AI</Link>
               <Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Social Media AI Tools</Link>
               <Link href="/blog/top-5-tools-for-creative-and-marketing-agencies" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Agency AI Tools Guide</Link>
               <Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>Content Marketing AI</Link>
               <Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Caption Generator</Link>
-              <Link href="/tools/ai-content-generator" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '0.9rem' }}>AI Content Generator</Link>
             </div>
           </div>
         </div>
@@ -236,6 +244,18 @@ export default async function BlogPage() {
             }
           },
           "blogPost": [
+            {
+              "@type": "BlogPosting",
+              "headline": "Create Viral Posts with AI: Best Tools & Strategies for 2025",
+              "description": "Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.",
+              "url": "https://sreve.online/blog/create-viral-posts-with-ai",
+              "datePublished": "2025-01-15",
+              "author": {
+                "@type": "Organization",
+                "name": "Sreve"
+              },
+              "keywords": ["Viral Content", "AI Tools", "Social Media", "Viral Marketing"]
+            },
             {
               "@type": "BlogPosting",
               "headline": "Best Cheaper Jasper AI Alternative in 2025 - Save 90% on AI Copywriting",
@@ -308,13 +328,22 @@ export default async function BlogPage() {
                 "position": 1,
                 "item": {
                   "@type": "Article",
+                  "name": "Create Viral Posts with AI: Best Tools & Strategies for 2025",
+                  "url": "https://sreve.online/blog/create-viral-posts-with-ai"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "item": {
+                  "@type": "Article",
                   "name": "Best Cheaper Jasper AI Alternative in 2025",
                   "url": "https://sreve.online/blog/cheaper-jasper-alternative-2025"
                 }
               },
               {
                 "@type": "ListItem",
-                "position": 2,
+                "position": 3,
                 "item": {
                   "@type": "Article",
                   "name": "Top 5 AI Tools for Creative & Marketing Agencies",
@@ -323,7 +352,7 @@ export default async function BlogPage() {
               },
               {
                 "@type": "ListItem",
-                "position": 3,
+                "position": 4,
                 "item": {
                   "@type": "Article",
                   "name": "10 Best AI Tools for Social Media Marketing in 2025",
@@ -332,7 +361,7 @@ export default async function BlogPage() {
               },
               {
                 "@type": "ListItem",
-                "position": 4,
+                "position": 5,
                 "item": {
                   "@type": "Article",
                   "name": "Best AI Tools for Content Marketing 2025",
