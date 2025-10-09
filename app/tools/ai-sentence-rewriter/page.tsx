@@ -31,6 +31,7 @@ export default function AISentenceRewriterPage() {
           <a href="/#features">Product</a>
           <Link href="/tools">Tools</Link>
           <a href="/#pricing">Pricing</a>
+          <Link href="/resources">Resources</Link>
           <Link href="/blog">Blog</Link>
           <a href="/#contact-us">Contact Us</a>
         </nav>

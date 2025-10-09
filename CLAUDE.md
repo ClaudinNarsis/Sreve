@@ -102,7 +102,7 @@ app/
 --text-secondary: #cccccc;     /* Secondary text, descriptions */
 --text-tertiary: #888888;     /* Metadata, subtle text */
 
-/* Orange Accent - LIMITED TO 25% OF PAGE */
+/* Orange Accent - LIMITED TO 5% OF PAGE */
 --orange-primary: #ff6600;     /* Main orange - CTAs, highlights */
 --orange-secondary: #ff8533;   /* Orange variations for gradients */
 --orange-glow: rgba(255, 102, 0, 0.3); /* Orange glow effects */
@@ -121,7 +121,7 @@ app/
 ```
 
 #### Usage Guidelines - STRICT RULES
-- **Orange Usage**: Maximum 25% of page content, ONE orange background section only
+- **Orange Usage**: Maximum 5% of page content, ONE orange background section only
 - **Background Levels**: Level 1 (main bg) → Level 2 (sections) → Level 3 (cards/elements)
 - **Text Hierarchy**: White (headings) → Light grey (body) → Dark grey (metadata)
 - **Glass Effects**: Use on cards, modals, and elevated elements
