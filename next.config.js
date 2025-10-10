@@ -43,6 +43,10 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Content-Language',
+            value: 'en, ar, fr',
+          },
         ],
       },
       {
@@ -110,7 +114,12 @@ const nextConfig = {
   
   // Trailing slash consistency
   trailingSlash: false,
-  
+
+  // Redirects removed - middleware handles locale routing with whitelist approach
+  async redirects() {
+    return [];
+  },
+
   env: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
