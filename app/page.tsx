@@ -16,27 +16,7 @@ export default function HomePage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   console.log('🎯 [LANDING] HomePage component loaded');
-  const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
 
-  const loadSampleResponses = useMemo(() => {
-    let controller: AbortController | null = null;
-    return () => {
-      if (controller) controller.abort();
-      controller = new AbortController();
-      fetch('/sample-responses.json', { signal: controller.signal })
-        .then(response => response.json())
-        .then(data => setSampleResponses(data))
-        .catch(error => {
-          if (error.name !== 'AbortError') {
-            console.error('Error loading sample responses:', error);
-          }
-        });
-    };
-  }, []);
-
-  useEffect(() => {
-    loadSampleResponses();
-  }, [loadSampleResponses]);
 
   // Clear any stale sessionStorage data on component mount (helps with production caching issues)
   useEffect(() => {
@@ -117,40 +97,30 @@ export default function HomePage() {
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
     const inputText = promptInput?.innerText?.trim() || '';
     console.log('🎯 [LANDING] Input text:', inputText);
-    
-    if (inputText) {
-      const matchingResponse = sampleResponses.responses.find(
-        response => response.prompt.toLowerCase() === inputText.toLowerCase()
-      );
-      console.log('🎯 [LANDING] Matching sample response:', matchingResponse ? 'Found' : 'Not found');
-      
-      if (matchingResponse) {
-        console.log('🎯 [LANDING] Redirecting to sample page');
-        router.push(`/sample?prompt=${encodeURIComponent(matchingResponse.prompt)}&answer=${encodeURIComponent(matchingResponse.answer)}`);
-      } else {
-        // Check if auth is loaded and user is signed in
-        if (isLoaded && isSignedIn) {
-          console.log('🎯 [LANDING] User is signed in, storing prompt and redirecting to /app');
-          // Store prompt in sessionStorage
-          sessionStorage.setItem('pendingPrompt', inputText);
-          sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
-          // Redirect to /app - it will auto-send the prompt
-          router.push('/app');
-        } else if (isLoaded && !isSignedIn) {
-          console.log('🎯 [LANDING] User not signed in, storing prompt for post-auth processing');
-          // Store prompt in sessionStorage to survive auth redirects
-          sessionStorage.setItem('pendingPrompt', inputText);
-          sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
 
-          console.log('🎯 [LANDING] Triggering sign-in flow');
-          // Trigger sign-in - user will be redirected through auth flow and return to app
-          const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
-          signInButton?.click();
-        } else {
-          console.log('🎯 [LANDING] Auth not loaded yet, please wait');
-          // Auth not loaded yet - could show a loading indicator or just ignore the click
-          return;
-        }
+    if (inputText) {
+      // Check if auth is loaded and user is signed in
+      if (isLoaded && isSignedIn) {
+        console.log('🎯 [LANDING] User is signed in, storing prompt and redirecting to /app');
+        // Store prompt in sessionStorage
+        sessionStorage.setItem('pendingPrompt', inputText);
+        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+        // Redirect to /app - it will auto-send the prompt
+        router.push('/app');
+      } else if (isLoaded && !isSignedIn) {
+        console.log('🎯 [LANDING] User not signed in, storing prompt for post-auth processing');
+        // Store prompt in sessionStorage to survive auth redirects
+        sessionStorage.setItem('pendingPrompt', inputText);
+        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+
+        console.log('🎯 [LANDING] Triggering sign-in flow');
+        // Trigger sign-in - user will be redirected through auth flow and return to app
+        const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
+        signInButton?.click();
+      } else {
+        console.log('🎯 [LANDING] Auth not loaded yet, please wait');
+        // Auth not loaded yet - could show a loading indicator or just ignore the click
+        return;
       }
     } else {
       console.log('🎯 [LANDING] No input text provided');
