@@ -16,27 +16,7 @@ export default function HomePage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   console.log('🎯 [LANDING] HomePage component loaded');
-  const [sampleResponses, setSampleResponses] = useState<{responses: Array<{prompt: string, answer: string}>}>({responses: []});
 
-  const loadSampleResponses = useMemo(() => {
-    let controller: AbortController | null = null;
-    return () => {
-      if (controller) controller.abort();
-      controller = new AbortController();
-      fetch('/sample-responses.json', { signal: controller.signal })
-        .then(response => response.json())
-        .then(data => setSampleResponses(data))
-        .catch(error => {
-          if (error.name !== 'AbortError') {
-            console.error('Error loading sample responses:', error);
-          }
-        });
-    };
-  }, []);
-
-  useEffect(() => {
-    loadSampleResponses();
-  }, [loadSampleResponses]);
 
   // Clear any stale sessionStorage data on component mount (helps with production caching issues)
   useEffect(() => {
@@ -117,40 +97,30 @@ export default function HomePage() {
     const promptInput = document.querySelector<HTMLElement>('.prompt-input');
     const inputText = promptInput?.innerText?.trim() || '';
     console.log('🎯 [LANDING] Input text:', inputText);
-    
-    if (inputText) {
-      const matchingResponse = sampleResponses.responses.find(
-        response => response.prompt.toLowerCase() === inputText.toLowerCase()
-      );
-      console.log('🎯 [LANDING] Matching sample response:', matchingResponse ? 'Found' : 'Not found');
-      
-      if (matchingResponse) {
-        console.log('🎯 [LANDING] Redirecting to sample page');
-        router.push(`/sample?prompt=${encodeURIComponent(matchingResponse.prompt)}&answer=${encodeURIComponent(matchingResponse.answer)}`);
-      } else {
-        // Check if auth is loaded and user is signed in
-        if (isLoaded && isSignedIn) {
-          console.log('🎯 [LANDING] User is signed in, storing prompt and redirecting to /app');
-          // Store prompt in sessionStorage
-          sessionStorage.setItem('pendingPrompt', inputText);
-          sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
-          // Redirect to /app - it will auto-send the prompt
-          router.push('/app');
-        } else if (isLoaded && !isSignedIn) {
-          console.log('🎯 [LANDING] User not signed in, storing prompt for post-auth processing');
-          // Store prompt in sessionStorage to survive auth redirects
-          sessionStorage.setItem('pendingPrompt', inputText);
-          sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
 
-          console.log('🎯 [LANDING] Triggering sign-in flow');
-          // Trigger sign-in - user will be redirected through auth flow and return to app
-          const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
-          signInButton?.click();
-        } else {
-          console.log('🎯 [LANDING] Auth not loaded yet, please wait');
-          // Auth not loaded yet - could show a loading indicator or just ignore the click
-          return;
-        }
+    if (inputText) {
+      // Check if auth is loaded and user is signed in
+      if (isLoaded && isSignedIn) {
+        console.log('🎯 [LANDING] User is signed in, storing prompt and redirecting to /app');
+        // Store prompt in sessionStorage
+        sessionStorage.setItem('pendingPrompt', inputText);
+        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+        // Redirect to /app - it will auto-send the prompt
+        router.push('/app');
+      } else if (isLoaded && !isSignedIn) {
+        console.log('🎯 [LANDING] User not signed in, storing prompt for post-auth processing');
+        // Store prompt in sessionStorage to survive auth redirects
+        sessionStorage.setItem('pendingPrompt', inputText);
+        sessionStorage.setItem('pendingPromptTimestamp', Date.now().toString());
+
+        console.log('🎯 [LANDING] Triggering sign-in flow');
+        // Trigger sign-in - user will be redirected through auth flow and return to app
+        const signInButton = document.querySelector<HTMLButtonElement>('.signup-button');
+        signInButton?.click();
+      } else {
+        console.log('🎯 [LANDING] Auth not loaded yet, please wait');
+        // Auth not loaded yet - could show a loading indicator or just ignore the click
+        return;
       }
     } else {
       console.log('🎯 [LANDING] No input text provided');
@@ -160,7 +130,17 @@ export default function HomePage() {
     return () => {
       const mobileBtn = document.querySelector<HTMLButtonElement>('.mobile-menu-button');
       const navLinks = document.querySelector<HTMLDivElement>('.nav-links');
+
+      // Toggle menu on button click
       mobileBtn?.addEventListener('click', () => navLinks?.classList.toggle('active'));
+
+      // Close menu when any nav link is clicked
+      const allNavLinks = navLinks?.querySelectorAll('a');
+      allNavLinks?.forEach(link => {
+        link.addEventListener('click', () => {
+          navLinks?.classList.remove('active');
+        });
+      });
     };
   }, []);
 
@@ -269,6 +249,9 @@ export default function HomePage() {
           }, 1000); // Remove highlight after 2 seconds
         }
       }
+    } else if (url === 'signup') {
+      // Redirect to sign-up page
+      router.push('/sign-up');
     } else {
       if (!button.querySelector('.button-loader')) {
         const loader = document.createElement('span');
@@ -356,19 +339,19 @@ export default function HomePage() {
             <article className="feature">
               <h3>Unhinged (In a Good Way)</h3>
               <p>&quot;No intern would dare write this.&quot;</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
+              <button className="cta-button" onClick={(e) => gtagClick(e, 'signup')}>Try Now</button>
               <Image src="/assets/1-1.png" alt="Unhinged AI copywriting example showing creative ad copy" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Thinks Like a Strategist</h3>
               <p>&quot;This feels like something my strategist would say.&quot;</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
+              <button className="cta-button" onClick={(e) => gtagClick(e, 'signup')}>Try Now</button>
               <Image src="/assets/1-2.png" alt="Strategic AI copywriting example showing thoughtful ad messaging" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
             <article className="feature">
               <h3>Built for Creative Teams</h3>
               <p>&quot;Before Sreve, Everything needs rewriting or &quot;seasoning&quot; to work&quot;</p>
-              <button className="cta-button" onClick={(e) => gtagClick(e, '#hero')}>Try Now</button>
+              <button className="cta-button" onClick={(e) => gtagClick(e, 'signup')}>Try Now</button>
               <Image src="/assets/1-3.png" alt="Creative team collaboration with AI-generated marketing content" width={400} height={300} loading="lazy" sizes="(max-width: 768px) 100vw, 400px" priority={false} placeholder="blur" blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABAAABAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAEAQAE/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==" />
             </article>
           </div>
@@ -387,7 +370,7 @@ export default function HomePage() {
                 <li>Generate up to 20 Ideas/month</li>
                 <li>1 Brand Guide</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, 'signup')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
             <div className="pricing-card popular">
@@ -398,7 +381,7 @@ export default function HomePage() {
                 <li>Increased limit upto 200 Ideas/month</li>
                 <li>5 Brand Guides</li>
               </ul>
-              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, '#hero')}>Try now for free</button>
+              <button className="cta-button secondary-cta" onClick={(e) => gtagClick(e, 'signup')}>Try now for free</button>
               <p className="no-credit-card">Start free. No credit card required</p>
             </div>
           </div>

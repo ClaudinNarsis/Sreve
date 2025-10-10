@@ -632,17 +632,38 @@ p {
     font-size: 0.8rem !important;
   }
   .prompt-box{
-    width: 90% !important;
-
+    width: 95% !important;
+    padding: 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
   }
   .generate-button{
-    font-size: 0.6rem !important;
+    font-size: 0.875rem !important;
+    padding: 0.75rem 1.25rem !important;
   }
   .prompt-input{
-    font-size: 0.8rem !important;
+    font-size: 0.875rem !important;
+    padding: 0.75rem !important;
+    min-height: 60px !important;
   }
   .chip{
-    font-size: 0.5rem !important;
+    font-size: 0.65rem !important;
+    padding: 0.6rem 0.8rem !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    text-align: left !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  .prompt-chips{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    margin-top: 0.75rem !important;
+  }
+  .prompt-input-container{
+    width: 100% !important;
   }
   .feature{
     margin-bottom: 1rem !important;

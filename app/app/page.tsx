@@ -882,7 +882,18 @@ function AppContent() {
           })
         });
 
-        const trendsResult = await trendsResponse.json();
+        let trendsResult;
+        try {
+          const text = await trendsResponse.text();
+          if (!text || text.trim() === '') {
+            throw new Error(`Empty response body (HTTP ${trendsResponse.status})`);
+          }
+          trendsResult = JSON.parse(text);
+        } catch (parseError) {
+          console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse trends response:`, parseError);
+          throw new Error(`Invalid JSON response from trends API (HTTP ${trendsResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+        }
+
         const trendsDuration = Date.now() - trendsStartTime;
         console.log(`📈 [SEQUENTIAL-FLOW] Trends API completed in ${trendsDuration}ms:`, {
           status: trendsResponse.status,
@@ -988,7 +999,18 @@ function AppContent() {
             })
           });
 
-          const accountsResult = await accountsResponse.json();
+          let accountsResult;
+          try {
+            const text = await accountsResponse.text();
+            if (!text || text.trim() === '') {
+              throw new Error(`Empty response body (HTTP ${accountsResponse.status})`);
+            }
+            accountsResult = JSON.parse(text);
+          } catch (parseError) {
+            console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse accounts response:`, parseError);
+            throw new Error(`Invalid JSON response from accounts API (HTTP ${accountsResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+          }
+
           const accountsDuration = Date.now() - accountsStartTime;
           console.log(`🔍 [SEQUENTIAL-FLOW] Accounts API completed in ${accountsDuration}ms:`, {
             status: accountsResponse.status,
@@ -1113,7 +1135,18 @@ function AppContent() {
               })
             });
 
-            const ideasResult = await ideasResponse.json();
+            let ideasResult;
+            try {
+              const text = await ideasResponse.text();
+              if (!text || text.trim() === '') {
+                throw new Error(`Empty response body (HTTP ${ideasResponse.status})`);
+              }
+              ideasResult = JSON.parse(text);
+            } catch (parseError) {
+              console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse ideas response:`, parseError);
+              throw new Error(`Invalid JSON response from ideas API (HTTP ${ideasResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+            }
+
             const ideasDuration = Date.now() - ideasStartTime;
             console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
               status: ideasResponse.status,
@@ -1256,7 +1289,17 @@ function AppContent() {
                     })
                   });
 
-                  const critiqueResult = await critiqueResponse.json();
+                  let critiqueResult;
+                  try {
+                    const text = await critiqueResponse.text();
+                    if (!text || text.trim() === '') {
+                      throw new Error(`Empty response body (HTTP ${critiqueResponse.status})`);
+                    }
+                    critiqueResult = JSON.parse(text);
+                  } catch (parseError) {
+                    console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse critique response:`, parseError);
+                    throw new Error(`Invalid JSON response from critique API (HTTP ${critiqueResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+                  }
                   const critiqueDuration = Date.now() - critiqueStartTime;
                   console.log(`🎯 [SEQUENTIAL-FLOW] Critique API completed in ${critiqueDuration}ms:`, {
                     status: critiqueResponse.status,

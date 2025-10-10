@@ -1,17 +1,77 @@
 /* Global resets and tokens - Critical CSS */
-*, *::before, *::after { 
-  box-sizing: border-box; 
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-html { 
+html {
   scroll-behavior: smooth;
 }
 
-html, body { 
-  height: 100%; 
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
   font-display: swap;
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] body {
+  text-align: right;
+}
+
+/* RTL: Reverse flex directions */
+[dir="rtl"] .header,
+[dir="rtl"] .nav-links,
+[dir="rtl"] .footer-content {
+  flex-direction: row-reverse;
+}
+
+/* RTL: Mirror margins and paddings */
+[dir="rtl"] .nav-links a {
+  margin-left: 0;
+  margin-right: 1.5rem;
+}
+
+[dir="rtl"] .footer-nav li {
+  text-align: right;
+}
+
+/* RTL: Mirror transforms */
+[dir="rtl"] .chevron {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .chevron.open {
+  transform: scaleX(-1) rotate(180deg);
+}
+
+/* RTL: Adjust grid layouts */
+[dir="rtl"] .features-grid,
+[dir="rtl"] .tools-grid {
+  direction: rtl;
+}
+
+/* RTL: Text alignment */
+[dir="rtl"] .feature,
+[dir="rtl"] .tool-card {
+  text-align: right;
+}
+
+/* RTL: Button positioning */
+[dir="rtl"] .cta-button,
+[dir="rtl"] button {
+  text-align: center;
+}
+
+/* RTL: Icons and arrows should be mirrored */
+[dir="rtl"] .arrow-icon,
+[dir="rtl"] .next-icon {
+  transform: scaleX(-1);
 }
 
 /* Performance optimizations */

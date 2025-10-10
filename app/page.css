@@ -86,6 +86,10 @@
   background: var(--darkness-level-2);
 }
 
+.mobile-menu-button {
+  display: none;
+}
+
 .header-auth-section {
   display: flex;
   align-items: center;
@@ -218,16 +222,290 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  /* Header Mobile Fixes */
   .header {
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
   }
-  
-  .hero-title {
-    font-size: 2rem;
+
+  .header .logo {
+    width: 100px;
+    height: auto;
   }
-  
-  .footer-nav {
+
+  .header-auth-section {
+    gap: 0.5rem;
+  }
+
+  .header .cta-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: var(--darkness-level-2);
     flex-direction: column;
+    padding: 1rem;
     gap: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .mobile-menu-button {
+    display: block;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  /* Hero Mobile Optimization */
+  .hero {
+    min-height: 100vh;
+    padding-top: 80px;
+    padding-bottom: 2rem;
+    background-position: center top;
+    background-size: cover;
+  }
+
+  .hero .container {
+    padding: 0 1rem;
+  }
+
+  .hero-intro {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    line-height: 1.3;
+    margin: 1rem 0;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+
+  .signup-button {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 1.5rem;
+    display: block;
+  }
+
+  /* Prompt Box Mobile */
+  .prompt-box {
+    width: 100%;
+    padding: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .prompt-input-container {
+    margin-bottom: 1rem;
+  }
+
+  .prompt-input {
+    font-size: 0.875rem;
+    min-height: 60px;
+    padding: 0.75rem;
+  }
+
+  .chips-wrapper {
+    margin-top: 0.75rem;
+  }
+
+  .prompt-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .chip {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    white-space: normal;
+    text-align: left;
+    min-height: 44px;
+  }
+
+  .generate-button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.875rem;
+    min-height: 48px;
+  }
+
+  .hero-trust-link {
+    margin-top: 1.5rem;
+  }
+
+  .hero-blog-link {
+    font-size: 0.75rem;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Features Mobile */
+  .features-section {
+    padding: 3rem 0;
+  }
+
+  .features-title {
+    font-size: 1.5rem;
+    padding: 0 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .feature h3 {
+    font-size: 1.25rem;
+  }
+
+  .feature p {
+    font-size: 0.875rem;
+  }
+
+  .feature .cta-button {
+    width: 100%;
+    max-width: 250px;
+  }
+
+  /* Pricing Mobile */
+  .pricing-section {
+    padding: 3rem 0;
+  }
+
+  .pricing-section h2 {
+    font-size: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .pricing-card {
+    padding: 1.5rem;
+  }
+
+  /* Footer Mobile */
+  .footer {
+    padding: 3rem 0 1rem;
+  }
+
+  .footer-content {
+    padding: 0 1rem;
+  }
+
+  .footer-content > div > div {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .footer-content h4 {
+    font-size: 1rem;
+    margin-bottom: 1rem !important;
+  }
+
+  .footer-content ul {
+    line-height: 1.8 !important;
+  }
+
+  .footer-content ul li {
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-content ul li a {
+    font-size: 0.875rem;
+  }
+
+  .footer-bottom {
+    padding: 1.5rem 1rem 1rem;
+    font-size: 0.75rem;
+  }
+
+  .footer-content > div:last-child > div {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Final CTA Mobile */
+  .final-cta-section {
+    padding: 3rem 1rem;
+  }
+
+  .final-cta-section h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .contact-box {
+    padding: 1.5rem 1rem;
+  }
+
+  .contact-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 425px) {
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .features-title,
+  .pricing-section h2 {
+    font-size: 1.25rem;
+  }
+
+  .prompt-input {
+    font-size: 0.8125rem;
+  }
+
+  .chip {
+    font-size: 0.6875rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 375px) {
+  .header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .hero-title {
+    font-size: 1.375rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9375rem;
+  }
+
+  .prompt-box {
+    padding: 0.75rem;
   }
 }

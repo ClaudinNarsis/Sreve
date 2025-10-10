@@ -1,0 +1,126 @@
+.language-switcher {
+  position: relative;
+  z-index: 100;
+}
+
+.language-switcher-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.language-switcher-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.language-switcher-button svg {
+  color: #cccccc;
+}
+
+.current-locale {
+  color: #ffffff;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.language-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 160px;
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.language-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.language-option:hover {
+  background: rgba(255, 102, 0, 0.1);
+}
+
+.language-option.active {
+  background: rgba(255, 102, 0, 0.15);
+  color: #ff6600;
+}
+
+.language-option.active .locale-name {
+  font-weight: 600;
+}
+
+.language-option svg {
+  color: #ff6600;
+}
+
+.locale-name {
+  flex: 1;
+}
+
+/* RTL support */
+[dir="rtl"] .language-switcher-dropdown {
+  right: auto;
+  left: 0;
+}
+
+[dir="rtl"] .language-option {
+  text-align: right;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .language-switcher-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .current-locale {
+    display: none;
+  }
+
+  .language-switcher-dropdown {
+    min-width: 140px;
+  }
+}
