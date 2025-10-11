@@ -1124,26 +1124,85 @@ function AppContent() {
 
             const ideasStartTime = Date.now();
 
+            // Detailed logging before API call
+            const requestPayload = {
+              campaignId,
+              brandDetails,
+              selectedAccounts: accountsData?.selected_accounts || [],
+              selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
+            };
+
+            console.log('💡 [IDEAS-REQUEST] Preparing ideas API call:', {
+              timestamp: new Date().toISOString(),
+              campaignId,
+              brandName: brandDetails.brand_name,
+              accountsCount: requestPayload.selectedAccounts.length,
+              trendsCount: requestPayload.selectedTrends.length,
+              payloadSize: JSON.stringify(requestPayload).length,
+              accountsData: accountsData ? {
+                hasSelectedAccounts: !!accountsData.selected_accounts,
+                selectedAccountsLength: accountsData.selected_accounts?.length || 0,
+                accountsSample: accountsData.selected_accounts?.slice(0, 2)
+              } : 'null',
+              trendData: trendData ? {
+                hasChosenTrend: !!trendData.chosen_trend,
+                trendSample: trendData.chosen_trend ? JSON.stringify(trendData.chosen_trend).substring(0, 200) : 'none'
+              } : 'null'
+            });
+
             const ideasResponse = await fetch('/api/chat/ideas', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                campaignId,
-                brandDetails,
-                selectedAccounts: accountsData?.selected_accounts || [],
-                selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
-              })
+              body: JSON.stringify(requestPayload)
+            });
+
+            console.log('💡 [IDEAS-RESPONSE] Ideas API response received:', {
+              timestamp: new Date().toISOString(),
+              status: ideasResponse.status,
+              statusText: ideasResponse.statusText,
+              ok: ideasResponse.ok,
+              headers: {
+                contentType: ideasResponse.headers.get('content-type'),
+                contentLength: ideasResponse.headers.get('content-length'),
+                server: ideasResponse.headers.get('server')
+              },
+              duration: Date.now() - ideasStartTime
             });
 
             let ideasResult;
             try {
               const text = await ideasResponse.text();
+              console.log('💡 [IDEAS-PARSE] Response text received:', {
+                textLength: text.length,
+                isEmpty: !text || text.trim() === '',
+                firstChars: text.substring(0, 200),
+                lastChars: text.length > 200 ? text.substring(text.length - 100) : 'N/A'
+              });
+
               if (!text || text.trim() === '') {
+                console.error('❌ [IDEAS-PARSE] Empty response body detected:', {
+                  status: ideasResponse.status,
+                  statusText: ideasResponse.statusText,
+                  headers: Object.fromEntries(ideasResponse.headers.entries())
+                });
                 throw new Error(`Empty response body (HTTP ${ideasResponse.status})`);
               }
+
               ideasResult = JSON.parse(text);
+              console.log('✅ [IDEAS-PARSE] JSON parsed successfully:', {
+                success: ideasResult.success,
+                hasIdeaData: !!ideasResult.ideaData,
+                hasError: !!ideasResult.error,
+                keys: Object.keys(ideasResult)
+              });
             } catch (parseError) {
-              console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse ideas response:`, parseError);
+              console.error(`❌ [IDEAS-PARSE] Failed to parse ideas response:`, {
+                error: parseError,
+                errorMessage: parseError instanceof Error ? parseError.message : 'Unknown',
+                errorStack: parseError instanceof Error ? parseError.stack : 'N/A',
+                responseStatus: ideasResponse.status,
+                responseHeaders: Object.fromEntries(ideasResponse.headers.entries())
+              });
               throw new Error(`Invalid JSON response from ideas API (HTTP ${ideasResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
             }
 
