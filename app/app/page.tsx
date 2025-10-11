@@ -2828,33 +2828,37 @@ function AppContent() {
                   </div>
                 )}
               </div>
-              {/* All Generated Ideas */}
+              {/* All Generated Ideas (excluding selected idea) */}
               <div className="all-ideas-section">
                   <h3 className="section-title">Other Ideas</h3>
                   <div className="ideas-grid">
-                    {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
-                      <div key={index} className="idea-card">
-                        <div className="idea-header">
-                          <h4 className="idea-angle">{idea.angle}</h4>
-                        </div>
-                        <div className="idea-hook">
-                          <strong>Hook:</strong> "{idea.hook}"
-                        </div>
-                        <div className="idea-description">
-                          {idea.description}
-                        </div>
-                        {idea.execution_script && (
-                          <div className="idea-execution-script">
-                            <strong>Execution Script:</strong>
-                            <div className="execution-script-content">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {normalizeMarkdown(idea.execution_script)}
-                              </ReactMarkdown>
-                            </div>
+                    {Array.isArray(ideaData.ideas) ? (() => {
+                      // Filter out the selected idea from the list
+                      const otherIdeas = ideaData.ideas.filter((idea) => {
+                        // Compare by angle and hook to identify the selected idea
+                        return !(
+                          idea.angle === ideaData.selected_idea?.angle &&
+                          idea.hook === ideaData.selected_idea?.hook
+                        );
+                      });
+
+                      return otherIdeas.length > 0 ? otherIdeas.map((idea, index) => (
+                        <div key={index} className="idea-card">
+                          <div className="idea-header">
+                            <h4 className="idea-angle">{idea.angle}</h4>
                           </div>
-                        )}
-                      </div>
-                    )) : (
+                          <div className="idea-hook">
+                            <strong>Hook:</strong> "{idea.hook}"
+                          </div>
+                          <div className="idea-description">
+                            {idea.description}
+                          </div>
+                          {/* Other ideas from ideas_ready won't have execution_script */}
+                        </div>
+                      )) : (
+                        <div className="no-ideas">No other ideas available</div>
+                      );
+                    })() : (
                       <div className="no-ideas">No ideas available</div>
                     )}
                   </div>
