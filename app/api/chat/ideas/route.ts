@@ -182,26 +182,68 @@ export async function POST(request: NextRequest) {
       console.log('📦 [IDEAS-API] Complete request payload:');
       console.log(JSON.stringify(generateIdeaPayload, null, 2));
       console.log('📦 [IDEAS-API] Payload size:', JSON.stringify(generateIdeaPayload).length, 'bytes');
+      console.log('📦 [IDEAS-API] Endpoint:', `${sreveApiEndpoint}/generate_idea`);
+      console.log('📦 [IDEAS-API] Request start time:', new Date().toISOString());
 
       const apiCallStart = Date.now();
-      const generateIdeaResponse = await makeAPICallWithRetry(
-        `${sreveApiEndpoint}/generate_idea`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(generateIdeaPayload),
-        }
-      );
-      const apiCallDuration = Date.now() - apiCallStart;
-      console.log(`⏱️ [IDEAS-API] API call completed in ${apiCallDuration}ms`);
+      console.log('🌐 [IDEAS-API] Starting external API call to generate_idea endpoint...');
+
+      let generateIdeaResponse;
+      try {
+        generateIdeaResponse = await makeAPICallWithRetry(
+          `${sreveApiEndpoint}/generate_idea`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(generateIdeaPayload),
+          }
+        );
+        const apiCallDuration = Date.now() - apiCallStart;
+        console.log(`⏱️ [IDEAS-API] External API call completed in ${apiCallDuration}ms`, {
+          status: generateIdeaResponse.status,
+          statusText: generateIdeaResponse.statusText,
+          ok: generateIdeaResponse.ok,
+          headers: {
+            contentType: generateIdeaResponse.headers.get('content-type'),
+            contentLength: generateIdeaResponse.headers.get('content-length')
+          }
+        });
+      } catch (apiError) {
+        const apiCallDuration = Date.now() - apiCallStart;
+        console.error(`❌ [IDEAS-API] External API call failed after ${apiCallDuration}ms:`, {
+          error: apiError instanceof Error ? apiError.message : 'Unknown error',
+          errorType: apiError instanceof Error ? apiError.constructor.name : typeof apiError,
+          stack: apiError instanceof Error ? apiError.stack : 'N/A'
+        });
+        throw apiError;
+      }
 
       if (generateIdeaResponse.ok) {
-        const ideaData = await generateIdeaResponse.json();
+        console.log('📥 [IDEAS-API] Parsing response JSON...');
+        let ideaData;
+        try {
+          const responseText = await generateIdeaResponse.text();
+          console.log('📥 [IDEAS-API] Response text received:', {
+            length: responseText.length,
+            firstChars: responseText.substring(0, 200),
+            lastChars: responseText.length > 200 ? responseText.substring(responseText.length - 100) : 'N/A'
+          });
+          ideaData = JSON.parse(responseText);
+          console.log('✅ [IDEAS-API] JSON parsed successfully');
+        } catch (parseError) {
+          console.error('❌ [IDEAS-API] Failed to parse external API response:', {
+            error: parseError instanceof Error ? parseError.message : 'Unknown',
+            stack: parseError instanceof Error ? parseError.stack : 'N/A'
+          });
+          throw parseError;
+        }
+
         console.log('💡 [IDEAS-API] Generate-idea API response received:', {
           hasSelectedIdea: !!ideaData?.selected_idea,
           ideasCount: Array.isArray(ideaData?.ideas) ? ideaData.ideas.length : 0,
           hasReasoning: !!ideaData?.reasoning,
-          responseSize: JSON.stringify(ideaData).length
+          responseSize: JSON.stringify(ideaData).length,
+          keys: Object.keys(ideaData)
         });
 
         if (ideaData?.ideas && ideaData.selected_idea) {
