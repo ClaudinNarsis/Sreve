@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
+import WebSocket from 'ws';
 
 console.log('🔧 Chat Ideas API endpoint loaded');
 
@@ -66,55 +67,191 @@ async function deleteChatMessage(messageId: string) {
   }
 }
 
-// Helper function for API calls with timeout and retry
-async function makeAPICallWithRetry(
-  url: string,
-  options: RequestInit,
-  maxRetries: number = 3,
-  timeoutMs: number = 60000
-): Promise<Response> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+// Helper function to connect to WebSocket and generate ideas
+async function generateIdeaViaWebSocket(
+  wsUrl: string,
+  brandDetails: Record<string, unknown>,
+  selectedAccounts: unknown[],
+  selectedTrends: unknown[],
+  prompt: string
+): Promise<{
+  success: boolean;
+  ideaData?: unknown;
+  error?: string;
+}> {
+  return new Promise((resolve) => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      console.log('🔌 [WEBSOCKET] Connecting to:', wsUrl);
 
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal
+      const ws = new WebSocket(wsUrl);
+
+      // Store all 5 ideas from ideas_ready message
+      let allIdeas: unknown[] = [];
+
+      // Set overall timeout for the entire operation (60 seconds)
+      const overallTimeout = setTimeout(() => {
+        console.error('❌ [WEBSOCKET] Overall timeout (60s) reached');
+        ws.close();
+        resolve({
+          success: false,
+          error: 'WebSocket operation timed out after 60 seconds'
+        });
+      }, 60000);
+
+      // Set connection timeout (10 seconds)
+      const connectionTimeout = setTimeout(() => {
+        console.error('❌ [WEBSOCKET] Connection timeout (10s)');
+        ws.close();
+        resolve({
+          success: false,
+          error: 'Failed to connect to WebSocket within 10 seconds'
+        });
+      }, 10000);
+
+      let messageTimeout: NodeJS.Timeout | undefined;
+
+      ws.on('open', () => {
+        console.log('✅ [WEBSOCKET] Connection established');
+        clearTimeout(connectionTimeout);
+
+        // Send generate idea request
+        const request = {
+          action: "generateIdea",
+          brand_details: brandDetails,
+          selected_accounts: selectedAccounts,
+          selected_trends: selectedTrends,
+          prompt: prompt
+        };
+
+        console.log('📤 [WEBSOCKET] Sending request:', {
+          action: request.action,
+          brand: brandDetails.brand_name || 'unknown',
+          accountsCount: selectedAccounts.length,
+          trendsCount: selectedTrends.length
+        });
+
+        ws.send(JSON.stringify(request));
+
+        // Set timeout for receiving messages (45 seconds after connection)
+        messageTimeout = setTimeout(() => {
+          console.error('❌ [WEBSOCKET] Message timeout (45s) reached');
+          ws.close();
+          resolve({
+            success: false,
+            error: 'No response received within 45 seconds'
+          });
+        }, 45000);
       });
 
-      clearTimeout(timeoutId);
+      ws.on('message', (rawData: WebSocket.Data) => {
+        try {
+          const data = JSON.parse(rawData.toString());
+          console.log('📨 [WEBSOCKET] Message received:', { type: data.type });
 
-      if (response.ok || response.status < 500) {
-        return response;
-      }
+          switch (data.type) {
+            case 'connected':
+              console.log('✅ [WEBSOCKET] Connected:', data.message);
+              break;
 
-      if (attempt === maxRetries) {
-        throw new Error(`API call failed after ${maxRetries} attempts`);
-      }
+            case 'progress':
+              console.log(`⏳ [WEBSOCKET] Progress - Stage: ${data.stage}, Message: ${data.message}`);
+              // Reset message timeout on each progress update
+              if (messageTimeout) clearTimeout(messageTimeout);
+              messageTimeout = setTimeout(() => {
+                console.error('❌ [WEBSOCKET] Message timeout after progress update');
+                ws.close();
+                resolve({
+                  success: false,
+                  error: 'Operation timed out during processing'
+                });
+              }, 45000);
+              break;
 
-      console.log(`⚠️ API call failed (attempt ${attempt}/${maxRetries}), retrying...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            case 'ideas_ready':
+              console.log(`✨ [WEBSOCKET] Ideas ready: ${data.count} ideas generated`);
+              // Store all 5 ideas for later use
+              if (Array.isArray(data.ideas)) {
+                allIdeas = data.ideas;
+                console.log(`📝 [WEBSOCKET] Stored ${allIdeas.length} ideas for later`);
+              }
+              break;
+
+            case 'complete':
+              console.log('🎉 [WEBSOCKET] Generation complete!');
+              if (messageTimeout) clearTimeout(messageTimeout);
+              clearTimeout(overallTimeout);
+
+              ws.close();
+
+              // Return both the selected idea and all 5 original ideas
+              resolve({
+                success: true,
+                ideaData: {
+                  selected_idea: data.selected_idea,
+                  ideas: allIdeas.length > 0 ? allIdeas : [data.selected_idea],
+                  reasoning: data.reasoning
+                }
+              });
+              break;
+
+            case 'error':
+              console.error('❌ [WEBSOCKET] Error received:', data.message);
+              if (messageTimeout) clearTimeout(messageTimeout);
+              clearTimeout(overallTimeout);
+
+              ws.close();
+
+              resolve({
+                success: false,
+                error: data.message || 'WebSocket error occurred'
+              });
+              break;
+
+            default:
+              console.log('ℹ️ [WEBSOCKET] Unknown message type:', data.type);
+          }
+        } catch (parseError) {
+          console.error('❌ [WEBSOCKET] Failed to parse message:', parseError);
+        }
+      });
+
+      ws.on('error', (error: Error) => {
+        console.error('❌ [WEBSOCKET] Connection error:', error.message);
+        clearTimeout(connectionTimeout);
+        if (messageTimeout) clearTimeout(messageTimeout);
+        clearTimeout(overallTimeout);
+
+        resolve({
+          success: false,
+          error: `WebSocket connection error: ${error.message}`
+        });
+      });
+
+      ws.on('close', (code: number, reason: Buffer) => {
+        console.log('🔌 [WEBSOCKET] Connection closed:', code, reason.toString());
+        clearTimeout(connectionTimeout);
+        if (messageTimeout) clearTimeout(messageTimeout);
+        clearTimeout(overallTimeout);
+      });
 
     } catch (error) {
-      if (attempt === maxRetries) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          throw new Error(`API call timed out after ${timeoutMs}ms`);
-        }
-        throw new Error(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-
-      console.log(`⚠️ Network error (attempt ${attempt}/${maxRetries}), retrying...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      console.error('❌ [WEBSOCKET] Failed to create WebSocket:', error);
+      resolve({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create WebSocket connection'
+      });
     }
-  }
-
-  throw new Error('Unexpected error in retry logic');
+  });
 }
+
+// Configure route for extended timeout (if platform supports it)
+export const maxDuration = 60; // Try to request 60 seconds
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   console.log('📥 [IDEAS-API] POST /api/chat/ideas - Ideas generation request received');
+  console.log('⏰ [IDEAS-API] Function timeout config: maxDuration=60s, current platform limit likely ~30-40s');
 
   try {
     const { userId } = await auth();
@@ -155,14 +292,14 @@ export async function POST(request: NextRequest) {
     console.log('✅ [IDEAS-API] Loading message created with ID and TTL:', loadingBotMessageId);
 
     try {
-      // Make generate_idea API call
-      const sreveApiEndpoint = process.env.SREVE_CREATOR_API_ENDPOINT;
-      if (!sreveApiEndpoint) {
-        console.log('❌ [IDEAS-API] SREVE_CREATOR_API_ENDPOINT not configured');
-        throw new Error('SREVE_CREATOR_API_ENDPOINT not configured');
+      // Get WebSocket URL from environment
+      const sreveWebSocketUrl = process.env.SREVE_CREATOR_WEBSOCKET_URL;
+      if (!sreveWebSocketUrl) {
+        console.log('❌ [IDEAS-API] SREVE_CREATOR_WEBSOCKET_URL not configured');
+        throw new Error('SREVE_CREATOR_WEBSOCKET_URL not configured');
       }
 
-      console.log('💡 [IDEAS-API] Making generate_idea API call');
+      console.log('💡 [IDEAS-API] Starting WebSocket-based idea generation');
       console.log('📊 [IDEAS-API] Payload summary:', {
         brand_name: brandDetails.brand_name,
         selectedAccountsCount: selectedAccounts.length,
@@ -171,147 +308,110 @@ export async function POST(request: NextRequest) {
         hasTrends: selectedTrends.length > 0
       });
 
-      const generateIdeaPayload = {
-        brand_details: brandDetails,
-        selected_accounts: selectedAccounts,
-        selected_trends: selectedTrends,
-        prompt: brandDetails.format || ''
+      const apiCallStart = Date.now();
+      const elapsedSinceStart = apiCallStart - startTime;
+      console.log('🌐 [IDEAS-API] Starting WebSocket connection...');
+      console.log(`⏰ [IDEAS-API] Time already elapsed: ${elapsedSinceStart}ms`);
+
+      // Call WebSocket function
+      const wsResult = await generateIdeaViaWebSocket(
+        sreveWebSocketUrl,
+        brandDetails,
+        selectedAccounts,
+        selectedTrends,
+        brandDetails.format as string || ''
+      );
+
+      const apiCallDuration = Date.now() - apiCallStart;
+      const totalDuration = Date.now() - startTime;
+
+      console.log(`⏱️ [IDEAS-API] WebSocket operation completed in ${apiCallDuration}ms (total: ${totalDuration}ms)`, {
+        success: wsResult.success,
+        hasIdeaData: !!wsResult.ideaData,
+        hasError: !!wsResult.error
+      });
+
+      if (!wsResult.success) {
+        console.error('❌ [IDEAS-API] WebSocket operation failed:', wsResult.error);
+        throw new Error(wsResult.error || 'WebSocket operation failed');
+      }
+
+      const ideaData = wsResult.ideaData as {
+        selected_idea?: unknown;
+        ideas?: unknown[];
+        reasoning?: string;
       };
 
-      // Log complete request payload for verification
-      console.log('📦 [IDEAS-API] Complete request payload:');
-      console.log(JSON.stringify(generateIdeaPayload, null, 2));
-      console.log('📦 [IDEAS-API] Payload size:', JSON.stringify(generateIdeaPayload).length, 'bytes');
-      console.log('📦 [IDEAS-API] Endpoint:', `${sreveApiEndpoint}/generate_idea`);
-      console.log('📦 [IDEAS-API] Request start time:', new Date().toISOString());
+      console.log('💡 [IDEAS-API] WebSocket response received:', {
+        hasSelectedIdea: !!ideaData?.selected_idea,
+        ideasCount: Array.isArray(ideaData?.ideas) ? ideaData.ideas.length : 0,
+        hasReasoning: !!ideaData?.reasoning,
+        responseSize: JSON.stringify(ideaData).length,
+        keys: Object.keys(ideaData)
+      });
 
-      const apiCallStart = Date.now();
-      console.log('🌐 [IDEAS-API] Starting external API call to generate_idea endpoint...');
+      if (ideaData?.ideas && ideaData.selected_idea) {
+        const ideasMessage = `Excellent! I've generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:`;
 
-      let generateIdeaResponse;
-      try {
-        generateIdeaResponse = await makeAPICallWithRetry(
-          `${sreveApiEndpoint}/generate_idea`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(generateIdeaPayload),
-          }
-        );
-        const apiCallDuration = Date.now() - apiCallStart;
-        console.log(`⏱️ [IDEAS-API] External API call completed in ${apiCallDuration}ms`, {
-          status: generateIdeaResponse.status,
-          statusText: generateIdeaResponse.statusText,
-          ok: generateIdeaResponse.ok,
-          headers: {
-            contentType: generateIdeaResponse.headers.get('content-type'),
-            contentLength: generateIdeaResponse.headers.get('content-length')
-          }
-        });
-      } catch (apiError) {
-        const apiCallDuration = Date.now() - apiCallStart;
-        console.error(`❌ [IDEAS-API] External API call failed after ${apiCallDuration}ms:`, {
-          error: apiError instanceof Error ? apiError.message : 'Unknown error',
-          errorType: apiError instanceof Error ? apiError.constructor.name : typeof apiError,
-          stack: apiError instanceof Error ? apiError.stack : 'N/A'
-        });
-        throw apiError;
-      }
+        // Save ideas results and delete loading message
+        console.log('💾 [IDEAS-API] Saving ideas results message');
+        const ideasBotMessageId = await saveChatMessage(campaignId, userId, ideasMessage, 'bot', 'idea-preview', ideaData);
+        console.log('✅ [IDEAS-API] Ideas results message saved with ID:', ideasBotMessageId);
 
-      if (generateIdeaResponse.ok) {
-        console.log('📥 [IDEAS-API] Parsing response JSON...');
-        let ideaData;
-        try {
-          const responseText = await generateIdeaResponse.text();
-          console.log('📥 [IDEAS-API] Response text received:', {
-            length: responseText.length,
-            firstChars: responseText.substring(0, 200),
-            lastChars: responseText.length > 200 ? responseText.substring(responseText.length - 100) : 'N/A'
-          });
-          ideaData = JSON.parse(responseText);
-          console.log('✅ [IDEAS-API] JSON parsed successfully');
-        } catch (parseError) {
-          console.error('❌ [IDEAS-API] Failed to parse external API response:', {
-            error: parseError instanceof Error ? parseError.message : 'Unknown',
-            stack: parseError instanceof Error ? parseError.stack : 'N/A'
-          });
-          throw parseError;
+        // Save reasoning message if reasoning exists
+        let reasoningBotMessageId = null;
+        if (ideaData.reasoning) {
+          console.log('💾 [IDEAS-API] Saving ideas reasoning message');
+          reasoningBotMessageId = await saveChatMessage(campaignId, userId, ideaData.reasoning, 'bot', 'default');
+          console.log('✅ [IDEAS-API] Ideas reasoning message saved with ID:', reasoningBotMessageId);
         }
 
-        console.log('💡 [IDEAS-API] Generate-idea API response received:', {
-          hasSelectedIdea: !!ideaData?.selected_idea,
-          ideasCount: Array.isArray(ideaData?.ideas) ? ideaData.ideas.length : 0,
-          hasReasoning: !!ideaData?.reasoning,
-          responseSize: JSON.stringify(ideaData).length,
-          keys: Object.keys(ideaData)
-        });
+        // Delete the loading message from DynamoDB
+        console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
+        await deleteChatMessage(loadingBotMessageId);
+        console.log('✅ [IDEAS-API] Loading message deleted from DynamoDB');
 
-        if (ideaData?.ideas && ideaData.selected_idea) {
-          const ideasMessage = `Excellent! I've generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:`;
+        const totalDuration = Date.now() - startTime;
+        console.log(`🎯 [IDEAS-API] Success response sent (${totalDuration}ms total) - FLOW COMPLETED`);
 
-          // Save ideas results and delete loading message
-          console.log('💾 [IDEAS-API] Saving ideas results message');
-          const ideasBotMessageId = await saveChatMessage(campaignId, userId, ideasMessage, 'bot', 'idea-preview', ideaData);
-          console.log('✅ [IDEAS-API] Ideas results message saved with ID:', ideasBotMessageId);
-
-          // Save reasoning message if reasoning exists
-          let reasoningBotMessageId = null;
-          if (ideaData.reasoning) {
-            console.log('💾 [IDEAS-API] Saving ideas reasoning message');
-            reasoningBotMessageId = await saveChatMessage(campaignId, userId, ideaData.reasoning, 'bot', 'default');
-            console.log('✅ [IDEAS-API] Ideas reasoning message saved with ID:', reasoningBotMessageId);
-          }
-
-          // Delete the loading message from DynamoDB
-          console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
-          await deleteChatMessage(loadingBotMessageId);
-          console.log('✅ [IDEAS-API] Loading message deleted from DynamoDB');
-
-          const totalDuration = Date.now() - startTime;
-          console.log(`🎯 [IDEAS-API] Success response sent (${totalDuration}ms total) - FLOW COMPLETED`);
-
-          return NextResponse.json({
-            message: 'Ideas generation completed',
-            loadingBotMessageId,
-            ideasBotMessageId,
-            ideasMessage,
-            ideaData,
-            reasoningBotMessageId,
-            nextStep: 'critique',
-            success: true
-          }, { status: 200 });
-        } else {
-          console.log('ℹ️ [IDEAS-API] No specific ideas found in response');
-          const noIdeasMessage = 'I was unable to generate specific content ideas at this time. However, I can still analyze what we have so far...';
-          const noIdeasBotMessageId = await saveChatMessage(campaignId, userId, noIdeasMessage, 'bot', 'default');
-          console.log('✅ [IDEAS-API] No-ideas message saved with ID:', noIdeasBotMessageId);
-
-          // Delete the loading message from DynamoDB
-          console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
-          await deleteChatMessage(loadingBotMessageId);
-          console.log('✅ [IDEAS-API] Loading message deleted from DynamoDB');
-
-          const totalDuration = Date.now() - startTime;
-          console.log(`🎯 [IDEAS-API] No-ideas response sent (${totalDuration}ms total) - FLOW COMPLETED`);
-
-          return NextResponse.json({
-            message: 'Ideas generation completed (no specific ideas generated)',
-            loadingBotMessageId,
-            noIdeasBotMessageId,
-            noIdeasMessage,
-            nextStep: 'critique',
-            success: true
-          }, { status: 200 });
-        }
+        return NextResponse.json({
+          message: 'Ideas generation completed',
+          loadingBotMessageId,
+          ideasBotMessageId,
+          ideasMessage,
+          ideaData,
+          reasoningBotMessageId,
+          nextStep: 'critique',
+          success: true
+        }, { status: 200 });
       } else {
-        console.log(`❌ [IDEAS-API] API call failed with status: ${generateIdeaResponse.status}`);
-        throw new Error(`Ideas API call failed with status: ${generateIdeaResponse.status}`);
+        console.log('ℹ️ [IDEAS-API] No specific ideas found in response');
+        const noIdeasMessage = 'I was unable to generate specific content ideas at this time. However, I can still analyze what we have so far...';
+        const noIdeasBotMessageId = await saveChatMessage(campaignId, userId, noIdeasMessage, 'bot', 'default');
+        console.log('✅ [IDEAS-API] No-ideas message saved with ID:', noIdeasBotMessageId);
+
+        // Delete the loading message from DynamoDB
+        console.log('🗑️ [IDEAS-API] Deleting loading message from DynamoDB');
+        await deleteChatMessage(loadingBotMessageId);
+        console.log('✅ [IDEAS-API] Loading message deleted from DynamoDB');
+
+        const totalDuration = Date.now() - startTime;
+        console.log(`🎯 [IDEAS-API] No-ideas response sent (${totalDuration}ms total) - FLOW COMPLETED`);
+
+        return NextResponse.json({
+          message: 'Ideas generation completed (no specific ideas generated)',
+          loadingBotMessageId,
+          noIdeasBotMessageId,
+          noIdeasMessage,
+          nextStep: 'critique',
+          success: true
+        }, { status: 200 });
       }
     } catch (error) {
-      console.error('❌ [IDEAS-API] Generate-idea API call error:', {
+      console.error('❌ [IDEAS-API] WebSocket idea generation error:', {
         error: error instanceof Error ? error.message : 'Unknown error',
         errorType: error instanceof Error ? error.constructor.name : typeof error,
-        apiEndpoint: process.env.SREVE_CREATOR_API_ENDPOINT ? 'configured' : 'missing'
+        websocketUrl: process.env.SREVE_CREATOR_WEBSOCKET_URL ? 'configured' : 'missing'
       });
 
       // Delete the loading message from DynamoDB
