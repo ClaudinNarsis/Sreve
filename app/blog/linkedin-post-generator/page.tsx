@@ -413,7 +413,8 @@ export default function LinkedInPostGenerator() {
             <p>
               Offers LinkedIn post templates but at $49-125/month. Output quality similar to Sreve at 3-6x the price.
               Check our <Link href="/blog/cheaper-jasper-alternative-2025">Jasper alternatives comparison</Link> for detailed
-              cost analysis.
+              cost analysis, or explore our <Link href="/blog/social-media-post-generator-tools-2025">comprehensive social media
+              tool comparison</Link>.
             </p>
           </section>
 
