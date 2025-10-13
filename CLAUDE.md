@@ -826,18 +826,212 @@ Before publishing any new blog post:
 - [ ] Article has ONE H1 only
 - [ ] 5-8 H2 sections with relevant H3 subsections
 - [ ] Minimum 1,500 words of quality content
-- [ ] 5-10 internal links to tools and blog posts
+- [ ] 8-12 internal links to tools and blog posts (see Internal Linking Strategy below)
 - [ ] FAQ section with 3-5 questions minimum
 - [ ] 2-3 CTA boxes throughout article
 - [ ] Article, FAQPage, and BreadcrumbList schemas included
 - [ ] All schema data matches article content
 - [ ] Tested schemas at Google Rich Results Test
 - [ ] Added post to blog listing page dynamicPosts array
-- [ ] Added post to blog listing page schema
+- [ ] Added post to blog listing page schema (Blog schema blogPost array)
+- [ ] Added post to blog listing page CollectionPage itemListElement
+- [ ] **CRITICAL: Added post to /app/sitemap.ts** (see Sitemap Management below)
 - [ ] Dark theme styling (3 levels of darkness)
 - [ ] Orange used sparingly (5% max)
 - [ ] `npm run build` passes without errors
 - [ ] `npx tsc --noEmit` passes type checking
+
+### Sitemap Management - CRITICAL FOR SEO
+
+**ALWAYS update `/app/sitemap.ts` when adding new pages or blog posts.**
+
+#### When to Update Sitemap
+- ✅ Adding new blog posts
+- ✅ Adding new tool pages
+- ✅ Adding new main pages (features, pricing, etc.)
+- ✅ Adding new resource pages
+- ❌ User-specific pages (protected routes, user dashboards)
+
+#### How to Update Sitemap
+
+**File Location**: `/app/sitemap.ts`
+
+**For New Blog Posts**:
+```typescript
+// Add to the routes array in sitemap.ts
+{
+  url: `${baseUrl}/blog/your-new-blog-post-slug`,
+  lastModified: new Date('2025-01-15'), // Use actual publish date
+  changeFrequency: 'monthly' as const,
+  priority: 0.8, // High priority for new SEO-focused content
+},
+```
+
+**Priority Guidelines**:
+- **1.0**: Homepage only
+- **0.9**: Main tool pages (blog-generator, viral-post-generator)
+- **0.8**: Blog listing page, new blog posts targeting primary keywords
+- **0.7**: Existing blog posts, secondary tool pages
+- **0.5**: Auth pages (sign-in, sign-up)
+- **0.3**: Legal pages (privacy-policy)
+
+**Change Frequency Guidelines**:
+- **daily**: Blog listing page (updates frequently)
+- **weekly**: Tool pages, homepage
+- **monthly**: Individual blog posts, resource pages
+- **yearly**: Legal pages
+
+**Example - Adding Multiple Blog Posts**:
+```typescript
+// Group related blog posts with comments for organization
+// Phase 2 Blog Generator Content Cluster
+{
+  url: `${baseUrl}/blog/free-blog-generator-tools-2025`,
+  lastModified: new Date('2025-01-15'),
+  changeFrequency: 'monthly' as const,
+  priority: 0.8,
+},
+{
+  url: `${baseUrl}/blog/ai-blog-generator-vs-manual-writing`,
+  lastModified: new Date('2025-01-18'),
+  changeFrequency: 'monthly' as const,
+  priority: 0.8,
+},
+```
+
+#### robots.txt
+
+The `robots.txt` is managed at `/public/robots.txt`. It should:
+- Allow all crawlers for public pages
+- Reference the sitemap location
+- Disallow user-specific and protected routes
+
+**Current Configuration**:
+```
+User-agent: *
+Allow: /
+Disallow: /app/*
+Disallow: /api/*
+Disallow: /onboarding
+Disallow: /schedule
+
+Sitemap: https://sreve.online/sitemap.xml
+```
+
+**When to Update robots.txt**:
+- Adding new protected route patterns
+- Blocking specific bots (rare)
+- Never update for individual blog posts
+
+### Internal Linking Strategy - CRITICAL FOR SEO
+
+**Every blog post needs 8-12 strategic internal links for maximum SEO benefit.**
+
+#### Internal Link Distribution
+
+**Tool Links (3-4 per post)**:
+```tsx
+<Link href="/tools/blog-generator">Sreve's blog generator</Link>
+<Link href="/tools/viral-post-generator">viral post generator</Link>
+<Link href="/tools/ai-content-generator">AI content generator</Link>
+```
+
+**Related Blog Posts (4-6 per post)**:
+- Link to posts in the same topic cluster
+- Link to posts in related topic clusters
+- Use descriptive, keyword-rich anchor text
+
+**Example for Blog Generator Posts**:
+```tsx
+{/* Same cluster */}
+<Link href="/blog/free-blog-generator-tools-2025">compare blog generator tools</Link>
+<Link href="/blog/ai-blog-generator-vs-manual-writing">AI vs manual writing for SEO</Link>
+
+{/* Related clusters */}
+<Link href="/blog/viral-post-generator-guide">create viral social content</Link>
+<Link href="/blog/cheaper-jasper-alternative-2025">cost-effective Jasper alternative</Link>
+```
+
+**Main Pages (2-3 per post)**:
+```tsx
+<a href="/#pricing">our pricing</a>
+<a href="/#features">features</a>
+<Link href="/">Sreve platform</Link>
+```
+
+#### Internal Linking Best Practices
+
+**DO**:
+- ✅ Use descriptive anchor text with target keywords
+- ✅ Link naturally within content flow (not all at top/bottom)
+- ✅ Spread links throughout the article
+- ✅ Link to both tools and blog posts
+- ✅ Create bidirectional links (post A links to B, B links to A)
+- ✅ Use Next.js `<Link>` component for internal navigation
+
+**DON'T**:
+- ❌ Use generic anchor text ("click here", "read more")
+- ❌ Stuff too many links in one paragraph
+- ❌ Link to irrelevant content
+- ❌ Use only tool links (need blog-to-blog links too)
+- ❌ Forget to link back from related posts
+
+#### Topic Cluster Linking Pattern
+
+**Blog Generator Cluster** → Should interlink:
+1. Free Blog Generator Tools 2025
+2. AI Blog Generator vs Manual Writing
+3. Blog Generator for Small Businesses
+4. How to Use AI for Blog Content Creation
+
+**Each post in cluster should**:
+- Link to 2-3 other posts in same cluster
+- Link to 1-2 posts in viral post cluster
+- Link to /tools/blog-generator
+
+**Viral Post Generator Cluster** → Should interlink:
+1. Viral Post Generator Guide
+2. LinkedIn Post Generator
+3. Social Media Post Generator Tools 2025
+4. How to Create Viral Content with AI
+
+**Each post in cluster should**:
+- Link to 2-3 other posts in same cluster
+- Link to 1-2 posts in blog generator cluster
+- Link to /tools/viral-post-generator
+
+#### Example of High-Quality Internal Linking
+
+```tsx
+<section>
+  <h2>Why Blog Generators Are Essential in 2025</h2>
+  <p>
+    Content marketers face increasing demands for consistent, high-quality output.
+    Our analysis of <Link href="/blog/ai-blog-generator-vs-manual-writing">AI generators
+    versus manual writing</Link> shows that hybrid approaches deliver the best results.
+  </p>
+  <p>
+    For small businesses specifically, cost savings are critical. Our
+    <Link href="/blog/blog-generator-for-small-businesses">small business guide</Link>
+    demonstrates how companies save $5,000+ monthly using
+    <Link href="/tools/blog-generator">AI blog generators</Link>.
+  </p>
+  <p>
+    When comparing tools, remember that not all generators are equal. Check our
+    <Link href="/blog/free-blog-generator-tools-2025">comprehensive tool comparison</Link>
+    to find the best fit for your needs. And if you're considering expensive options,
+    our <Link href="/blog/cheaper-jasper-alternative-2025">Jasper alternative analysis</Link>
+    shows how much you can save with Sreve.
+  </p>
+</section>
+```
+
+**This example includes**:
+- 5 internal links naturally distributed
+- Descriptive anchor text with keywords
+- Mix of tool and blog post links
+- Related topic cluster links
+- Natural reading flow
 
 ### Common Mistakes to Avoid
 
