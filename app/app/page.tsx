@@ -3074,15 +3074,39 @@ function AppContent() {
                 Your AI-powered marketing content creation assistant
               </p>
               <div className="welcome-features">
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Create scroll-stopping ads');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">✨</span>
                   <span>Create scroll-stopping ads</span>
                 </div>
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Generate UGC scripts');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">📝</span>
                   <span>Generate UGC scripts</span>
                 </div>
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Build viral content that converts');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">🚀</span>
                   <span>Build viral content that converts</span>
                 </div>
