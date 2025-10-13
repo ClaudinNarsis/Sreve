@@ -451,5 +451,420 @@ body { text-align: left !important; }
 3. Ensure internal links use proper anchor text
 4. Confirm breadcrumb navigation is working
 
+## Adding New Blog Pages - Complete Checklist
+
+### File Structure
+All blog posts follow this structure:
+```
+app/blog/
+├── [blog-slug]/
+│   └── page.tsx          # Individual blog post component
+└── page.tsx              # Blog listing page (update this to add new post)
+```
+
+### Step 1: Update Blog Listing Page
+
+**File**: `app/blog/page.tsx`
+
+Add your new blog post to the `dynamicPosts` array (lines 44-85):
+
+```typescript
+{
+  slug: 'your-blog-slug',
+  title: 'Your Blog Title with Keywords',
+  description: 'Compelling 150-character meta description with main keywords',
+  date: 'Month DD, YYYY',
+  readTime: 'X min read',
+  tags: ['Tag1', 'Tag2', 'Tag3']  // Max 3 tags
+}
+```
+
+**IMPORTANT**: Also add the blog post to the Schema.org structured data in the same file (lines 246-307) within the `blogPost` array.
+
+### Step 2: Create Blog Post Page
+
+**File**: `app/blog/[your-slug]/page.tsx`
+
+#### Required Metadata Export
+```typescript
+export const metadata: Metadata = {
+  title: 'Blog Title - Include Main Keyword (50-60 chars)',
+  description: 'Compelling meta description 150-160 characters including primary keywords and value proposition.',
+  keywords: [
+    'primary keyword',
+    'secondary keyword',
+    'long-tail keyword 1',
+    'long-tail keyword 2',
+    // 8-10 highly relevant keywords
+  ],
+  openGraph: {
+    title: 'OG Title - Can be slightly different from meta title',
+    description: 'OG description for social sharing',
+    url: 'https://sreve.online/blog/your-slug',
+    type: 'article',
+    images: [
+      {
+        url: '/assets/blog/your-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Descriptive alt text',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Twitter card title',
+    description: 'Twitter card description',
+    images: ['/assets/blog/your-twitter-image.png'],
+  },
+  alternates: {
+    canonical: 'https://sreve.online/blog/your-slug'
+  }
+};
+```
+
+#### Required Component Structure
+```typescript
+export default function YourBlogPost() {
+  return (
+    <div className="blog-container">
+      {/* Header with logo and back link */}
+      <header className="blog-header">
+        <nav className="blog-nav">
+          <Link href="/" className="logo-link">
+            <Image src="/assets/logo.png" alt="Sreve Logo" className="nav-logo" width={120} height={40} />
+          </Link>
+          <Link href="/blog" className="back-link">← Back to Blog</Link>
+        </nav>
+      </header>
+
+      {/* Main content */}
+      <main className="blog-content">
+        <article>
+          {/* Article header with title, date, tags */}
+          <header className="article-header">
+            <h1>Your Main Blog Title (H1 - Only ONE per page)</h1>
+            <div className="article-meta">
+              <time dateTime="YYYY-MM-DD">Month DD, YYYY</time>
+              <span className="reading-time">X min read</span>
+              <div className="tags">
+                <span className="tag">Tag1</span>
+                <span className="tag">Tag2</span>
+                <span className="tag">Tag3</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Intro paragraph with .lead class */}
+          <div className="article-intro">
+            <p className="lead">
+              Compelling opening paragraph that hooks the reader and includes primary keywords naturally.
+            </p>
+          </div>
+
+          {/* Content sections with H2s */}
+          <section className="section-class-name">
+            <h2>Main Section Heading (H2)</h2>
+            <p>Content paragraph...</p>
+
+            <h3>Subsection Heading (H3)</h3>
+            <p>More detailed content...</p>
+
+            <ul>
+              <li><strong>Bold point:</strong> Explanation</li>
+            </ul>
+          </section>
+
+          {/* Include internal links to tools and other blog posts */}
+          <section>
+            <p>
+              Check out our <Link href="/tools/ai-caption-generator">AI Caption Generator</Link> for
+              more details on <Link href="/blog/related-post">this topic</Link>.
+            </p>
+          </section>
+
+          {/* CTA boxes throughout the article */}
+          <section>
+            <div className="cta-box">
+              <h3>Call to Action Heading</h3>
+              <p>Persuasive text encouraging action</p>
+              <Link href="/tools/relevant-tool">
+                <button className="cta-button">Try Tool Free</button>
+              </Link>
+            </div>
+          </section>
+
+          {/* FAQ section (REQUIRED for schema) */}
+          <section className="faq">
+            <h2>Frequently Asked Questions</h2>
+
+            <div className="faq-item">
+              <h3>Question in H3 format?</h3>
+              <p>Detailed answer paragraph with keywords naturally included.</p>
+            </div>
+
+            {/* Include 3-5 FAQ items minimum */}
+          </section>
+
+          {/* Conclusion section */}
+          <section className="conclusion">
+            <h2>Conclusion Heading</h2>
+            <p>Summary paragraph reinforcing main points...</p>
+
+            {/* Final CTA */}
+            <div className="final-cta">
+              <h3>Final Call to Action</h3>
+              <p>Compelling reason to take action now</p>
+              <Link href="/" className="cta-button large">
+                Primary CTA Button →
+              </Link>
+              <p className="cta-subtext">
+                Trust signals • Social proof • Risk reversal
+              </p>
+            </div>
+          </section>
+        </article>
+      </main>
+
+      {/* Schema.org structured data - REQUIRED */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": "Your Article Headline",
+            "description": "Article description",
+            "author": {"@type": "Organization", "name": "Sreve"},
+            "publisher": {
+              "@type": "Organization",
+              "name": "Sreve",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://sreve.online/assets/logo.png"
+              }
+            },
+            "datePublished": "YYYY-MM-DD",
+            "dateModified": "YYYY-MM-DD",
+            "image": "https://sreve.online/assets/blog/your-image.png",
+            "mainEntityOfPage": "https://sreve.online/blog/your-slug"
+          })
+        }}
+      />
+
+      {/* FAQPage schema - REQUIRED if FAQ section exists */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Your FAQ question?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Your answer text that appears in FAQ section"
+                }
+              },
+              // Add 3-5 FAQ items minimum
+            ]
+          })
+        }}
+      />
+
+      {/* BreadcrumbList schema - REQUIRED */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://sreve.online"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Blog",
+                "item": "https://sreve.online/blog"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Your Article Title",
+                "item": "https://sreve.online/blog/your-slug"
+              }
+            ]
+          })
+        }}
+      />
+    </div>
+  );
+}
+```
+
+### Content Guidelines for Blog Posts
+
+#### Word Count & Structure
+- **Minimum**: 1,500 words (comprehensive articles perform better)
+- **Optimal**: 2,000-3,000 words with detailed analysis
+- **H1**: Only ONE per page (the main title)
+- **H2s**: 5-8 major sections
+- **H3s**: 2-4 subsections per H2
+- **Paragraphs**: Keep to 2-4 sentences max for readability
+
+#### Writing Style & Tone
+- **First-person perspective**: Use "I" and personal stories (see viral-posts example)
+- **Conversational**: Write like you're talking to a friend, not a textbook
+- **Honest & authentic**: Include real experiences, struggles, and results
+- **Bold statements**: Use strong, confident language (not wishy-washy)
+- **Emotion-driven**: Address fears, frustrations, and aspirations
+- **Contrarian when appropriate**: Challenge common advice if you have better insights
+
+#### Keyword Strategy
+- **Primary keyword**: Include in title, first paragraph, H2s, and naturally throughout
+- **LSI keywords**: Use 8-10 related keywords in metadata
+- **Keyword density**: 1-2% (natural, not forced)
+- **Anchor text**: Use descriptive, keyword-rich links to internal pages
+
+#### Internal Linking Requirements
+**Minimum 5-10 internal links per blog post:**
+1. **Tool links**: Link to 2-3 relevant Sreve tools
+   - Example: `<Link href="/tools/ai-caption-generator">AI Caption Generator</Link>`
+2. **Related blog posts**: Link to 2-3 related articles
+   - Example: `<Link href="/blog/cheaper-jasper-alternative-2025">our Jasper comparison</Link>`
+3. **Homepage/main pages**: Link to pricing, features, or main tools page
+4. **Contextual links**: Use natural anchor text that describes what the link goes to
+
+#### Required Sections
+1. **Article intro** with `.lead` paragraph class
+2. **Personal story or hook** (especially for engagement-focused posts)
+3. **Main content sections** with clear H2 headings
+4. **Comparison tables** (if relevant) using `.comparison-table` class
+5. **Real results/testimonials** in `.case-study` or blockquote format
+6. **CTA boxes** (2-3 throughout article) using `.cta-box` class
+7. **FAQ section** (minimum 3-5 questions) - REQUIRED for FAQPage schema
+8. **Conclusion** with final CTA
+
+#### Visual Elements
+- **Comparison tables**: Use for pricing, feature comparisons
+- **Blockquotes**: For testimonials and notable quotes
+- **Lists**: Use bulleted/numbered lists for readability
+- **Bold text**: Highlight key points and important phrases
+- **CTA boxes**: Orange background boxes with clear actions
+
+### CSS Classes Reference
+
+All blog styles are in `/app/blog/blog.css`:
+
+#### Common Classes
+- `.blog-container` - Main wrapper (max-width: 800px)
+- `.blog-header` - Top header with logo and back link
+- `.blog-nav` - Navigation bar styling
+- `.article-header` - Article title and metadata section
+- `.article-meta` - Date, reading time, tags
+- `.tags` / `.tag` - Tag styling
+- `.article-intro` - Opening section
+- `.lead` - Lead paragraph (larger font, emphasis)
+
+#### Content Classes
+- `.comparison-table` - Pricing/feature comparison tables
+- `.cta-box` - Call-to-action box with orange background
+- `.cta-button` - Orange button styling
+- `.faq` / `.faq-item` - FAQ section styling
+- `.case-study` - Testimonial/case study boxes
+- `.conclusion` - Final section
+- `.final-cta` - Last call-to-action section
+
+### Schema.org Requirements (CRITICAL)
+
+**Every blog post MUST include these three schemas:**
+
+1. **Article Schema** - Basic article metadata
+2. **FAQPage Schema** - Questions and answers from FAQ section
+3. **BreadcrumbList Schema** - Navigation breadcrumbs
+
+**Schema Validation:**
+- Test all schemas at https://search.google.com/test/rich-results
+- Ensure no errors before deploying
+- Match FAQ schema questions exactly with FAQ section content
+
+### Dark Theme Styling Requirements
+
+**Background Levels** (from darkest to lightest):
+- Level 1 (`#000000`): Main page background
+- Level 2 (`#0f0f0f`): Section backgrounds, `.cta-box`, `.case-study`
+- Level 3 (`#1f1f1f`): Tables, elevated elements
+
+**Text Colors**:
+- White (`#ffffff`): H1, H2, H3, important text
+- Light grey (`#cccccc`): Body text, paragraphs
+- Dark grey (`#888888`): Metadata, timestamps, subtle text
+
+**Orange Usage** (Maximum 5% of page):
+- Links and anchor text
+- CTA buttons background
+- One section background maximum (usually `.cta-box`)
+- Emphasis highlights only
+
+### Pre-Publish Checklist
+
+Before publishing any new blog post:
+
+- [ ] Metadata export includes all required fields
+- [ ] Title is 50-60 characters with primary keyword
+- [ ] Meta description is 150-160 characters
+- [ ] 8-10 relevant keywords in metadata array
+- [ ] OpenGraph and Twitter card data complete
+- [ ] Canonical URL is correct
+- [ ] Article has ONE H1 only
+- [ ] 5-8 H2 sections with relevant H3 subsections
+- [ ] Minimum 1,500 words of quality content
+- [ ] 5-10 internal links to tools and blog posts
+- [ ] FAQ section with 3-5 questions minimum
+- [ ] 2-3 CTA boxes throughout article
+- [ ] Article, FAQPage, and BreadcrumbList schemas included
+- [ ] All schema data matches article content
+- [ ] Tested schemas at Google Rich Results Test
+- [ ] Added post to blog listing page dynamicPosts array
+- [ ] Added post to blog listing page schema
+- [ ] Dark theme styling (3 levels of darkness)
+- [ ] Orange used sparingly (5% max)
+- [ ] `npm run build` passes without errors
+- [ ] `npx tsc --noEmit` passes type checking
+
+### Common Mistakes to Avoid
+
+❌ **DON'T**:
+- Use multiple H1 tags
+- Skip metadata or schema
+- Forget to update blog listing page
+- Use generic, AI-sounding content
+- Ignore internal linking opportunities
+- Create thin content (<1,000 words)
+- Skip FAQ section
+- Forget to test schema markup
+- Use inline styles instead of CSS classes
+- Exceed 5% orange usage
+- Use light backgrounds (dark theme only)
+
+✅ **DO**:
+- Write comprehensive, valuable content
+- Use personal stories and authentic voice
+- Include real examples and results
+- Link extensively to internal pages
+- Add multiple CTAs throughout
+- Test all schema before deploying
+- Follow dark theme color hierarchy
+- Use `.blog-container` and proper CSS classes
+- Keep paragraphs short and scannable
+- Include comparison tables where relevant
+
 This file should be updated whenever significant changes are made to the project structure or content strategy.
-- add to memory. the pages should only use dark backgrounds. have 3 different levels of darkness. the text should be in white, grey and orange. there should only be about 25% of orange in each page and only one section in orange background. you can use monochoromatic gradients wherever needed. add glass effect, frost effect glow wherever needed.
+- add to memory. the pages should only use dark backgrounds. have 3 different levels of darkness. the text should be in white, grey and orange. there should only be about 5% of orange in each page and only one section in orange background. you can use monochoromatic gradients wherever needed. add glass effect, frost effect glow wherever needed.

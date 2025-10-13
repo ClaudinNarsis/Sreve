@@ -10,6 +10,7 @@ import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { generateIdeasViaWebSocket } from '../utils/websocket-ideas';
 
 import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -230,6 +231,7 @@ function PostCards({ posts, postMetadata, onFetchMetadata, onRetryMetadata, form
                   <div className="loading-spinner"></div>
                 </div>
               ) : metaData?.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={metaData.image}
                   alt={metaData.title || post.post_caption || 'Post'}
@@ -360,6 +362,7 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetad
                     <div className="loading-spinner"></div>
                   </div>
                 ) : metaData?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={metaData.image}
                     alt={metaData.title || example.caption}
@@ -730,7 +733,7 @@ function AppContent() {
   }, []); // Only run once on mount
 
   // Function to fetch URL metadata with retry logic
-  const fetchUrlMetadata = async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
+  const fetchUrlMetadata = useCallback(async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
     const maxRetries = 2;
     const retryDelay = 1000 * (retryCount + 1); // Exponential backoff: 1s, 2s, 3s
 
@@ -796,7 +799,7 @@ function AppContent() {
 
       return null;
     }
-  };
+  }, []);
 
   // Retry sequence function - defined as regular function to avoid circular dependency
   const retrySequence = async () => {
@@ -882,7 +885,18 @@ function AppContent() {
           })
         });
 
-        const trendsResult = await trendsResponse.json();
+        let trendsResult;
+        try {
+          const text = await trendsResponse.text();
+          if (!text || text.trim() === '') {
+            throw new Error(`Empty response body (HTTP ${trendsResponse.status})`);
+          }
+          trendsResult = JSON.parse(text);
+        } catch (parseError) {
+          console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse trends response:`, parseError);
+          throw new Error(`Invalid JSON response from trends API (HTTP ${trendsResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+        }
+
         const trendsDuration = Date.now() - trendsStartTime;
         console.log(`📈 [SEQUENTIAL-FLOW] Trends API completed in ${trendsDuration}ms:`, {
           status: trendsResponse.status,
@@ -988,7 +1002,18 @@ function AppContent() {
             })
           });
 
-          const accountsResult = await accountsResponse.json();
+          let accountsResult;
+          try {
+            const text = await accountsResponse.text();
+            if (!text || text.trim() === '') {
+              throw new Error(`Empty response body (HTTP ${accountsResponse.status})`);
+            }
+            accountsResult = JSON.parse(text);
+          } catch (parseError) {
+            console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse accounts response:`, parseError);
+            throw new Error(`Invalid JSON response from accounts API (HTTP ${accountsResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+          }
+
           const accountsDuration = Date.now() - accountsStartTime;
           console.log(`🔍 [SEQUENTIAL-FLOW] Accounts API completed in ${accountsDuration}ms:`, {
             status: accountsResponse.status,
@@ -1090,9 +1115,31 @@ function AppContent() {
               stepName: 'Generating Creative Ideas'
             });
 
+            const ideasStartTime = Date.now();
+
+            // Step 1: Create loading message in DynamoDB
+            console.log('💾 [IDEAS-FLOW] Step 1: Creating loading message in DB...');
+            let loadingMessageId = '';
+            try {
+              const createLoadingResponse = await fetch('/api/chat/ideas/create-loading', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ campaignId })
+              });
+              const createLoadingResult = await createLoadingResponse.json();
+
+              if (createLoadingResult.success) {
+                loadingMessageId = createLoadingResult.loadingMessageId;
+                console.log('✅ [IDEAS-FLOW] Loading message created:', loadingMessageId);
+              }
+            } catch (loadingError) {
+              console.error('❌ [IDEAS-FLOW] Failed to create loading message:', loadingError);
+              // Continue anyway - not critical
+            }
+
             // Show loading message immediately in frontend
             const ideasLoadingMessage: ChatMessage = {
-              id: `ideas-loading-${Date.now()}`,
+              id: loadingMessageId || `ideas-loading-${Date.now()}`,
               text: 'Generating creative content ideas based on the trends and competitor insights...',
               sender: 'bot',
               messageType: 'loading-final-idea',
@@ -1100,34 +1147,74 @@ function AppContent() {
             };
             setMessages(prev => [...prev, ideasLoadingMessage]);
 
-            const ideasStartTime = Date.now();
+            // Step 2: Call WebSocket directly from client (bypasses API route timeout)
+            console.log('💡 [IDEAS-FLOW] Step 2: Starting WebSocket idea generation:', {
+              timestamp: new Date().toISOString(),
+              campaignId,
+              brandName: brandDetails.brand_name,
+              accountsCount: accountsData?.selected_accounts?.length || 0,
+              trendsCount: trendData?.chosen_trend ? 1 : 0
+            });
 
-            const ideasResponse = await fetch('/api/chat/ideas', {
+            const wsUrl = process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_URL || 'wss://kajg8zc828.execute-api.ap-south-1.amazonaws.com/dev';
+
+            const wsResult = await generateIdeasViaWebSocket(
+              wsUrl,
+              brandDetails,
+              accountsData?.selected_accounts || [],
+              trendData?.chosen_trend ? [trendData.chosen_trend] : [],
+              (brandDetails.format as string) || ''
+            );
+
+            const wsIdeasDuration = Date.now() - ideasStartTime;
+            console.log(`✅ [IDEAS-FLOW] WebSocket completed in ${wsIdeasDuration}ms:`, {
+              success: wsResult.success,
+              hasIdeaData: !!wsResult.ideaData
+            });
+
+            // Check for WebSocket error
+            if (!wsResult.success || !wsResult.ideaData) {
+              const errorMessage = wsResult.error || 'WebSocket idea generation failed';
+              throw new Error(errorMessage);
+            }
+
+            // Step 3: Save results to DynamoDB
+            console.log('💾 [IDEAS-FLOW] Step 3: Saving results to DynamoDB...');
+            const saveResponse = await fetch('/api/chat/ideas/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 campaignId,
-                brandDetails,
-                selectedAccounts: accountsData?.selected_accounts || [],
-                selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
+                ideaData: wsResult.ideaData,
+                loadingMessageId
               })
             });
 
-            const ideasResult = await ideasResponse.json();
-            const ideasDuration = Date.now() - ideasStartTime;
-            console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
-              status: ideasResponse.status,
-              success: ideasResult.success,
-              hasIdeaData: !!ideasResult.ideaData,
-              flowCompleted: ideasResult.flowCompleted,
-              loadingMessageId: ideasResult.loadingBotMessageId
+            const saveResult = await saveResponse.json();
+
+            if (!saveResult.success) {
+              console.error('❌ [IDEAS-FLOW] Failed to save to DB:', saveResult.error);
+              throw new Error('Failed to save ideas to database');
+            }
+
+            console.log('✅ [IDEAS-FLOW] Results saved to DB:', {
+              ideasBotMessageId: saveResult.ideasBotMessageId,
+              reasoningBotMessageId: saveResult.reasoningBotMessageId,
+              nextStep: saveResult.nextStep
             });
 
-            // Check for HTTP error status or API error response
-            if (!ideasResponse.ok || !ideasResult.success) {
-              const errorMessage = ideasResult.error?.message || `Ideas API failed with status: ${ideasResponse.status}`;
-              throw new Error(errorMessage);
-            }
+            const ideasDuration = Date.now() - ideasStartTime;
+            console.log(`🎯 [IDEAS-FLOW] Complete flow finished in ${ideasDuration}ms`);
+
+            // Format result to match expected API response structure
+            const ideasResult = {
+              success: true,
+              ideaData: wsResult.ideaData,
+              ideasBotMessageId: saveResult.ideasBotMessageId,
+              ideasMessage: 'Excellent! I\'ve generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:',
+              reasoningBotMessageId: saveResult.reasoningBotMessageId,
+              nextStep: saveResult.nextStep // This will trigger critique step
+            };
 
             if (ideasResult.success) {
               // Replace loading message or add new result message
@@ -1256,7 +1343,17 @@ function AppContent() {
                     })
                   });
 
-                  const critiqueResult = await critiqueResponse.json();
+                  let critiqueResult;
+                  try {
+                    const text = await critiqueResponse.text();
+                    if (!text || text.trim() === '') {
+                      throw new Error(`Empty response body (HTTP ${critiqueResponse.status})`);
+                    }
+                    critiqueResult = JSON.parse(text);
+                  } catch (parseError) {
+                    console.error(`❌ [SEQUENTIAL-FLOW] Failed to parse critique response:`, parseError);
+                    throw new Error(`Invalid JSON response from critique API (HTTP ${critiqueResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+                  }
                   const critiqueDuration = Date.now() - critiqueStartTime;
                   console.log(`🎯 [SEQUENTIAL-FLOW] Critique API completed in ${critiqueDuration}ms:`, {
                     status: critiqueResponse.status,
@@ -1539,7 +1636,7 @@ function AppContent() {
         }
       }));
     }
-  }, []); // Remove exampleMetadata from dependencies
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Function to retry metadata for a single example
   const retryExampleMetadata = useCallback(async (url: string) => {
@@ -1617,7 +1714,7 @@ function AppContent() {
         };
       });
     }
-  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Function to retry metadata for a single post
   const retryPostMetadata = useCallback(async (url: string) => {
@@ -1646,7 +1743,7 @@ function AppContent() {
         error: !metadata
       }
     }));
-  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Message loading state
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -1685,7 +1782,7 @@ function AppContent() {
   };
 
   // Helper function to handle follow-up messages
-  const handleFollowUpMessage = async (messageText: string) => {
+  const handleFollowUpMessage = useCallback(async (messageText: string) => {
     if (!selectedCampaignId || !selectedProject) {
       console.error('❌ [FOLLOW-UP] Missing campaign or project for follow-up');
       return;
@@ -1835,7 +1932,7 @@ function AppContent() {
         }
       });
     }
-  };
+  }, [selectedCampaignId, selectedProject, messages]);
 
   // Message sending logic with campaign validation
   const handleSendMessage = useCallback(async () => {
@@ -2049,7 +2146,7 @@ function AppContent() {
 
       toast.error('Network error. Please try again.');
     }
-  }, [inputMessage, selectedCampaignId, handleSequentialFlow]);
+  }, [inputMessage, selectedCampaignId, handleSequentialFlow, handleFollowUpMessage, isSequenceComplete]);
 
   // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -2209,6 +2306,7 @@ function AppContent() {
     } finally {
       setIsLoadingMessages(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load messages when campaign changes
@@ -2692,7 +2790,7 @@ function AppContent() {
                 </div>
 
                 <div className="selected-idea-hook">
-                  <strong>Hook:</strong> "{ideaData.selected_idea.hook}"
+                  <strong>Hook:</strong> &ldquo;{ideaData.selected_idea.hook}&rdquo;
                 </div>
 
                 <div className="selected-idea-description">
@@ -2726,33 +2824,37 @@ function AppContent() {
                   </div>
                 )}
               </div>
-              {/* All Generated Ideas */}
+              {/* All Generated Ideas (excluding selected idea) */}
               <div className="all-ideas-section">
                   <h3 className="section-title">Other Ideas</h3>
                   <div className="ideas-grid">
-                    {Array.isArray(ideaData.ideas) ? ideaData.ideas.map((idea, index) => (
-                      <div key={index} className="idea-card">
-                        <div className="idea-header">
-                          <h4 className="idea-angle">{idea.angle}</h4>
-                        </div>
-                        <div className="idea-hook">
-                          <strong>Hook:</strong> "{idea.hook}"
-                        </div>
-                        <div className="idea-description">
-                          {idea.description}
-                        </div>
-                        {idea.execution_script && (
-                          <div className="idea-execution-script">
-                            <strong>Execution Script:</strong>
-                            <div className="execution-script-content">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {normalizeMarkdown(idea.execution_script)}
-                              </ReactMarkdown>
-                            </div>
+                    {Array.isArray(ideaData.ideas) ? (() => {
+                      // Filter out the selected idea from the list
+                      const otherIdeas = ideaData.ideas.filter((idea) => {
+                        // Compare by angle and hook to identify the selected idea
+                        return !(
+                          idea.angle === ideaData.selected_idea?.angle &&
+                          idea.hook === ideaData.selected_idea?.hook
+                        );
+                      });
+
+                      return otherIdeas.length > 0 ? otherIdeas.map((idea, index) => (
+                        <div key={index} className="idea-card">
+                          <div className="idea-header">
+                            <h4 className="idea-angle">{idea.angle}</h4>
                           </div>
-                        )}
-                      </div>
-                    )) : (
+                          <div className="idea-hook">
+                            <strong>Hook:</strong> &ldquo;{idea.hook}&rdquo;
+                          </div>
+                          <div className="idea-description">
+                            {idea.description}
+                          </div>
+                          {/* Other ideas from ideas_ready won't have execution_script */}
+                        </div>
+                      )) : (
+                        <div className="no-ideas">No other ideas available</div>
+                      );
+                    })() : (
                       <div className="no-ideas">No ideas available</div>
                     )}
                   </div>
@@ -2975,15 +3077,39 @@ function AppContent() {
                 Your AI-powered marketing content creation assistant
               </p>
               <div className="welcome-features">
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Create scroll-stopping ads');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">✨</span>
                   <span>Create scroll-stopping ads</span>
                 </div>
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Generate UGC scripts');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">📝</span>
                   <span>Generate UGC scripts</span>
                 </div>
-                <div className="feature-item">
+                <div
+                  className="feature-item"
+                  onClick={() => {
+                    setInputMessage('Build viral content that converts');
+                    setTimeout(() => {
+                      handleSendMessage();
+                    }, 0);
+                  }}
+                >
                   <span className="feature-icon">🚀</span>
                   <span>Build viral content that converts</span>
                 </div>

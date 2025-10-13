@@ -43,6 +43,10 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Content-Language',
+            value: 'en, ar, fr',
+          },
         ],
       },
       {
@@ -110,9 +114,15 @@ const nextConfig = {
   
   // Trailing slash consistency
   trailingSlash: false,
-  
+
+  // Redirects removed - middleware handles locale routing with whitelist approach
+  async redirects() {
+    return [];
+  },
+
   env: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_URL: process.env.SREVE_CREATOR_WEBSOCKET_URL,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     ACCESS_KEY_ID_AWS: process.env.ACCESS_KEY_ID_AWS,
     SECRET_ACCESS_KEY_AWS: process.env.SECRET_ACCESS_KEY_AWS,
@@ -120,6 +130,7 @@ const nextConfig = {
     ENVIRONMENT: process.env.ENVIRONMENT,
     SREVE_CREATOR_API_ENDPOINT: process.env.SREVE_CREATOR_API_ENDPOINT,
     SREVE_CREATOR_HEALTHCHECK_ENDPOINT: process.env.SREVE_CREATOR_HEALTHCHECK_ENDPOINT,
+    SREVE_CREATOR_WEBSOCKET_URL: process.env.SREVE_CREATOR_WEBSOCKET_URL
   },
 };
 

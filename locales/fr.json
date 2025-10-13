@@ -1,0 +1,108 @@
+{
+  "common": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "getStarted": "Commencer",
+    "learnMore": "En savoir plus",
+    "contactUs": "Nous contacter",
+    "goToApp": "Accéder à l'app",
+    "pricing": "Tarifs",
+    "features": "Fonctionnalités",
+    "product": "Produit",
+    "tools": "Outils",
+    "blog": "Blog",
+    "resources": "Ressources",
+    "tryNow": "Essayer maintenant",
+    "tryNowForFree": "Essayer gratuitement",
+    "generate": "Générer",
+    "startFree": "Commencez gratuitement. Aucune carte de crédit requise",
+    "loading": "Chargement..."
+  },
+  "nav": {
+    "home": "Accueil",
+    "tools": "Outils",
+    "blog": "Blog",
+    "pricing": "Tarifs",
+    "features": "Fonctionnalités",
+    "contactUs": "Nous contacter"
+  },
+  "footer": {
+    "aiTools": "Outils de création de contenu IA",
+    "freeResources": "Ressources gratuites",
+    "marketingResources": "Ressources marketing",
+    "solutions": "Solutions par secteur",
+    "companySupport": "Entreprise et support",
+    "resources": "Ressources",
+    "company": "Entreprise",
+    "privacyPolicy": "Politique de confidentialité",
+    "contact": "Contact",
+    "allRightsReserved": "Tous droits réservés",
+    "popularComparisons": "Comparaisons d'outils IA populaires",
+    "copyright": "© 2024 Sreve. Tous droits réservés. Économisez 90% par rapport à Jasper AI avec des outils marketing IA professionnels."
+  },
+  "home": {
+    "hero": {
+      "intro": "Générateur de blogs IA et créateur de posts viraux pour les marketeurs et fondateurs.",
+      "title": "L'IA ennuyeuse écrit du contenu moyen.",
+      "titleBrand": "Sreve",
+      "titleEnd": "écrit du contenu captivant.",
+      "subtitle": "Générez des articles de blog, du contenu social viral, des scripts UGC, des accroches, des copies publicitaires et des idées fraîches — le tout dans la voix de votre marque.",
+      "cta": "Se connecter",
+      "promptPlaceholder": "Que voulez-vous créer?",
+      "chipAd": "Créer une copie publicitaire pour hot-box",
+      "chipStatic": "Créer 5 copies publicitaires statiques pour une bouteille d'eau",
+      "chipUGC": "Créer un script UGC pour une agence de voyage",
+      "trustLink": "Approuvé par plus de 500 marques et agences",
+      "blogLink": "Lisez nos dernières perspectives sur le copywriting IA et l'automatisation marketing →",
+      "jasperLink": "Économisez 90% vs Jasper AI →",
+      "exploreTools": "Explorer les outils IA →"
+    },
+    "features": {
+      "title": "Pourquoi les agences choisissent Sreve plutôt que l'IA générique",
+      "subtitle": "Des outils conçus spécialement pour les équipes de marketing de performance",
+      "feature1Title": "Audacieux (dans le bon sens)",
+      "feature1Desc": "\"Aucun stagiaire n'oserait écrire ça.\"",
+      "feature2Title": "Pense comme un stratège",
+      "feature2Desc": "\"On dirait quelque chose que mon stratège dirait.\"",
+      "feature3Title": "Conçu pour les équipes créatives",
+      "feature3Desc": "\"Avant Sreve, tout devait être réécrit ou 'assaisonné' pour fonctionner\""
+    },
+    "pricing": {
+      "title": "Choisissez votre plan",
+      "subtitle": "90% moins cher que Jasper AI. Pas d'astuces, pas de frais cachés.",
+      "litePlan": "Lite",
+      "litePrice": "Gratuit",
+      "litePeriod": "toujours",
+      "liteFeature1": "Générez jusqu'à 20 idées/mois",
+      "liteFeature2": "1 guide de marque",
+      "proPlan": "Pro (Bientôt)",
+      "proPrice": "$19",
+      "proPeriod": "/mois",
+      "proFeature1": "Limite augmentée jusqu'à 200 idées/mois",
+      "proFeature2": "5 guides de marque"
+    },
+    "finalCta": {
+      "title": "Obtenez des idées créatives pour votre marque — gratuit pendant notre bêta",
+      "note": "⚡ Places limitées disponibles ce mois-ci",
+      "contactText": "Des questions? Réservez un appel rapide avec notre équipe."
+    }
+  },
+  "tools": {
+    "title": "Outils marketing IA",
+    "subtitle": "Des outils IA puissants conçus pour le marketing de performance et les agences créatives",
+    "captionGenerator": "Générateur de légendes IA",
+    "contentGenerator": "Générateur de contenu IA",
+    "blogIdeas": "Générateur d'idées de blog",
+    "socialPosts": "Générateur de publications sociales",
+    "sentenceRewriter": "Réécriture de phrases IA",
+    "viralPostGenerator": "Générateur de posts viraux",
+    "blogGenerator": "Générateur de blogs IA",
+    "viralAudioFinder": "Détecteur d'audio viral",
+    "allTools": "Tous les outils IA",
+    "marketingBlog": "Blog marketing",
+    "jasperAlternative": "Alternative à Jasper AI",
+    "bestToolsAgencies": "Meilleurs outils IA pour agences",
+    "socialMediaTools": "Outils IA pour réseaux sociaux",
+    "contentMarketingAI": "IA pour marketing de contenu"
+  }
+}

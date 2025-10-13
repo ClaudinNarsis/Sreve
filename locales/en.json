@@ -1,0 +1,173 @@
+{
+  "common": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "contactUs": "Contact Us",
+    "goToApp": "Go to App",
+    "pricing": "Pricing",
+    "features": "Features",
+    "product": "Product",
+    "tools": "Tools",
+    "blog": "Blog",
+    "resources": "Resources",
+    "tryNow": "Try Now",
+    "tryNowForFree": "Try now for free",
+    "generate": "Generate",
+    "startFree": "Start free. No credit card required",
+    "loading": "Loading...",
+    "home": "Home",
+    "readMore": "Read More",
+    "startCreating": "Start Creating"
+  },
+  "nav": {
+    "home": "Home",
+    "tools": "Tools",
+    "blog": "Blog",
+    "pricing": "Pricing",
+    "features": "Features",
+    "contactUs": "Contact Us"
+  },
+  "footer": {
+    "aiTools": "AI Content Creation Tools",
+    "freeResources": "Free Resources",
+    "marketingResources": "Marketing Resources",
+    "solutions": "Solutions by Industry",
+    "companySupport": "Company & Support",
+    "resources": "Resources",
+    "company": "Company",
+    "privacyPolicy": "Privacy Policy",
+    "contact": "Contact",
+    "allRightsReserved": "All rights reserved",
+    "popularComparisons": "Popular AI Tool Comparisons",
+    "copyright": "© 2024 Sreve. All rights reserved. Save 90% vs Jasper AI with professional AI marketing tools."
+  },
+  "home": {
+    "hero": {
+      "intro": "AI Blog Generator & Viral Post Creator for marketers and founders.",
+      "title": "Boring AI writes meh copy.",
+      "titleBrand": "Sreve",
+      "titleEnd": "writes scroll-stoppers.",
+      "subtitle": "Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.",
+      "cta": "Sign In",
+      "promptPlaceholder": "What do you want to create?",
+      "chipAd": "Create a ad copy for hot-box",
+      "chipStatic": "Create 5 static ad-copies for a water bottle",
+      "chipUGC": "Create a UGC script for a Travel Agency",
+      "trustLink": "Trusted by 500+ brands and agencies",
+      "blogLink": "Read our latest insights on AI copywriting and marketing automation →",
+      "jasperLink": "Save 90% vs Jasper AI →",
+      "exploreTools": "Explore AI Tools →"
+    },
+    "features": {
+      "title": "Why Agencies Choose Sreve Over Generic AI",
+      "subtitle": "Purpose-built tools for performance marketing teams",
+      "feature1Title": "Unhinged (In a Good Way)",
+      "feature1Desc": "\"No intern would dare write this.\"",
+      "feature2Title": "Thinks Like a Strategist",
+      "feature2Desc": "\"This feels like something my strategist would say.\"",
+      "feature3Title": "Built for Creative Teams",
+      "feature3Desc": "\"Before Sreve, Everything needs rewriting or 'seasoning' to work\""
+    },
+    "pricing": {
+      "title": "Choose Your Plan",
+      "subtitle": "90% cheaper than Jasper AI. No tricks, no hidden fees.",
+      "litePlan": "Lite",
+      "litePrice": "Free",
+      "litePeriod": "always",
+      "liteFeature1": "Generate up to 20 Ideas/month",
+      "liteFeature2": "1 Brand Guide",
+      "proPlan": "Pro (Coming Soon)",
+      "proPrice": "$19",
+      "proPeriod": "/month",
+      "proFeature1": "Increased limit upto 200 Ideas/month",
+      "proFeature2": "5 Brand Guides"
+    },
+    "finalCta": {
+      "title": "Get creative ideas for your brand — free while we're in beta",
+      "note": "⚡ Limited spots available this month",
+      "contactText": "Have questions? Book a quick call with our team."
+    }
+  },
+  "toolsPage": {
+    "hero": {
+      "title": "AI Tools for ",
+      "titleHighlight": "Content Creation",
+      "subtitle": "Transform your content strategy with our comprehensive suite of AI-powered marketing tools. Built for agencies, marketers, and content creators who demand professional results without the premium price tag. Each tool is designed to save you hours while delivering scroll-stopping content that converts.",
+      "agenciesLink": "agencies",
+      "jasperLink": "Save 90% vs Jasper AI",
+      "promptPlaceholder": "What type of content do you want to create?",
+      "chip1": "Rewrite this sentence for clarity",
+      "chip2": "Generate Instagram captions for my product",
+      "chip3": "Give me blog ideas for marketing",
+      "chip4": "Create social media posts",
+      "tryTools": "Try Our AI Tools"
+    },
+    "stats": {
+      "agencies": "500+ Agencies",
+      "agenciesSub": "Trust Our Tools",
+      "faster": "10x Faster",
+      "fasterSub": "Content Creation",
+      "savings": "90% Savings",
+      "savingsSub": "vs Premium Tools"
+    },
+    "toolsList": {
+      "aiCaption": {
+        "title": "AI Caption Generator",
+        "desc": "Create engaging captions for Instagram, TikTok, LinkedIn, and more. Used by 500+ agencies worldwide for social media marketing."
+      },
+      "aiContent": {
+        "title": "AI Content Generator",
+        "desc": "Create high-quality articles, blog posts, and marketing content in minutes. Better than Jasper AI at 90% less cost."
+      },
+      "socialMedia": {
+        "title": "Social Media Post Generator",
+        "desc": "Generate viral social media posts for all platforms. Drive engagement and grow your audience with AI-powered content."
+      },
+      "sentenceRewriter": {
+        "title": "AI Sentence Rewriter Tool",
+        "desc": "Transform your sentences with advanced AI. Improve clarity, change tone, and enhance readability for better conversions."
+      },
+      "blogIdea": {
+        "title": "Blog Idea Generator",
+        "desc": "Generate endless blog post ideas with SEO-optimized titles and trending topics for any niche or industry."
+      },
+      "viralPost": {
+        "title": "Viral Post Generator",
+        "desc": "Create viral-worthy content that gets shared and drives massive engagement across social media platforms."
+      },
+      "blogGenerator": {
+        "title": "AI Blog Generator",
+        "desc": "Generate complete blog posts with SEO optimization, compelling headlines, and engaging content that ranks and converts."
+      }
+    }
+  },
+  "blogPage": {
+    "breadcrumb": "Blog",
+    "title": "AI Copywriting Insights & Marketing Tips",
+    "subtitle": "Discover expert strategies, tools, and insights to boost your creative marketing campaigns with AI.",
+    "jasperCompare": "Sreve vs Jasper AI",
+    "completeToolkit": "complete AI toolkit",
+    "latestArticles": "Latest Articles",
+    "moreArticles": "More Articles"
+  },
+  "tools": {
+    "title": "AI Marketing Tools",
+    "subtitle": "Powerful AI tools designed for performance marketing and creative agencies",
+    "captionGenerator": "AI Caption Generator",
+    "contentGenerator": "AI Content Generator",
+    "blogIdeas": "Blog Idea Generator",
+    "socialPosts": "Social Media Post Generator",
+    "sentenceRewriter": "AI Sentence Rewriter",
+    "viralPostGenerator": "Viral Post Generator",
+    "blogGenerator": "AI Blog Generator",
+    "viralAudioFinder": "Viral Audio Finder",
+    "allTools": "All AI Tools",
+    "marketingBlog": "Marketing Blog",
+    "jasperAlternative": "Jasper AI Alternative",
+    "bestToolsAgencies": "Best AI Tools for Agencies",
+    "socialMediaTools": "Social Media AI Tools",
+    "contentMarketingAI": "Content Marketing AI"
+  }
+}

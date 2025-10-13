@@ -43,12 +43,52 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
-      slug: 'create-viral-posts-with-ai',
-      title: 'Create Viral Posts with AI: Best Tools & Strategies for 2025',
-      description: 'Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.',
+      slug: 'free-blog-generator-tools-2025',
+      title: 'Free Blog Generator Tools 2025: Complete Comparison Guide',
+      description: 'Compare the best free blog generator tools in 2025. Discover AI-powered blog generators, their features, pricing, and which one is right for your content strategy.',
       date: 'January 15, 2025',
+      readTime: '10 min read',
+      tags: ['Blog Generator', 'AI Tools', 'Content Marketing']
+    },
+    {
+      slug: 'ai-blog-generator-vs-manual-writing',
+      title: 'AI Blog Generator vs Manual Writing: Which is Better for SEO?',
+      description: 'Discover whether AI blog generators or manual writing produces better SEO results. Compare quality, ranking potential, costs, and find the optimal content strategy.',
+      date: 'January 18, 2025',
       readTime: '12 min read',
-      tags: ['Viral Content', 'AI Tools', 'Social Media']
+      tags: ['SEO', 'AI Writing', 'Content Strategy']
+    },
+    {
+      slug: 'blog-generator-for-small-businesses',
+      title: 'Blog Generator for Small Businesses: Save Time & Money in 2025',
+      description: 'Discover how small businesses use blog generators to save thousands on content creation. Complete guide with ROI calculators and success strategies.',
+      date: 'January 20, 2025',
+      readTime: '9 min read',
+      tags: ['Small Business', 'Cost Savings', 'Marketing Automation']
+    },
+    {
+      slug: 'how-to-use-ai-for-blog-content-creation',
+      title: 'How to Use AI for Blog Content Creation: Complete Guide',
+      description: 'Master AI blog content creation with this comprehensive guide. Step-by-step workflows, advanced strategies, and proven techniques for 2025.',
+      date: 'January 22, 2025',
+      readTime: '14 min read',
+      tags: ['AI Content Creation', 'Blog Strategy', 'Marketing Guide']
+    },
+    {
+      slug: 'viral-post-generator-guide',
+      title: 'Viral Post Generator: Create Engaging Content That Gets Shared',
+      description: 'Learn how to create viral social media content with AI post generators. Discover the 6 viral triggers and proven formulas that drive millions of shares.',
+      date: 'January 24, 2025',
+      readTime: '11 min read',
+      tags: ['Viral Content', 'Social Media', 'Content Strategy']
+    },
+    {
+      slug: 'linkedin-post-generator',
+      title: 'LinkedIn Post Generator: Create Professional Viral Content',
+      description: 'Master LinkedIn content creation with AI post generators. Learn the 7 proven post formats that drive engagement and B2B leads in 2025.',
+      date: 'January 26, 2025',
+      readTime: '10 min read',
+      tags: ['LinkedIn', 'B2B Marketing', 'Professional Content']
     },
     {
       slug: 'cheaper-jasper-alternative-2025',
@@ -59,12 +99,28 @@ export default async function BlogPage() {
       tags: ['AI Writing', 'Jasper Alternative', 'Cost Comparison']
     },
     {
-      slug: 'top-5-tools-for-creative-and-marketing-agencies',
-      title: 'Top 5 AI Tools for Creative & Marketing Agencies',
-      description: 'Discover the top 5 AI tools for creative & marketing agencies. Learn how copy ai, ad copy tools, and agency ai platforms can boost performance marketing.',
-      date: 'August 23, 2025',
-      readTime: '5 min read',
-      tags: ['AI Tools', 'Marketing Agencies', 'Performance Marketing']
+      slug: 'social-media-post-generator-tools-2025',
+      title: 'Social Media Post Generator Tools: Complete 2025 Guide',
+      description: 'Compare the top 7 social media post generator tools of 2025. Feature comparison, pricing analysis, and platform-specific recommendations.',
+      date: 'January 28, 2025',
+      readTime: '13 min read',
+      tags: ['Social Media Tools', 'AI Generators', 'Tool Comparison']
+    },
+    {
+      slug: 'create-viral-content-with-ai',
+      title: 'How to Create Viral Content with AI: Psychology & Strategy',
+      description: 'Master the psychology of viral content creation using AI tools. Learn the 6 core principles and proven formulas that generate millions of views.',
+      date: 'January 30, 2025',
+      readTime: '12 min read',
+      tags: ['Viral Marketing', 'Content Psychology', 'AI Strategy']
+    },
+    {
+      slug: 'create-viral-posts-with-ai',
+      title: 'Create Viral Posts with AI: Best Tools & Strategies for 2025',
+      description: 'Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.',
+      date: 'February 1, 2025',
+      readTime: '12 min read',
+      tags: ['Viral Content', 'AI Tools', 'Social Media']
     },
     {
       slug: 'ai-tools-social-media-marketing-2025',
@@ -81,6 +137,14 @@ export default async function BlogPage() {
       date: 'March 5, 2025',
       readTime: '15 min read',
       tags: ['Content Marketing', 'AI Tools', 'Marketing Strategy']
+    },
+    {
+      slug: 'top-5-tools-for-creative-and-marketing-agencies',
+      title: 'Top 5 AI Tools for Creative & Marketing Agencies',
+      description: 'Discover the top 5 AI tools for creative & marketing agencies. Learn how copy ai, ad copy tools, and agency ai platforms can boost performance marketing.',
+      date: 'August 23, 2025',
+      readTime: '5 min read',
+      tags: ['AI Tools', 'Marketing Agencies', 'Performance Marketing']
     }
   ];
 
@@ -246,15 +310,57 @@ export default async function BlogPage() {
           "blogPost": [
             {
               "@type": "BlogPosting",
-              "headline": "Create Viral Posts with AI: Best Tools & Strategies for 2025",
-              "description": "Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.",
-              "url": "https://sreve.online/blog/create-viral-posts-with-ai",
+              "headline": "Free Blog Generator Tools 2025: Complete Comparison Guide",
+              "description": "Compare the best free blog generator tools in 2025. Discover AI-powered blog generators, their features, pricing, and which one is right for your content strategy.",
+              "url": "https://sreve.online/blog/free-blog-generator-tools-2025",
               "datePublished": "2025-01-15",
-              "author": {
-                "@type": "Organization",
-                "name": "Sreve"
-              },
-              "keywords": ["Viral Content", "AI Tools", "Social Media", "Viral Marketing"]
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["free blog generator", "blog generator 2025", "AI blog generator"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Blog Generator vs Manual Writing: Which is Better for SEO?",
+              "description": "Data-driven comparison of AI blog generators vs manual writing for SEO performance, quality, and ROI.",
+              "url": "https://sreve.online/blog/ai-blog-generator-vs-manual-writing",
+              "datePublished": "2025-01-18",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI blog generator SEO", "AI vs manual writing", "blog generator for SEO"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Blog Generator for Small Businesses: Save Time & Money",
+              "description": "Complete guide for small businesses to save thousands on content creation using blog generators.",
+              "url": "https://sreve.online/blog/blog-generator-for-small-businesses",
+              "datePublished": "2025-01-20",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["blog generator for small business", "automated blogging", "small business SEO"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How to Use AI for Blog Content Creation: Complete Guide",
+              "description": "Master AI blog content creation with comprehensive workflows, advanced strategies, and proven techniques.",
+              "url": "https://sreve.online/blog/how-to-use-ai-for-blog-content-creation",
+              "datePublished": "2025-01-22",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI blog content creation", "blog content generator", "AI writing workflow"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Viral Post Generator: Create Engaging Content That Gets Shared",
+              "description": "Learn how to create viral social media content with AI. Discover the 6 viral triggers and proven formulas.",
+              "url": "https://sreve.online/blog/viral-post-generator-guide",
+              "datePublished": "2025-01-24",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["viral post generator", "viral content creator", "social media AI"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "LinkedIn Post Generator: Create Professional Viral Content",
+              "description": "Master LinkedIn content creation with AI. Learn the 7 proven post formats that drive engagement and B2B leads.",
+              "url": "https://sreve.online/blog/linkedin-post-generator",
+              "datePublished": "2025-01-26",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["LinkedIn post generator", "viral LinkedIn posts", "B2B content"]
             },
             {
               "@type": "BlogPosting",
@@ -262,23 +368,35 @@ export default async function BlogPage() {
               "description": "Discover why Sreve is the best affordable alternative to Jasper AI. Compare pricing, features, and see how agencies save $1,200+ yearly.",
               "url": "https://sreve.online/blog/cheaper-jasper-alternative-2025",
               "datePublished": "2025-01-27",
-              "author": {
-                "@type": "Organization",
-                "name": "Sreve"
-              },
+              "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["AI Writing", "Jasper Alternative", "Cost Comparison", "Marketing AI"]
             },
             {
-              "@type": "BlogPosting", 
-              "headline": "Top 5 AI Tools for Creative & Marketing Agencies",
-              "description": "Discover the top 5 AI tools for creative & marketing agencies. Learn how copy ai, ad copy tools, and agency ai platforms can boost performance marketing.",
-              "url": "https://sreve.online/blog/top-5-tools-for-creative-and-marketing-agencies",
-              "datePublished": "2025-08-23",
-              "author": {
-                "@type": "Organization",
-                "name": "Sreve"
-              },
-              "keywords": ["AI Tools", "Marketing Agencies", "Performance Marketing"]
+              "@type": "BlogPosting",
+              "headline": "Social Media Post Generator Tools: Complete 2025 Guide",
+              "description": "Compare the top 7 social media post generator tools. Feature comparison, pricing analysis, and platform recommendations.",
+              "url": "https://sreve.online/blog/social-media-post-generator-tools-2025",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["social media post generator", "post generator tool", "AI social tools"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How to Create Viral Content with AI: Psychology & Strategy",
+              "description": "Master the psychology of viral content creation using AI. Learn the 6 core principles and proven formulas.",
+              "url": "https://sreve.online/blog/create-viral-content-with-ai",
+              "datePublished": "2025-01-30",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["create viral content", "viral marketing AI", "content psychology"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Create Viral Posts with AI: Best Tools & Strategies for 2025",
+              "description": "Discover the best AI tools to create and validate viral social media posts. Learn proven strategies and techniques used by top marketers to maximize engagement.",
+              "url": "https://sreve.online/blog/create-viral-posts-with-ai",
+              "datePublished": "2025-02-01",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["Viral Content", "AI Tools", "Social Media", "Viral Marketing"]
             },
             {
               "@type": "BlogPosting",
@@ -286,10 +404,7 @@ export default async function BlogPage() {
               "description": "Discover the top AI tools for social media marketing in 2025. Create viral content, optimize posting schedules, and boost engagement.",
               "url": "https://sreve.online/blog/ai-tools-social-media-marketing-2025",
               "datePublished": "2025-02-15",
-              "author": {
-                "@type": "Organization",
-                "name": "Sreve"
-              },
+              "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["Social Media", "AI Tools", "Marketing Automation"]
             },
             {
@@ -298,11 +413,17 @@ export default async function BlogPage() {
               "description": "Transform your content strategy with the top AI tools of 2025. Comprehensive guide to AI content creation, automation, and marketing tools.",
               "url": "https://sreve.online/blog/best-ai-tools-content-marketing-2025",
               "datePublished": "2025-03-05",
-              "author": {
-                "@type": "Organization",
-                "name": "Sreve"
-              },
+              "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["Content Marketing", "AI Tools", "Marketing Strategy"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Top 5 AI Tools for Creative & Marketing Agencies",
+              "description": "Discover the top 5 AI tools for creative & marketing agencies. Learn how copy ai, ad copy tools, and agency ai platforms can boost performance marketing.",
+              "url": "https://sreve.online/blog/top-5-tools-for-creative-and-marketing-agencies",
+              "datePublished": "2025-08-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI Tools", "Marketing Agencies", "Performance Marketing"]
             }
           ]
         })
@@ -328,8 +449,8 @@ export default async function BlogPage() {
                 "position": 1,
                 "item": {
                   "@type": "Article",
-                  "name": "Create Viral Posts with AI: Best Tools & Strategies for 2025",
-                  "url": "https://sreve.online/blog/create-viral-posts-with-ai"
+                  "name": "Free Blog Generator Tools 2025: Complete Comparison Guide",
+                  "url": "https://sreve.online/blog/free-blog-generator-tools-2025"
                 }
               },
               {
@@ -337,8 +458,8 @@ export default async function BlogPage() {
                 "position": 2,
                 "item": {
                   "@type": "Article",
-                  "name": "Best Cheaper Jasper AI Alternative in 2025",
-                  "url": "https://sreve.online/blog/cheaper-jasper-alternative-2025"
+                  "name": "AI Blog Generator vs Manual Writing: Which is Better for SEO?",
+                  "url": "https://sreve.online/blog/ai-blog-generator-vs-manual-writing"
                 }
               },
               {
@@ -346,8 +467,8 @@ export default async function BlogPage() {
                 "position": 3,
                 "item": {
                   "@type": "Article",
-                  "name": "Top 5 AI Tools for Creative & Marketing Agencies",
-                  "url": "https://sreve.online/blog/top-5-tools-for-creative-and-marketing-agencies"
+                  "name": "Blog Generator for Small Businesses: Save Time & Money",
+                  "url": "https://sreve.online/blog/blog-generator-for-small-businesses"
                 }
               },
               {
@@ -355,8 +476,8 @@ export default async function BlogPage() {
                 "position": 4,
                 "item": {
                   "@type": "Article",
-                  "name": "10 Best AI Tools for Social Media Marketing in 2025",
-                  "url": "https://sreve.online/blog/ai-tools-social-media-marketing-2025"
+                  "name": "How to Use AI for Blog Content Creation: Complete Guide",
+                  "url": "https://sreve.online/blog/how-to-use-ai-for-blog-content-creation"
                 }
               },
               {
@@ -364,8 +485,35 @@ export default async function BlogPage() {
                 "position": 5,
                 "item": {
                   "@type": "Article",
-                  "name": "Best AI Tools for Content Marketing 2025",
-                  "url": "https://sreve.online/blog/best-ai-tools-content-marketing-2025"
+                  "name": "Viral Post Generator: Create Engaging Content That Gets Shared",
+                  "url": "https://sreve.online/blog/viral-post-generator-guide"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "item": {
+                  "@type": "Article",
+                  "name": "LinkedIn Post Generator: Create Professional Viral Content",
+                  "url": "https://sreve.online/blog/linkedin-post-generator"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 7,
+                "item": {
+                  "@type": "Article",
+                  "name": "Social Media Post Generator Tools: Complete 2025 Guide",
+                  "url": "https://sreve.online/blog/social-media-post-generator-tools-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 8,
+                "item": {
+                  "@type": "Article",
+                  "name": "How to Create Viral Content with AI: Psychology & Strategy",
+                  "url": "https://sreve.online/blog/create-viral-content-with-ai"
                 }
               }
             ]

@@ -17,6 +17,7 @@
     "@clerk/themes": "^2.4.5",
     "@types/js-cookie": "^3.0.6",
     "@types/uuid": "^10.0.0",
+    "bufferutil": "^4.0.9",
     "critters": "^0.0.23",
     "js-cookie": "^3.0.5",
     "next": "^15.2.3",
@@ -26,13 +27,16 @@
     "react-markdown": "^10.1.0",
     "react-resizable": "^3.0.5",
     "remark-gfm": "^4.0.1",
-    "uuid": "^11.1.0"
+    "utf-8-validate": "^6.0.5",
+    "uuid": "^11.1.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/node": "24.2.0",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "@types/react-resizable": "^3.0.7",
+    "@types/ws": "^8.18.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.2.3",
     "typescript": "5.9.2"
