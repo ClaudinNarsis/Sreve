@@ -10,6 +10,7 @@ import "../components/ProjectExplorer.css";
 import { useAutoCreateUser } from "../hooks/useAutoCreateUser";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { generateIdeasViaWebSocket } from '../utils/websocket-ideas';
 
 import "./app.css";
 import React, { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -1112,9 +1113,31 @@ function AppContent() {
               stepName: 'Generating Creative Ideas'
             });
 
+            const ideasStartTime = Date.now();
+
+            // Step 1: Create loading message in DynamoDB
+            console.log('💾 [IDEAS-FLOW] Step 1: Creating loading message in DB...');
+            let loadingMessageId = '';
+            try {
+              const createLoadingResponse = await fetch('/api/chat/ideas/create-loading', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ campaignId })
+              });
+              const createLoadingResult = await createLoadingResponse.json();
+
+              if (createLoadingResult.success) {
+                loadingMessageId = createLoadingResult.loadingMessageId;
+                console.log('✅ [IDEAS-FLOW] Loading message created:', loadingMessageId);
+              }
+            } catch (loadingError) {
+              console.error('❌ [IDEAS-FLOW] Failed to create loading message:', loadingError);
+              // Continue anyway - not critical
+            }
+
             // Show loading message immediately in frontend
             const ideasLoadingMessage: ChatMessage = {
-              id: `ideas-loading-${Date.now()}`,
+              id: loadingMessageId || `ideas-loading-${Date.now()}`,
               text: 'Generating creative content ideas based on the trends and competitor insights...',
               sender: 'bot',
               messageType: 'loading-final-idea',
@@ -1122,104 +1145,74 @@ function AppContent() {
             };
             setMessages(prev => [...prev, ideasLoadingMessage]);
 
-            const ideasStartTime = Date.now();
-
-            // Detailed logging before API call
-            const requestPayload = {
-              campaignId,
-              brandDetails,
-              selectedAccounts: accountsData?.selected_accounts || [],
-              selectedTrends: trendData?.chosen_trend ? [trendData.chosen_trend] : []
-            };
-
-            console.log('💡 [IDEAS-REQUEST] Preparing ideas API call:', {
+            // Step 2: Call WebSocket directly from client (bypasses API route timeout)
+            console.log('💡 [IDEAS-FLOW] Step 2: Starting WebSocket idea generation:', {
               timestamp: new Date().toISOString(),
               campaignId,
               brandName: brandDetails.brand_name,
-              accountsCount: requestPayload.selectedAccounts.length,
-              trendsCount: requestPayload.selectedTrends.length,
-              payloadSize: JSON.stringify(requestPayload).length,
-              accountsData: accountsData ? {
-                hasSelectedAccounts: !!accountsData.selected_accounts,
-                selectedAccountsLength: accountsData.selected_accounts?.length || 0,
-                accountsSample: accountsData.selected_accounts?.slice(0, 2)
-              } : 'null',
-              trendData: trendData ? {
-                hasChosenTrend: !!trendData.chosen_trend,
-                trendSample: trendData.chosen_trend ? JSON.stringify(trendData.chosen_trend).substring(0, 200) : 'none'
-              } : 'null'
+              accountsCount: accountsData?.selected_accounts?.length || 0,
+              trendsCount: trendData?.chosen_trend ? 1 : 0
             });
 
-            const ideasResponse = await fetch('/api/chat/ideas', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(requestPayload)
+            const wsUrl = process.env.NEXT_PUBLIC_SREVE_CREATOR_WEBSOCKET_URL || 'wss://kajg8zc828.execute-api.ap-south-1.amazonaws.com/dev';
+
+            const wsResult = await generateIdeasViaWebSocket(
+              wsUrl,
+              brandDetails,
+              accountsData?.selected_accounts || [],
+              trendData?.chosen_trend ? [trendData.chosen_trend] : [],
+              (brandDetails.format as string) || ''
+            );
+
+            const wsIdeasDuration = Date.now() - ideasStartTime;
+            console.log(`✅ [IDEAS-FLOW] WebSocket completed in ${wsIdeasDuration}ms:`, {
+              success: wsResult.success,
+              hasIdeaData: !!wsResult.ideaData
             });
 
-            console.log('💡 [IDEAS-RESPONSE] Ideas API response received:', {
-              timestamp: new Date().toISOString(),
-              status: ideasResponse.status,
-              statusText: ideasResponse.statusText,
-              ok: ideasResponse.ok,
-              headers: {
-                contentType: ideasResponse.headers.get('content-type'),
-                contentLength: ideasResponse.headers.get('content-length'),
-                server: ideasResponse.headers.get('server')
-              },
-              duration: Date.now() - ideasStartTime
-            });
-
-            let ideasResult;
-            try {
-              const text = await ideasResponse.text();
-              console.log('💡 [IDEAS-PARSE] Response text received:', {
-                textLength: text.length,
-                isEmpty: !text || text.trim() === '',
-                firstChars: text.substring(0, 200),
-                lastChars: text.length > 200 ? text.substring(text.length - 100) : 'N/A'
-              });
-
-              if (!text || text.trim() === '') {
-                console.error('❌ [IDEAS-PARSE] Empty response body detected:', {
-                  status: ideasResponse.status,
-                  statusText: ideasResponse.statusText,
-                  headers: Object.fromEntries(ideasResponse.headers.entries())
-                });
-                throw new Error(`Empty response body (HTTP ${ideasResponse.status})`);
-              }
-
-              ideasResult = JSON.parse(text);
-              console.log('✅ [IDEAS-PARSE] JSON parsed successfully:', {
-                success: ideasResult.success,
-                hasIdeaData: !!ideasResult.ideaData,
-                hasError: !!ideasResult.error,
-                keys: Object.keys(ideasResult)
-              });
-            } catch (parseError) {
-              console.error(`❌ [IDEAS-PARSE] Failed to parse ideas response:`, {
-                error: parseError,
-                errorMessage: parseError instanceof Error ? parseError.message : 'Unknown',
-                errorStack: parseError instanceof Error ? parseError.stack : 'N/A',
-                responseStatus: ideasResponse.status,
-                responseHeaders: Object.fromEntries(ideasResponse.headers.entries())
-              });
-              throw new Error(`Invalid JSON response from ideas API (HTTP ${ideasResponse.status}): ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
-            }
-
-            const ideasDuration = Date.now() - ideasStartTime;
-            console.log(`💡 [SEQUENTIAL-FLOW] Ideas API completed in ${ideasDuration}ms:`, {
-              status: ideasResponse.status,
-              success: ideasResult.success,
-              hasIdeaData: !!ideasResult.ideaData,
-              flowCompleted: ideasResult.flowCompleted,
-              loadingMessageId: ideasResult.loadingBotMessageId
-            });
-
-            // Check for HTTP error status or API error response
-            if (!ideasResponse.ok || !ideasResult.success) {
-              const errorMessage = ideasResult.error?.message || `Ideas API failed with status: ${ideasResponse.status}`;
+            // Check for WebSocket error
+            if (!wsResult.success || !wsResult.ideaData) {
+              const errorMessage = wsResult.error || 'WebSocket idea generation failed';
               throw new Error(errorMessage);
             }
+
+            // Step 3: Save results to DynamoDB
+            console.log('💾 [IDEAS-FLOW] Step 3: Saving results to DynamoDB...');
+            const saveResponse = await fetch('/api/chat/ideas/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                campaignId,
+                ideaData: wsResult.ideaData,
+                loadingMessageId
+              })
+            });
+
+            const saveResult = await saveResponse.json();
+
+            if (!saveResult.success) {
+              console.error('❌ [IDEAS-FLOW] Failed to save to DB:', saveResult.error);
+              throw new Error('Failed to save ideas to database');
+            }
+
+            console.log('✅ [IDEAS-FLOW] Results saved to DB:', {
+              ideasBotMessageId: saveResult.ideasBotMessageId,
+              reasoningBotMessageId: saveResult.reasoningBotMessageId,
+              nextStep: saveResult.nextStep
+            });
+
+            const ideasDuration = Date.now() - ideasStartTime;
+            console.log(`🎯 [IDEAS-FLOW] Complete flow finished in ${ideasDuration}ms`);
+
+            // Format result to match expected API response structure
+            const ideasResult = {
+              success: true,
+              ideaData: wsResult.ideaData,
+              ideasBotMessageId: saveResult.ideasBotMessageId,
+              ideasMessage: 'Excellent! I\'ve generated creative content ideas based on the trends and competitor analysis. Here are your personalized content suggestions:',
+              reasoningBotMessageId: saveResult.reasoningBotMessageId,
+              nextStep: saveResult.nextStep // This will trigger critique step
+            };
 
             if (ideasResult.success) {
               // Replace loading message or add new result message
