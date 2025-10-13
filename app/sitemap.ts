@@ -64,15 +64,84 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.8,
     },
+    // Phase 2 Blog Generator Content Cluster
+    {
+      url: `${baseUrl}/blog/free-blog-generator-tools-2025`,
+      lastModified: new Date('2025-01-15'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-blog-generator-vs-manual-writing`,
+      lastModified: new Date('2025-01-18'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/blog-generator-for-small-businesses`,
+      lastModified: new Date('2025-01-20'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/how-to-use-ai-for-blog-content-creation`,
+      lastModified: new Date('2025-01-22'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    // Phase 2 Viral Post Generator Content Cluster
+    {
+      url: `${baseUrl}/blog/viral-post-generator-guide`,
+      lastModified: new Date('2025-01-24'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/linkedin-post-generator`,
+      lastModified: new Date('2025-01-26'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/social-media-post-generator-tools-2025`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/create-viral-content-with-ai`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    // Existing blog posts
+    {
+      url: `${baseUrl}/blog/create-viral-posts-with-ai`,
+      lastModified: new Date('2025-02-01'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog/ai-tools-social-media-marketing-2025`,
+      lastModified: new Date('2025-02-15'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog/best-ai-tools-content-marketing-2025`,
+      lastModified: new Date('2025-03-05'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
     {
       url: `${baseUrl}/blog/cheaper-jasper-alternative-2025`,
-      lastModified: new Date(),
+      lastModified: new Date('2025-01-27'),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
     {
       url: `${baseUrl}/blog/top-5-tools-for-creative-and-marketing-agencies`,
-      lastModified: new Date(),
+      lastModified: new Date('2025-08-23'),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     },
