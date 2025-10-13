@@ -231,6 +231,7 @@ function PostCards({ posts, postMetadata, onFetchMetadata, onRetryMetadata, form
                   <div className="loading-spinner"></div>
                 </div>
               ) : metaData?.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={metaData.image}
                   alt={metaData.title || post.post_caption || 'Post'}
@@ -361,6 +362,7 @@ function ExampleCards({ examples, exampleMetadata, onFetchMetadata, onRetryMetad
                     <div className="loading-spinner"></div>
                   </div>
                 ) : metaData?.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={metaData.image}
                     alt={metaData.title || example.caption}
@@ -731,7 +733,7 @@ function AppContent() {
   }, []); // Only run once on mount
 
   // Function to fetch URL metadata with retry logic
-  const fetchUrlMetadata = async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
+  const fetchUrlMetadata = useCallback(async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
     const maxRetries = 2;
     const retryDelay = 1000 * (retryCount + 1); // Exponential backoff: 1s, 2s, 3s
 
@@ -797,7 +799,7 @@ function AppContent() {
 
       return null;
     }
-  };
+  }, []);
 
   // Retry sequence function - defined as regular function to avoid circular dependency
   const retrySequence = async () => {
@@ -1634,7 +1636,7 @@ function AppContent() {
         }
       }));
     }
-  }, []); // Remove exampleMetadata from dependencies
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Function to retry metadata for a single example
   const retryExampleMetadata = useCallback(async (url: string) => {
@@ -1712,7 +1714,7 @@ function AppContent() {
         };
       });
     }
-  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Function to retry metadata for a single post
   const retryPostMetadata = useCallback(async (url: string) => {
@@ -1741,7 +1743,7 @@ function AppContent() {
         error: !metadata
       }
     }));
-  }, []); // Remove fetchUrlMetadata dependency to prevent infinite loop
+  }, [fetchUrlMetadata]); // Add fetchUrlMetadata dependency
 
   // Message loading state
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -1780,7 +1782,7 @@ function AppContent() {
   };
 
   // Helper function to handle follow-up messages
-  const handleFollowUpMessage = async (messageText: string) => {
+  const handleFollowUpMessage = useCallback(async (messageText: string) => {
     if (!selectedCampaignId || !selectedProject) {
       console.error('❌ [FOLLOW-UP] Missing campaign or project for follow-up');
       return;
@@ -1930,7 +1932,7 @@ function AppContent() {
         }
       });
     }
-  };
+  }, [selectedCampaignId, selectedProject, messages]);
 
   // Message sending logic with campaign validation
   const handleSendMessage = useCallback(async () => {
@@ -2144,7 +2146,7 @@ function AppContent() {
 
       toast.error('Network error. Please try again.');
     }
-  }, [inputMessage, selectedCampaignId, handleSequentialFlow]);
+  }, [inputMessage, selectedCampaignId, handleSequentialFlow, handleFollowUpMessage, isSequenceComplete]);
 
   // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -2304,6 +2306,7 @@ function AppContent() {
     } finally {
       setIsLoadingMessages(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load messages when campaign changes
@@ -2787,7 +2790,7 @@ function AppContent() {
                 </div>
 
                 <div className="selected-idea-hook">
-                  <strong>Hook:</strong> "{ideaData.selected_idea.hook}"
+                  <strong>Hook:</strong> &ldquo;{ideaData.selected_idea.hook}&rdquo;
                 </div>
 
                 <div className="selected-idea-description">
@@ -2841,7 +2844,7 @@ function AppContent() {
                             <h4 className="idea-angle">{idea.angle}</h4>
                           </div>
                           <div className="idea-hook">
-                            <strong>Hook:</strong> "{idea.hook}"
+                            <strong>Hook:</strong> &ldquo;{idea.hook}&rdquo;
                           </div>
                           <div className="idea-description">
                             {idea.description}
