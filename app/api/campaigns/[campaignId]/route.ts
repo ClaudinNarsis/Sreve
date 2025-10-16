@@ -102,15 +102,29 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Update the campaign with selected idea
+    // Update the campaign with selected idea and campaign name
+    const updateExpression = body.campaignName
+      ? 'SET selectedIdea = :selectedIdea, #name = :campaignName, updatedAt = :updatedAt'
+      : 'SET selectedIdea = :selectedIdea, updatedAt = :updatedAt';
+
+    const expressionAttributeValues: Record<string, unknown> = {
+      ':selectedIdea': body.selectedIdea,
+      ':updatedAt': new Date().toISOString(),
+    };
+
+    const expressionAttributeNames: Record<string, string> = {};
+
+    if (body.campaignName) {
+      expressionAttributeValues[':campaignName'] = body.campaignName;
+      expressionAttributeNames['#name'] = 'name'; // 'name' is a reserved word in DynamoDB
+    }
+
     const updateCommand = new UpdateCommand({
       TableName: CAMPAIGNS_TABLE,
       Key: { userId, campaignId },
-      UpdateExpression: 'SET selectedIdea = :selectedIdea, updatedAt = :updatedAt',
-      ExpressionAttributeValues: {
-        ':selectedIdea': body.selectedIdea,
-        ':updatedAt': new Date().toISOString(),
-      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ...(body.campaignName && { ExpressionAttributeNames: expressionAttributeNames }),
       ReturnValues: 'ALL_NEW',
     });
 

@@ -1772,10 +1772,87 @@ function AppContent() {
     }
   };
 
+  // Load selected idea from campaign when campaign or messages change
+  useEffect(() => {
+    const loadSelectedIdeaFromCampaign = async () => {
+      console.log('🔍 [LOAD-SELECTED-IDEA] useEffect triggered');
+      console.log('🔍 [LOAD-SELECTED-IDEA] selectedCampaignId:', selectedCampaignId);
+      console.log('🔍 [LOAD-SELECTED-IDEA] messages.length:', messages.length);
+
+      if (!selectedCampaignId || messages.length === 0) {
+        console.log('⚠️ [LOAD-SELECTED-IDEA] Skipping - no campaign or no messages');
+        return;
+      }
+
+      try {
+        console.log('🔍 [LOAD-SELECTED-IDEA] Fetching campaign details...');
+        const campaign = await getCampaignDetailsForFollowUp(selectedCampaignId);
+        console.log('🔍 [LOAD-SELECTED-IDEA] Campaign data:', campaign);
+        console.log('🔍 [LOAD-SELECTED-IDEA] Campaign.selectedIdea:', campaign?.selectedIdea);
+
+        if (!campaign?.selectedIdea) {
+          console.log('⚠️ [LOAD-SELECTED-IDEA] No selectedIdea in campaign');
+          return;
+        }
+
+        console.log('🔍 [LOAD-SELECTED-IDEA] Found selected idea in campaign:', {
+          angle: campaign.selectedIdea.angle,
+          description: campaign.selectedIdea.description?.substring(0, 50) + '...'
+        });
+
+        // Count idea-preview messages
+        const ideaPreviewMessages = messages.filter(m => m.messageType === 'idea-preview');
+        console.log('🔍 [LOAD-SELECTED-IDEA] Total messages:', messages.length);
+        console.log('🔍 [LOAD-SELECTED-IDEA] Idea-preview messages:', ideaPreviewMessages.length);
+
+        // Find the message that contains this idea
+        for (const message of messages) {
+          if (message.messageType === 'idea-preview' && message.ideaData?.ideas) {
+            console.log('🔍 [LOAD-SELECTED-IDEA] Checking message:', message.id);
+            console.log('🔍 [LOAD-SELECTED-IDEA] Message has ideas:', message.ideaData.ideas.length);
+
+            const ideaIndex = message.ideaData.ideas.findIndex(
+              (idea: IdeaData) => {
+                const angleMatch = idea.angle === campaign.selectedIdea.angle;
+                const descMatch = idea.description === campaign.selectedIdea.description;
+                console.log('🔍 [LOAD-SELECTED-IDEA] Comparing idea:', {
+                  ideaAngle: idea.angle,
+                  campaignAngle: campaign.selectedIdea.angle,
+                  angleMatch,
+                  descMatch
+                });
+                return angleMatch && descMatch;
+              }
+            );
+
+            if (ideaIndex !== -1) {
+              console.log('✅ [LOAD-SELECTED-IDEA] Found matching idea in message:', message.id, 'at index:', ideaIndex);
+              setSelectedIdea({ messageId: message.id, index: ideaIndex });
+              return;
+            } else {
+              console.log('⚠️ [LOAD-SELECTED-IDEA] No match in message:', message.id);
+            }
+          }
+        }
+
+        console.log('⚠️ [LOAD-SELECTED-IDEA] Selected idea from campaign not found in any message');
+      } catch (error) {
+        console.error('❌ [LOAD-SELECTED-IDEA] Error loading selected idea:', error);
+      }
+    };
+
+    loadSelectedIdeaFromCampaign();
+  }, [selectedCampaignId, messages]);
+
   // Handler for selecting an idea card
   const handleSelectIdea = async (idea: IdeaData, index: number, messageId: string) => {
     if (!selectedCampaignId) {
       toast.error('Please select a campaign first');
+      return;
+    }
+
+    if (!selectedProjectId) {
+      toast.error('Please select a project first');
       return;
     }
 
@@ -1788,7 +1865,8 @@ function AppContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          selectedIdea: idea
+          selectedIdea: idea,
+          campaignName: idea.angle // Update campaign name with the idea angle
         })
       });
 
@@ -1796,8 +1874,21 @@ function AppContent() {
 
       if (data.success) {
         setSelectedIdea({ messageId, index });
-        toast.success('Idea selected successfully!');
-        console.log('✅ Campaign updated with selected idea:', data.campaign);
+        toast.success('Idea selected and campaign renamed!');
+        console.log('✅ [IDEA-SELECT] Campaign updated with selected idea and new name:', data.campaign);
+        console.log('✅ [IDEA-SELECT] Updated campaign name:', data.campaign?.name);
+        console.log('✅ [IDEA-SELECT] Selected project ID:', selectedProjectId);
+
+        // Refresh the campaigns list to show the updated campaign name
+        console.log('🔄 [IDEA-SELECT] Checking if projectExplorerRef.current exists:', !!projectExplorerRef.current);
+        console.log('🔄 [IDEA-SELECT] Checking if refreshCampaigns method exists:', !!projectExplorerRef.current?.refreshCampaigns);
+
+        if (projectExplorerRef.current?.refreshCampaigns) {
+          console.log('🔄 [IDEA-SELECT] Calling refreshCampaigns for project:', selectedProjectId);
+          projectExplorerRef.current.refreshCampaigns(selectedProjectId);
+        } else {
+          console.error('❌ [IDEA-SELECT] projectExplorerRef.current.refreshCampaigns is not available!');
+        }
       } else {
         toast.error('Failed to select idea');
         console.error('❌ Failed to update campaign:', data.error);
@@ -2373,33 +2464,28 @@ function AppContent() {
             if ('chosen_trend' in dbMsg.trendData) {
               trendApiResponse = dbMsg.trendData as TrendApiResponse;
               trendData = trendApiResponse.chosen_trend;
-              console.log('🔍 [DEBUG] New format detected - extracted chosen_trend:', JSON.stringify(trendData, null, 2));
-              console.log('🔍 [DEBUG] Reason from API response:', trendApiResponse.reason);
+              
             } else {
               // Old format - direct TrendData
               trendData = dbMsg.trendData as TrendData;
-              console.log('🔍 [DEBUG] Old format detected - direct TrendData:', JSON.stringify(trendData, null, 2));
             }
           }
 
           // Handle accounts data
           let accountsData: AccountsApiResponse | undefined;
           if (dbMsg.accountsData) {
-            console.log('🔍 [DEBUG] Processing DB message with accountsData:', JSON.stringify(dbMsg.accountsData, null, 2));
             accountsData = dbMsg.accountsData as AccountsApiResponse;
           }
 
           // Handle idea data
           let ideaData: IdeaApiResponse | undefined;
           if (dbMsg.ideaData) {
-            console.log('🔍 [DEBUG] Processing DB message with ideaData:', JSON.stringify(dbMsg.ideaData, null, 2));
             ideaData = dbMsg.ideaData as IdeaApiResponse;
           }
 
           // Handle critique data
           let critiqueData: CritiqueApiResponse | undefined;
           if (dbMsg.critiqueData) {
-            console.log('🔍 [DEBUG] Processing DB message with critiqueData:', JSON.stringify(dbMsg.critiqueData, null, 2));
             critiqueData = dbMsg.critiqueData as CritiqueApiResponse;
           }
 
@@ -2755,13 +2841,7 @@ function AppContent() {
         return null;
       }
 
-      // Debug logging for trend preview rendering
-      console.log('🔍 [DEBUG] Rendering trend preview message:');
-      console.log('🔍 [DEBUG] message.trendData:', JSON.stringify(message.trendData, null, 2));
-      console.log('🔍 [DEBUG] message.trendApiResponse:', JSON.stringify(message.trendApiResponse, null, 2));
-      console.log('🔍 [DEBUG] extracted trend:', JSON.stringify(trend, null, 2));
-      console.log('🔍 [DEBUG] extracted reason:', reason);
-      console.log('🔍 [DEBUG] reason truthy?', !!reason);
+     
 
       // Status icon mapping
       const getStatusIcon = (status?: string) => {
