@@ -1225,11 +1225,11 @@ function AppContent() {
                   sender: 'bot',
                   messageType: 'idea-preview',
                   timestamp: new Date(),
-                  ideaData: ideasResult.ideaData
+                  ideaData: ideasResult.ideaData as IdeaApiResponse
                 };
 
                 // Create reasoning message if returned by API
-                let reasoningMessage = null;
+                let reasoningMessage: ChatMessage | null = null;
                 if (ideasResult.reasoningBotMessageId && ideasResult.ideaData.reasoning) {
                   
                   reasoningMessage = {
@@ -1266,11 +1266,11 @@ function AppContent() {
                     return [...prev, ...newMessages];
                   }
                 });
-              } else if (ideasResult.noIdeasBotMessageId) {
+              } else if (ideasResult.ideasBotMessageId) {
                 // Handle no ideas case
                 const noIdeasMessage: ChatMessage = {
-                  id: ideasResult.noIdeasBotMessageId,
-                  text: ideasResult.noIdeasMessage,
+                  id: ideasResult.ideasBotMessageId,
+                  text: ideasResult.ideasMessage,
                   sender: 'bot',
                   messageType: 'default',
                   timestamp: new Date()
@@ -1546,10 +1546,10 @@ function AppContent() {
                 console.log('🎯 [SEQUENTIAL-FLOW] Sequence marked as complete after ideas step - follow-up mode enabled');
               }
             } else {
-              throw new Error(`Ideas API failed: ${ideasResult.message}`);
+              throw new Error(`Ideas API failed: ${'message' in ideasResult ? ideasResult.message : 'No message provided'}`);
             }
           } else {
-            throw new Error(`Accounts API failed: ${accountsResult.message}`);
+            throw new Error(`Accounts API failed: ${'message' in accountsResult ? accountsResult.message : 'No message provided'}`);
           }
         } else {
           throw new Error(`Trends API failed: ${trendsResult.message}`);
@@ -1782,7 +1782,7 @@ function AppContent() {
   };
 
   // Helper function to handle follow-up messages
-  const handleFollowUpMessage = useCallback(async (messageText: string) => {
+  const handleFollowUpMessage = useCallback(async (messageText: string, skipUserMessage = false) => {
     if (!selectedCampaignId || !selectedProject) {
       console.error('❌ [FOLLOW-UP] Missing campaign or project for follow-up');
       return;
@@ -1790,15 +1790,17 @@ function AppContent() {
 
     console.log('🎯 [FOLLOW-UP] Processing follow-up message');
 
-    // Add user message to chat immediately
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: messageText,
-      sender: 'user',
-      messageType: 'default',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message to chat immediately (unless already added by caller)
+    if (!skipUserMessage) {
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: messageText,
+        sender: 'user',
+        messageType: 'default',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+    }
 
     // Add temporary loading message
     const tempLoadingMessage: ChatMessage = {
@@ -1959,6 +1961,13 @@ function AppContent() {
 
     setMessages(prev => [...prev, userMessage]);
 
+    // Route to follow-up if sequence is complete and campaign is selected
+    if (selectedCampaignId && isSequenceComplete) {
+      console.log('🎯 [ROUTING] Routing to follow-up handler');
+      await handleFollowUpMessage(messageText, true); // Skip adding user message again
+      return;
+    }
+
     // Add temporary loading message that will be updated with the API response
     const tempLoadingMessage: ChatMessage = {
       id: 'temp-loading-' + Date.now().toString(),
@@ -1968,13 +1977,6 @@ function AppContent() {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, tempLoadingMessage]);
-
-    // Route to follow-up if sequence is complete and campaign is selected
-    if (selectedCampaignId && isSequenceComplete) {
-      console.log('🎯 [ROUTING] Routing to follow-up handler');
-      await handleFollowUpMessage(messageText);
-      return;
-    }
 
     // Proceed with main chat API (with or without campaign)
     if (selectedCampaignId) {

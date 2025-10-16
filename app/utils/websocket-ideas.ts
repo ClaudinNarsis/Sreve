@@ -41,15 +41,15 @@ export async function generateIdeasViaWebSocket(
       let messagesReceived = 0;
       const startTime = Date.now();
 
-      // Overall timeout (60 seconds)
+      // Overall timeout (120 seconds)
       const overallTimeout = setTimeout(() => {
-        console.error(`❌ [CLIENT-WS] [${connectionId}] Timeout after 60s`);
+        console.error(`❌ [CLIENT-WS] [${connectionId}] Timeout after 120s`);
         ws.close();
         resolve({
           success: false,
-          error: 'Idea generation timed out after 60 seconds'
+          error: 'Idea generation timed out after 120 seconds'
         });
-      }, 60000);
+      }, 120000);
 
       // Connection timeout (10 seconds)
       const connectionTimeout = setTimeout(() => {
