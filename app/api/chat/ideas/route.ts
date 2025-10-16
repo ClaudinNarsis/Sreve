@@ -99,9 +99,9 @@ async function generateIdeaViaWebSocket(
       let messagesReceived = 0;
       let lastMessageTime = Date.now();
 
-      // Set overall timeout for the entire operation (60 seconds)
+      // Set overall timeout for the entire operation (120 seconds)
       const overallTimeout = setTimeout(() => {
-        console.error(`❌ [WEBSOCKET] [${wsConnectionId}] Overall timeout (60s) reached`);
+        console.error(`❌ [WEBSOCKET] [${wsConnectionId}] Overall timeout (120s) reached`);
         console.error(`❌ [WEBSOCKET] [${wsConnectionId}] Stats at timeout:`, {
           messagesReceived,
           lastMessageReceived: Date.now() - lastMessageTime,
@@ -110,9 +110,9 @@ async function generateIdeaViaWebSocket(
         ws.close();
         resolve({
           success: false,
-          error: 'WebSocket operation timed out after 60 seconds'
+          error: 'WebSocket operation timed out after 120 seconds'
         });
-      }, 60000);
+      }, 120000);
 
       // Set connection timeout (10 seconds)
       const connectionTimeout = setTimeout(() => {
@@ -333,7 +333,7 @@ async function generateIdeaViaWebSocket(
 }
 
 // Configure route for extended timeout (if platform supports it)
-export const maxDuration = 60; // Try to request 60 seconds
+export const maxDuration = 120; // Extended to 120 seconds for idea generation
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
@@ -343,7 +343,7 @@ export async function POST(request: NextRequest) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📥 [IDEAS-API] [${requestId}] POST /api/chat/ideas - Request received`);
   console.log(`⏰ [IDEAS-API] [${requestId}] Timestamp: ${new Date().toISOString()}`);
-  console.log(`⏰ [IDEAS-API] [${requestId}] Function timeout config: maxDuration=60s`);
+  console.log(`⏰ [IDEAS-API] [${requestId}] Function timeout config: maxDuration=120s`);
   console.log(`🌍 [IDEAS-API] [${requestId}] Environment: ${process.env.NODE_ENV}`);
   console.log(`🔧 [IDEAS-API] [${requestId}] Next.js version: ${process.env.npm_package_version || 'unknown'}`);
 
