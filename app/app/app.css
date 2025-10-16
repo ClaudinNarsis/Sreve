@@ -1980,10 +1980,11 @@
 
 .idea-card {
   background: #3c3c3c30;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--glass-border, rgba(255, 255, 0.1));
   border-radius: 8px;
   padding: 1rem;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .idea-card:hover {
@@ -1992,8 +1993,29 @@
   border-color: var(--orange-primary, #ff6600);
 }
 
+.idea-card.selected {
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(255, 133, 51, 0.05));
+  border: 2px solid var(--orange-primary, #ff6600);
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+}
+
 .idea-header {
   margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-badge {
+  background: var(--orange-primary, #ff6600);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .idea-angle {

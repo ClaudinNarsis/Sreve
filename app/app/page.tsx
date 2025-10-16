@@ -89,25 +89,13 @@ interface AccountsApiResponse {
 
 interface IdeaData {
   angle: string;
-  hook: string;
   description: string;
-  execution_script?: string;
-}
-
-interface SelectedIdea extends IdeaData {
-  scores: {
-    Attention: number;
-    'Trend-Fit': number;
-    Originality: number;
-    'Brand-Fit': number;
-  };
-  rationale: string;
 }
 
 interface IdeaApiResponse {
   ideas: IdeaData[];
-  selected_idea: SelectedIdea;
   reasoning: string;
+  selected_idea?: IdeaData;
 }
 
 interface CritiqueApiResponse {
@@ -588,6 +576,9 @@ function AppContent() {
   // State for storing example metadata
   const [exampleMetadata, setExampleMetadata] = useState<Record<string, ExampleWithMetadata>>({});
   const [postMetadata, setPostMetadata] = useState<Record<string, ExampleWithMetadata>>({});
+
+  // State for selected idea - track by message ID and index
+  const [selectedIdea, setSelectedIdea] = useState<{ messageId: string; index: number } | null>(null);
 
   // Refresh warning effect for sequential flow
   useEffect(() => {
@@ -1319,8 +1310,8 @@ function AppContent() {
                 let ideaString = '';
                 let userRequirement = '';
 
-                if (ideasResult.ideaData?.selected_idea) {
-                  ideaString = JSON.stringify(ideasResult.ideaData.selected_idea);
+                if ((ideasResult.ideaData as IdeaApiResponse)?.selected_idea) {
+                  ideaString = JSON.stringify((ideasResult.ideaData as IdeaApiResponse).selected_idea);
                 } else if (ideasResult.ideaData?.ideas && ideasResult.ideaData.ideas.length > 0) {
                   ideaString = JSON.stringify(ideasResult.ideaData.ideas[0]);
                 } else {
@@ -1781,6 +1772,42 @@ function AppContent() {
     }
   };
 
+  // Handler for selecting an idea card
+  const handleSelectIdea = async (idea: IdeaData, index: number, messageId: string) => {
+    if (!selectedCampaignId) {
+      toast.error('Please select a campaign first');
+      return;
+    }
+
+    console.log('💡 Selecting idea:', idea, 'from message:', messageId, 'for campaign:', selectedCampaignId);
+
+    try {
+      const response = await fetch(`/api/campaigns/${selectedCampaignId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedIdea: idea
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSelectedIdea({ messageId, index });
+        toast.success('Idea selected successfully!');
+        console.log('✅ Campaign updated with selected idea:', data.campaign);
+      } else {
+        toast.error('Failed to select idea');
+        console.error('❌ Failed to update campaign:', data.error);
+      }
+    } catch (error) {
+      toast.error('Error selecting idea');
+      console.error('❌ Error updating campaign:', error);
+    }
+  };
+
   // Helper function to handle follow-up messages
   const handleFollowUpMessage = useCallback(async (messageText: string, skipUserMessage = false) => {
     if (!selectedCampaignId || !selectedProject) {
@@ -1824,24 +1851,24 @@ function AppContent() {
         timestamp: msg.timestamp
       }));
 
-      // Extract selected idea from messages
+      // Extract ideas from messages
       const ideaMessage = messages.find(msg =>
-        msg.messageType === 'idea-preview' && msg.ideaData?.selected_idea
+        msg.messageType === 'idea-preview' && msg.ideaData?.ideas
       );
-      const selectedIdea = ideaMessage?.ideaData?.selected_idea;
+      const generatedIdeas = ideaMessage?.ideaData?.ideas || [];
 
       // Prepare context object
       const context = {
         projectDetails: selectedProject,
         campaignDetails: campaignDetails,
-        selectedIdea: selectedIdea,
+        generatedIdeas: generatedIdeas,
         lastMessages: lastMessages
       };
 
       console.log('📋 [FOLLOW-UP] Context prepared:', {
         hasProjectDetails: !!selectedProject,
         hasCampaignDetails: !!campaignDetails,
-        hasSelectedIdea: !!selectedIdea,
+        generatedIdeasCount: generatedIdeas.length,
         messageCount: lastMessages.length
       });
 
@@ -1961,10 +1988,135 @@ function AppContent() {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Route to follow-up if sequence is complete and campaign is selected
+    // Route to change-idea API if sequence is complete and campaign is selected
     if (selectedCampaignId && isSequenceComplete) {
-      console.log('🎯 [ROUTING] Routing to follow-up handler');
-      await handleFollowUpMessage(messageText, true); // Skip adding user message again
+      console.log('🎯 [ROUTING] Routing to change-idea handler');
+
+      // Extract previous ideas from messages
+      const ideaMessage = messages.find(msg =>
+        msg.messageType === 'idea-preview' && msg.ideaData?.ideas
+      );
+
+      if (ideaMessage && ideaMessage.ideaData?.ideas) {
+        console.log('📋 [CHANGE-IDEA] Found previous ideas:', ideaMessage.ideaData.ideas.length);
+
+        // Add loading message
+        const loadingMessage: ChatMessage = {
+          id: 'temp-change-idea-loading-' + Date.now().toString(),
+          text: 'Generating new creative content ideas based on your request...',
+          sender: 'bot',
+          messageType: 'loading-final-idea',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, loadingMessage]);
+
+        try {
+          // Call change-idea API
+          const response = await fetch('/api/chat/ideas/change-idea', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              campaignId: selectedCampaignId,
+              ideas: ideaMessage.ideaData.ideas,
+              request_prompt: messageText
+            })
+          });
+
+          const data = await response.json();
+          console.log('🔄 [CHANGE-IDEA] API response:', data);
+
+          if (response.ok && data.success && data.ideaData) {
+            // Replace loading message with new ideas
+            const newIdeasMessage: ChatMessage = {
+              id: data.ideasBotMessageId || (Date.now() + 1).toString(),
+              text: data.ideasMessage || 'Here are your new creative ideas:',
+              sender: 'bot',
+              messageType: 'idea-preview',
+              timestamp: new Date(),
+              ideaData: data.ideaData
+            };
+
+            // Add reasoning message if exists
+            const messagesToAdd: ChatMessage[] = [newIdeasMessage];
+            if (data.reasoningBotMessageId && data.ideaData.reasoning) {
+              messagesToAdd.push({
+                id: data.reasoningBotMessageId,
+                text: data.ideaData.reasoning,
+                sender: 'bot',
+                messageType: 'default',
+                timestamp: new Date()
+              });
+            }
+
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.id.startsWith('temp-change-idea-loading-')
+              );
+
+              if (loadingIndex !== -1) {
+                const updated = [...prev];
+                updated.splice(loadingIndex, 1, ...messagesToAdd);
+                return updated;
+              } else {
+                return [...prev, ...messagesToAdd];
+              }
+            });
+          } else {
+            // Handle error - replace loading with error message
+            const errorMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              text: data.error?.message || 'Failed to generate new ideas. Please try again.',
+              sender: 'bot',
+              messageType: 'default',
+              timestamp: new Date()
+            };
+
+            setMessages(prev => {
+              const loadingIndex = prev.findIndex(msg =>
+                msg.id.startsWith('temp-change-idea-loading-')
+              );
+
+              if (loadingIndex !== -1) {
+                const updated = [...prev];
+                updated[loadingIndex] = errorMessage;
+                return updated;
+              } else {
+                return [...prev, errorMessage];
+              }
+            });
+          }
+        } catch (error) {
+          console.error('❌ [CHANGE-IDEA] Network error:', error);
+
+          // Replace loading with network error message
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            text: 'Network error occurred. Please check your connection and try again.',
+            sender: 'bot',
+            messageType: 'default',
+            timestamp: new Date()
+          };
+
+          setMessages(prev => {
+            const loadingIndex = prev.findIndex(msg =>
+              msg.id.startsWith('temp-change-idea-loading-')
+            );
+
+            if (loadingIndex !== -1) {
+              const updated = [...prev];
+              updated[loadingIndex] = errorMessage;
+              return updated;
+            } else {
+              return [...prev, errorMessage];
+            }
+          });
+        }
+      } else {
+        // No previous ideas found - fall back to regular follow-up
+        console.log('⚠️ [CHANGE-IDEA] No previous ideas found, falling back to follow-up');
+        await handleFollowUpMessage(messageText, true);
+      }
+
       return;
     }
 
@@ -2772,98 +2924,42 @@ function AppContent() {
     if (messageType === 'idea-preview' && message.sender === 'bot' && message.ideaData) {
       const ideaData = message.ideaData;
 
-
       return (
         <div className="message-content idea-preview">
           <div className="idea-intro">
             {message.text}
           </div>
 
-          
-
-          {/* Selected Idea with Scores */}
-          {ideaData.selected_idea && (
-            <div className="selected-idea-section">
-              <h3 className="section-title">Recommended Idea</h3>
-              <div className="selected-idea-card">
-                <div className="selected-idea-header">
-                  <h4 className="selected-idea-angle">{ideaData.selected_idea.angle}</h4>
-                  <div className="idea-badge">Top Pick</div>
-                </div>
-
-                <div className="selected-idea-hook">
-                  <strong>Hook:</strong> &ldquo;{ideaData.selected_idea.hook}&rdquo;
-                </div>
-
-                <div className="selected-idea-description">
-                  {ideaData.selected_idea.description}
-                </div>
-
-                {ideaData.selected_idea.execution_script && (() => {
-                  const rawScript = ideaData.selected_idea.execution_script;
-                  
-                  const normalizedScript = normalizeMarkdown(rawScript);
-                  
+          {/* All Generated Ideas */}
+          <div className="all-ideas-section">
+            <h3 className="section-title">Creative Ideas</h3>
+            <div className="ideas-grid">
+              {Array.isArray(ideaData.ideas) && ideaData.ideas.length > 0 ? (
+                ideaData.ideas.map((idea, index) => {
+                  const isSelected = selectedIdea?.messageId === message.id && selectedIdea?.index === index;
                   return (
-                    <div className="selected-idea-execution-script">
-                      <h5 className="execution-script-title">Execution Script</h5>
-                      <div className="execution-script-content">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {normalizedScript}
-                        </ReactMarkdown>
+                    <div
+                      key={index}
+                      className={`idea-card ${isSelected ? 'selected' : ''}`}
+                      onClick={() => handleSelectIdea(idea, index, message.id)}
+                    >
+                      <div className="idea-header">
+                        <h4 className="idea-angle">{idea.angle}</h4>
+                        {isSelected && (
+                          <span className="selected-badge">✓ Selected</span>
+                        )}
+                      </div>
+                      <div className="idea-description">
+                        {idea.description}
                       </div>
                     </div>
                   );
-                })()}
-                  
-                
-                
-                {/* Rationale */}
-                {ideaData.selected_idea.rationale && (
-                  <div className="idea-rationale">
-                    <h5 className="rationale-title">Why This Idea Works</h5>
-                    <p className="rationale-content">{ideaData.selected_idea.rationale}</p>
-                  </div>
-                )}
-              </div>
-              {/* All Generated Ideas (excluding selected idea) */}
-              <div className="all-ideas-section">
-                  <h3 className="section-title">Other Ideas</h3>
-                  <div className="ideas-grid">
-                    {Array.isArray(ideaData.ideas) ? (() => {
-                      // Filter out the selected idea from the list
-                      const otherIdeas = ideaData.ideas.filter((idea) => {
-                        // Compare by angle and hook to identify the selected idea
-                        return !(
-                          idea.angle === ideaData.selected_idea?.angle &&
-                          idea.hook === ideaData.selected_idea?.hook
-                        );
-                      });
-
-                      return otherIdeas.length > 0 ? otherIdeas.map((idea, index) => (
-                        <div key={index} className="idea-card">
-                          <div className="idea-header">
-                            <h4 className="idea-angle">{idea.angle}</h4>
-                          </div>
-                          <div className="idea-hook">
-                            <strong>Hook:</strong> &ldquo;{idea.hook}&rdquo;
-                          </div>
-                          <div className="idea-description">
-                            {idea.description}
-                          </div>
-                          {/* Other ideas from ideas_ready won't have execution_script */}
-                        </div>
-                      )) : (
-                        <div className="no-ideas">No other ideas available</div>
-                      );
-                    })() : (
-                      <div className="no-ideas">No ideas available</div>
-                    )}
-                  </div>
-                </div>
+                })
+              ) : (
+                <div className="no-ideas">No ideas available</div>
+              )}
             </div>
-            
-          )}
+          </div>
 
         </div>
       );
