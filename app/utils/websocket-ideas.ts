@@ -2,16 +2,8 @@
 // This bypasses the API route to avoid serverless timeout limits
 
 interface IdeaData {
-  selected_idea: {
-    angle: string;
-    hook: string;
-    description: string;
-    execution_script?: string;
-    rationale?: string;
-  };
   ideas: Array<{
     angle: string;
-    hook: string;
     description: string;
   }>;
   reasoning: string;
@@ -37,7 +29,6 @@ export async function generateIdeasViaWebSocket(
     try {
       const ws = new WebSocket(websocketUrl);
 
-      let allIdeas: unknown[] = [];
       let messagesReceived = 0;
       const startTime = Date.now();
 
@@ -101,6 +92,7 @@ export async function generateIdeasViaWebSocket(
         try {
           const data = JSON.parse(event.data);
           console.log(`📨 [CLIENT-WS] [${connectionId}] Message #${messagesReceived}:`, data.type);
+          console.log(`📦 [CLIENT-WS] [${connectionId}] RAW message data:`, JSON.stringify(data, null, 2));
 
           switch (data.type) {
             case 'connected':
@@ -121,26 +113,34 @@ export async function generateIdeasViaWebSocket(
               }, 45000);
               break;
 
-            case 'ideas_ready':
-              console.log(`✨ [CLIENT-WS] [${connectionId}] ${data.count} ideas ready`);
-              if (Array.isArray(data.ideas)) {
-                allIdeas = data.ideas;
-              }
-              break;
-
             case 'complete':
               console.log(`🎉 [CLIENT-WS] [${connectionId}] Complete (${Date.now() - startTime}ms total)`);
+              console.log(`📊 [CLIENT-WS] [${connectionId}] Response structure:`, {
+                ideasCount: Array.isArray(data.ideas) ? data.ideas.length : 0,
+                hasReasoning: !!data.reasoning
+              });
 
               if (messageTimeout) clearTimeout(messageTimeout);
               clearTimeout(overallTimeout);
               ws.close();
 
+              // NEW API STRUCTURE:
+              // Returns: { ideas: [{ angle, description }], reasoning, count }
+              // Map to format expected by frontend (angle, description)
+              const mappedIdeas = Array.isArray(data.ideas)
+                ? data.ideas.map((idea: { angle: string; description: string }) => ({
+                    angle: idea.angle,
+                    description: idea.description
+                  }))
+                : [];
+
+              console.log(`🔄 [CLIENT-WS] [${connectionId}] Mapped ${mappedIdeas.length} ideas`);
+
               resolve({
                 success: true,
                 ideaData: {
-                  selected_idea: data.selected_idea,
-                  ideas: allIdeas.length > 0 ? allIdeas as IdeaData['ideas'] : [data.selected_idea],
-                  reasoning: data.reasoning
+                  ideas: mappedIdeas,
+                  reasoning: data.reasoning || 'Generated creative ideas based on trends and competitor insights.'
                 }
               });
               break;

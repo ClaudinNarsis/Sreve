@@ -94,8 +94,6 @@ async function generateIdeaViaWebSocket(
       const ws = new WebSocket(wsUrl);
       console.log(`✅ [WEBSOCKET] [${wsConnectionId}] WebSocket object created, waiting for connection...`);
 
-      // Store all 5 ideas from ideas_ready message
-      let allIdeas: unknown[] = [];
       let messagesReceived = 0;
       let lastMessageTime = Date.now();
 
@@ -104,8 +102,7 @@ async function generateIdeaViaWebSocket(
         console.error(`❌ [WEBSOCKET] [${wsConnectionId}] Overall timeout (120s) reached`);
         console.error(`❌ [WEBSOCKET] [${wsConnectionId}] Stats at timeout:`, {
           messagesReceived,
-          lastMessageReceived: Date.now() - lastMessageTime,
-          hasIdeas: allIdeas.length > 0
+          lastMessageReceived: Date.now() - lastMessageTime
         });
         ws.close();
         resolve({
@@ -186,6 +183,7 @@ async function generateIdeaViaWebSocket(
 
           const data = JSON.parse(rawString);
           console.log(`📨 [WEBSOCKET] [${wsConnectionId}] Message type: ${data.type}`);
+          console.log(`📦 [WEBSOCKET] [${wsConnectionId}] RAW message data:`, JSON.stringify(data, null, 2));
 
           switch (data.type) {
             case 'connected':
@@ -211,28 +209,11 @@ async function generateIdeaViaWebSocket(
               }, 45000);
               break;
 
-            case 'ideas_ready':
-              console.log(`✨ [WEBSOCKET] [${wsConnectionId}] Ideas ready:`, {
-                count: data.count,
-                hasIdeasArray: Array.isArray(data.ideas),
-                ideasLength: Array.isArray(data.ideas) ? data.ideas.length : 0
-              });
-              // Store all 5 ideas for later use
-              if (Array.isArray(data.ideas)) {
-                allIdeas = data.ideas;
-                console.log(`📝 [WEBSOCKET] [${wsConnectionId}] Stored ${allIdeas.length} ideas:`,
-                  allIdeas.map((idea: unknown) => (idea as { angle?: string }).angle || 'no-angle').join(', ')
-                );
-              }
-              break;
-
             case 'complete':
               const completionTime = Date.now() - lastMessageTime;
               console.log(`🎉 [WEBSOCKET] [${wsConnectionId}] Generation complete (${completionTime}ms since last message)`);
               console.log(`📊 [WEBSOCKET] [${wsConnectionId}] Final data:`, {
-                hasSelectedIdea: !!data.selected_idea,
-                selectedIdeaKeys: data.selected_idea ? Object.keys(data.selected_idea) : [],
-                storedIdeasCount: allIdeas.length,
+                ideasCount: Array.isArray(data.ideas) ? data.ideas.length : 0,
                 hasReasoning: !!data.reasoning,
                 reasoningLength: data.reasoning?.length || 0
               });
@@ -242,13 +223,24 @@ async function generateIdeaViaWebSocket(
 
               ws.close();
 
-              // Return both the selected idea and all 5 original ideas
+              // NEW API STRUCTURE:
+              // Returns: { ideas: [{ angle, description }], reasoning, count }
+              // Map to format expected by frontend (angle, description)
+              const mappedIdeas = Array.isArray(data.ideas)
+                ? data.ideas.map((idea: { angle: string; description: string }) => ({
+                    angle: idea.angle,
+                    description: idea.description
+                  }))
+                : [];
+
+              console.log(`🔄 [WEBSOCKET] [${wsConnectionId}] Mapped ${mappedIdeas.length} ideas`);
+
+              // Return with mapped structure
               const finalData = {
                 success: true,
                 ideaData: {
-                  selected_idea: data.selected_idea,
-                  ideas: allIdeas.length > 0 ? allIdeas : [data.selected_idea],
-                  reasoning: data.reasoning
+                  ideas: mappedIdeas,
+                  reasoning: data.reasoning || 'Generated creative ideas based on trends and competitor insights.'
                 }
               };
               console.log(`✅ [WEBSOCKET] [${wsConnectionId}] Resolving with data (${messagesReceived} messages total)`);
@@ -292,7 +284,6 @@ async function generateIdeaViaWebSocket(
           error: error.message,
           errorType: error.constructor.name,
           messagesReceived,
-          hasIdeas: allIdeas.length > 0,
           stack: error.stack?.split('\n').slice(0, 5).join('\n')
         });
         clearTimeout(connectionTimeout);
@@ -664,7 +655,7 @@ export async function POST(request: NextRequest) {
           ideasMessage,
           ideaData,
           reasoningBotMessageId,
-          nextStep: 'critique',
+          nextStep: null,
           success: true
         }, { status: 200 });
       } else {
@@ -707,7 +698,7 @@ export async function POST(request: NextRequest) {
           loadingBotMessageId,
           noIdeasBotMessageId,
           noIdeasMessage,
-          nextStep: 'critique',
+          nextStep: null,
           success: true
         }, { status: 200 });
       }

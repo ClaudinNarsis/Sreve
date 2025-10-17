@@ -1,7 +1,7 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -43,6 +43,7 @@ interface ProjectExplorerProps {
 
 export interface ProjectExplorerRef {
   refreshData: () => void;
+  refreshCampaigns: (projectId: string) => void;
 }
 
 const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ onCampaignSelect, selectedCampaignId, onCreateProjectClick, selectedProjectId, onProjectSelect }, ref) => {
@@ -57,56 +58,8 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
   const [creatingCampaign, setCreatingCampaign] = useState<string | null>(null);
   const [, setSelectedProject] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isLoaded && user) {
-      fetchProjects();
-    }
-  }, [isLoaded, user]);
-
-  // Add effect to refresh data when component becomes visible again
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && isLoaded && user) {
-        console.log('🔄 Page became visible, refreshing projects...');
-        fetchProjects();
-      }
-    };
-
-    const handleFocus = () => {
-      if (isLoaded && user) {
-        console.log('🔄 Window focused, refreshing projects...');
-        fetchProjects();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [isLoaded, user]);
-
-  // Listen to pathname changes to refresh data when navigating back to /app
-  useEffect(() => {
-    if (pathname === '/app' && isLoaded && user) {
-      console.log('🔄 Navigated to /app, refreshing projects...');
-      fetchProjects();
-    }
-  }, [pathname, isLoaded, user]);
-
-  // Expose refresh method to parent components
-  useImperativeHandle(ref, () => ({
-    refreshData: () => {
-      if (isLoaded && user) {
-        console.log('🔄 External refresh triggered...');
-        fetchProjects();
-      }
-    }
-  }), [isLoaded, user]);
-
-  const fetchProjects = async () => {
+  // Define fetch functions with useCallback
+  const fetchProjects = useCallback(async () => {
     console.log('🔍 Fetching user projects...');
     setLoading(true);
 
@@ -135,36 +88,59 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchCampaigns = async (projectId: string) => {
-    console.log('🔍 Fetching campaigns for project:', projectId);
+  const fetchCampaigns = useCallback(async (projectId: string) => {
+    console.log('🔍 [FETCH-CAMPAIGNS] Starting fetchCampaigns for project:', projectId);
+    console.log('🔍 [FETCH-CAMPAIGNS] Current campaigns state:', campaigns);
     setLoadingCampaigns(prev => new Set([...prev, projectId]));
 
     try {
-      // Add timestamp to prevent caching  
+      // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
-      const response = await fetch(`/api/campaigns?projectId=${projectId}&t=${timestamp}`, {
+      const url = `/api/campaigns?projectId=${projectId}&t=${timestamp}`;
+      console.log('🔍 [FETCH-CAMPAIGNS] Fetching from URL:', url);
+
+      const response = await fetch(url, {
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         }
       });
+
+      console.log('🔍 [FETCH-CAMPAIGNS] Response status:', response.status);
       const data = await response.json();
-      console.log('📋 Campaigns response:', data);
+      console.log('📋 [FETCH-CAMPAIGNS] Campaigns response data:', data);
+      console.log('📋 [FETCH-CAMPAIGNS] Number of campaigns:', data.campaigns?.length || 0);
 
       if (response.ok && data.success) {
-        setCampaigns(prev => ({
-          ...prev,
+        const newCampaignsState = {
+          ...campaigns,
           [projectId]: data.campaigns || []
-        }));
-        console.log('✅ Campaigns loaded for project:', projectId, data.campaigns?.length || 0);
+        };
+        console.log('📋 [FETCH-CAMPAIGNS] Setting new campaigns state:', newCampaignsState);
+
+        setCampaigns(prev => {
+          const updated = {
+            ...prev,
+            [projectId]: data.campaigns || []
+          };
+          console.log('📋 [FETCH-CAMPAIGNS] State update - prev:', prev, 'updated:', updated);
+          return updated;
+        });
+
+        console.log('✅ [FETCH-CAMPAIGNS] Campaigns loaded for project:', projectId, 'count:', data.campaigns?.length || 0);
+
+        // Log campaign names for debugging
+        if (data.campaigns && data.campaigns.length > 0) {
+          console.log('✅ [FETCH-CAMPAIGNS] Campaign names:', data.campaigns.map((c: { name: string }) => c.name));
+        }
       } else {
-        console.error('❌ Failed to fetch campaigns:', data.error);
+        console.error('❌ [FETCH-CAMPAIGNS] Failed to fetch campaigns:', data.error);
         toast.error('Failed to load campaigns');
       }
     } catch (error) {
-      console.error('❌ Error fetching campaigns:', error);
+      console.error('❌ [FETCH-CAMPAIGNS] Error fetching campaigns:', error);
       toast.error('Error loading campaigns');
     } finally {
       setLoadingCampaigns(prev => {
@@ -172,8 +148,79 @@ const ProjectExplorer = forwardRef<ProjectExplorerRef, ProjectExplorerProps>(({ 
         newSet.delete(projectId);
         return newSet;
       });
+      console.log('✅ [FETCH-CAMPAIGNS] Finished fetchCampaigns for project:', projectId);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchProjects();
+    }
+  }, [isLoaded, user, fetchProjects]);
+
+  // Add effect to refresh data when component becomes visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isLoaded && user) {
+        console.log('🔄 Page became visible, refreshing projects...');
+        fetchProjects();
+      }
+    };
+
+    const handleFocus = () => {
+      if (isLoaded && user) {
+        console.log('🔄 Window focused, refreshing projects...');
+        fetchProjects();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isLoaded, user, fetchProjects]);
+
+  // Listen to pathname changes to refresh data when navigating back to /app
+  useEffect(() => {
+    if (pathname === '/app' && isLoaded && user) {
+      console.log('🔄 Navigated to /app, refreshing projects...');
+      fetchProjects();
+    }
+  }, [pathname, isLoaded, user, fetchProjects]);
+
+  // Expose refresh methods to parent components
+  useImperativeHandle(ref, () => {
+    console.log('🔄 [PROJECT-EXPLORER] useImperativeHandle creating ref methods');
+    console.log('🔄 [PROJECT-EXPLORER] isLoaded:', isLoaded, 'user:', !!user);
+    console.log('🔄 [PROJECT-EXPLORER] fetchProjects exists:', typeof fetchProjects);
+    console.log('🔄 [PROJECT-EXPLORER] fetchCampaigns exists:', typeof fetchCampaigns);
+
+    return {
+      refreshData: () => {
+        console.log('🔄 [PROJECT-EXPLORER] refreshData called');
+        console.log('🔄 [PROJECT-EXPLORER] isLoaded:', isLoaded, 'user:', !!user);
+        if (isLoaded && user) {
+          console.log('🔄 [PROJECT-EXPLORER] Calling fetchProjects...');
+          fetchProjects();
+        } else {
+          console.log('⚠️ [PROJECT-EXPLORER] Cannot refresh - user not loaded');
+        }
+      },
+      refreshCampaigns: (projectId: string) => {
+        console.log('🔄 [PROJECT-EXPLORER] refreshCampaigns called for project:', projectId);
+        console.log('🔄 [PROJECT-EXPLORER] isLoaded:', isLoaded, 'user:', !!user);
+        if (isLoaded && user) {
+          console.log('🔄 [PROJECT-EXPLORER] Calling fetchCampaigns...');
+          fetchCampaigns(projectId);
+        } else {
+          console.log('⚠️ [PROJECT-EXPLORER] Cannot refresh campaigns - user not loaded');
+        }
+      }
+    };
+  }, [isLoaded, user, fetchProjects, fetchCampaigns]);
 
   const toggleProject = (projectId: string) => {
     const wasExpanded = expandedProjects.has(projectId);
