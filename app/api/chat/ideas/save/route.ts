@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       success: true,
       ideasBotMessageId,
       reasoningBotMessageId,
-      nextStep: 'critique', // Signal to continue to critique
+      nextStep: null, // No more steps - critique removed from sequence
       message: 'Ideas saved successfully'
     }, { status: 200 });
 
