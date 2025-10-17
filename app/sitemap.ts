@@ -114,6 +114,61 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
+    // Phase 3 Supporting Content
+    {
+      url: `${baseUrl}/blog/how-ai-is-transforming-content-marketing-2025`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/best-ai-tools-for-marketing-agencies`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/social-media-content-calendar-with-ai`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-caption-generator-vs-manual-writing`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/how-to-create-viral-content-with-ai`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/instagram-caption-ideas-for-business`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/content-marketing-strategy-small-business`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-vs-human-content-writers`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/save-money-content-creation-ai`,
+      lastModified: new Date('2025-01-17'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     // Existing blog posts
     {
       url: `${baseUrl}/blog/create-viral-posts-with-ai`,
