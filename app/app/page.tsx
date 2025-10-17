@@ -723,8 +723,17 @@ function AppContent() {
     }
   }, []); // Only run once on mount
 
-  // Function to fetch URL metadata with retry logic
+  // Cache for URL metadata to prevent rate limiting
+  const metadataCache = useRef<Map<string, UrlMetadata | null>>(new Map());
+
+  // Function to fetch URL metadata with retry logic and caching
   const fetchUrlMetadata = useCallback(async (url: string, retryCount = 0): Promise<UrlMetadata | null> => {
+    // Check cache first
+    if (metadataCache.current.has(url)) {
+      console.log(`💾 Using cached metadata for: ${url}`);
+      return metadataCache.current.get(url) || null;
+    }
+
     const maxRetries = 2;
     const retryDelay = 1000 * (retryCount + 1); // Exponential backoff: 1s, 2s, 3s
 
@@ -765,11 +774,17 @@ function AppContent() {
           errorType: errorData.errorType,
           suggestion: errorData.suggestion
         });
+
+        // Cache null result to avoid re-fetching failed URLs
+        metadataCache.current.set(url, null);
         return null;
       }
 
       const metadata = await response.json();
       console.log(`✅ Successfully fetched metadata for ${url}:`, metadata);
+
+      // Cache successful result
+      metadataCache.current.set(url, metadata);
       return metadata;
 
     } catch (error) {
@@ -783,11 +798,13 @@ function AppContent() {
           error.message.includes('network')
         )
       )) {
-        console.log(`🔄 Retrying ${url} in ${retryDelay}ms due to ${error.name || 'network error'}...`);
+        console.log(`�� Retrying ${url} in ${retryDelay}ms due to ${error.name || 'network error'}...`);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         return fetchUrlMetadata(url, retryCount + 1);
       }
 
+      // Cache null result for errors to avoid re-fetching
+      metadataCache.current.set(url, null);
       return null;
     }
   }, []);
