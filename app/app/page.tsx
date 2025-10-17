@@ -118,7 +118,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
-  messageType?: 'default' | 'welcome-no-selection' | 'question-session' | 'loading-initial' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions';
+  messageType?: 'default' | 'welcome-no-selection' | 'question-session' | 'loading-initial' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'loading-followup' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'idea-selection-confirmation' | 'critique-preview' | 'critique-questions';
   questionMetadata?: {
     currentQuestionIndex: number;
     totalQuestions: number;
@@ -1861,6 +1861,85 @@ function AppContent() {
     loadSelectedIdeaFromCampaign();
   }, [selectedCampaignId, messages]);
 
+  // Handler for deselecting an idea
+  const handleDeselectIdea = async () => {
+    if (!selectedCampaignId) {
+      toast.error('No campaign selected');
+      return;
+    }
+
+    if (!selectedProjectId) {
+      toast.error('No project selected');
+      return;
+    }
+
+    console.log('🔄 [IDEA-DESELECT] Deselecting idea for campaign:', selectedCampaignId);
+
+    try {
+      const response = await fetch(`/api/campaigns/${selectedCampaignId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selectedIdea: null, // Remove selected idea
+          campaignName: 'Untitled Campaign' // Reset to default name
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSelectedIdea(null);
+
+        // Find and delete idea-selection-confirmation messages from database
+        const confirmationMessages = messages.filter(msg => msg.messageType === 'idea-selection-confirmation');
+        console.log(`🔄 [IDEA-DESELECT] Found ${confirmationMessages.length} confirmation messages to delete`);
+
+        // Delete each confirmation message from database
+        for (const msg of confirmationMessages) {
+          try {
+            console.log(`🗑️ [IDEA-DESELECT] Deleting confirmation message from database:`, msg.id);
+            const deleteResponse = await fetch('/api/chat/delete-message', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ messageId: msg.id })
+            });
+
+            const deleteData = await deleteResponse.json();
+
+            if (deleteData.success) {
+              console.log(`✅ [IDEA-DESELECT] Deleted confirmation message from database:`, msg.id);
+            } else {
+              console.error(`❌ [IDEA-DESELECT] Failed to delete message ${msg.id} from database`);
+            }
+          } catch (deleteError) {
+            console.error(`❌ [IDEA-DESELECT] Error deleting message ${msg.id}:`, deleteError);
+          }
+        }
+
+        // Remove idea-selection-confirmation messages from chat UI
+        setMessages(prev => prev.filter(msg => msg.messageType !== 'idea-selection-confirmation'));
+        console.log('✅ [IDEA-DESELECT] Removed idea-selection-confirmation messages from chat UI');
+
+        toast.success('Idea deselected');
+        console.log('✅ [IDEA-DESELECT] Idea deselected successfully');
+
+        // Refresh the campaigns list
+        if (projectExplorerRef.current?.refreshCampaigns) {
+          console.log('🔄 [IDEA-DESELECT] Refreshing campaigns for project:', selectedProjectId);
+          projectExplorerRef.current.refreshCampaigns(selectedProjectId);
+        }
+      } else {
+        toast.error('Failed to deselect idea');
+        console.error('❌ [IDEA-DESELECT] Failed to update campaign:', data.error);
+      }
+    } catch (error) {
+      toast.error('Error deselecting idea');
+      console.error('❌ [IDEA-DESELECT] Error:', error);
+    }
+  };
+
   // Handler for selecting an idea card
   const handleSelectIdea = async (idea: IdeaData, index: number, messageId: string) => {
     if (!selectedCampaignId) {
@@ -1905,6 +1984,57 @@ function AppContent() {
           projectExplorerRef.current.refreshCampaigns(selectedProjectId);
         } else {
           console.error('❌ [IDEA-SELECT] projectExplorerRef.current.refreshCampaigns is not available!');
+        }
+
+        // Save confirmation message to database
+        try {
+          const confirmationText = `Great choice! I've selected this idea for your campaign:`;
+          const confirmationMessageId = `idea-confirmation-${Date.now()}`;
+
+          const saveResponse = await fetch('/api/chat/save-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              campaignId: selectedCampaignId,
+              message: {
+                id: confirmationMessageId,
+                text: confirmationText,
+                sender: 'bot',
+                messageType: 'idea-selection-confirmation',
+                timestamp: new Date().toISOString(),
+                ideaData: {
+                  ideas: [idea],
+                  reasoning: '',
+                  selected_idea: idea
+                }
+              }
+            })
+          });
+
+          const saveData = await saveResponse.json();
+
+          if (saveData.success) {
+            // Add confirmation message to chat UI
+            const confirmationMessage: ChatMessage = {
+              id: saveData.messageId,
+              text: confirmationText,
+              sender: 'bot',
+              messageType: 'idea-selection-confirmation',
+              timestamp: new Date(),
+              ideaData: {
+                ideas: [idea],
+                reasoning: '',
+                selected_idea: idea
+              }
+            };
+
+            setMessages(prev => [...prev, confirmationMessage]);
+            console.log('✅ [IDEA-SELECT] Added confirmation message to chat and database');
+          } else {
+            console.error('❌ [IDEA-SELECT] Failed to save confirmation message to database');
+          }
+        } catch (saveError) {
+          console.error('❌ [IDEA-SELECT] Error saving confirmation message:', saveError);
         }
       } else {
         toast.error('Failed to select idea');
@@ -2542,7 +2672,7 @@ function AppContent() {
             id: dbMsg.chatMessageId,
             text: dbMsg.message,
             sender: dbMsg.sender as 'user' | 'bot',
-            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'critique-preview' | 'critique-questions') || 'default',
+            messageType: (dbMsg.messageType as 'default' | 'question-session' | 'loading-trends' | 'loading-competitors' | 'loading-final-idea' | 'loading-accounts' | 'loading-critique' | 'trend-preview' | 'accounts-preview' | 'idea-preview' | 'idea-selection-confirmation' | 'critique-preview' | 'critique-questions') || 'default',
             timestamp: new Date(dbMsg.timestamp || dbMsg.createdAt),
             questionMetadata,
             trendData,
@@ -3106,6 +3236,43 @@ function AppContent() {
             </div>
           </div>
 
+        </div>
+      );
+    }
+
+    // Idea selection confirmation message type
+    if (messageType === 'idea-selection-confirmation' && message.sender === 'bot' && message.ideaData?.selected_idea) {
+      const selectedIdeaData = message.ideaData.selected_idea;
+
+      return (
+        <div className="message-content idea-selection-confirmation">
+          <div className="confirmation-intro">
+            {message.text}
+          </div>
+
+          <div className="confirmation-angle-box">
+            <h4 className="confirmation-angle-label">Selected Angle:</h4>
+            <h3 className="confirmation-angle-text">{selectedIdeaData.angle}</h3>
+          </div>
+
+          <div className="confirmation-description">
+            <p>{selectedIdeaData.description}</p>
+          </div>
+
+          <div className="refinement-hint">
+            💡 You can send more messages to refine this idea or ask questions about it.
+          </div>
+
+          <div className="confirmation-actions">
+            <button className="generate-script-button" onClick={() => {
+              toast.success('Script generation coming soon! This feature will allow you to generate detailed copy for your selected idea.');
+            }}>
+              Generate Script →
+            </button>
+            <button className="deselect-button" onClick={handleDeselectIdea}>
+              Deselect Idea
+            </button>
+          </div>
         </div>
       );
     }
