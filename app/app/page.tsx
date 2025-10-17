@@ -2097,16 +2097,47 @@ function AppContent() {
     setMessages(prev => [...prev, userMessage]);
 
     // Route to change-idea API if sequence is complete and campaign is selected
+    console.log('🔍 [ROUTING] Checking routing conditions:', {
+      selectedCampaignId,
+      isSequenceComplete,
+      shouldRouteToChangeIdea: selectedCampaignId && isSequenceComplete
+    });
+
     if (selectedCampaignId && isSequenceComplete) {
       console.log('🎯 [ROUTING] Routing to change-idea handler');
 
-      // Extract previous ideas from messages
-      const ideaMessage = messages.find(msg =>
+      // Extract previous ideas from messages - get the MOST RECENT idea-preview message
+      const ideaMessages = messages.filter(msg =>
         msg.messageType === 'idea-preview' && msg.ideaData?.ideas
       );
+      const ideaMessage = ideaMessages[ideaMessages.length - 1]; // Get the last (most recent) one
+
+      console.log('📋 [CHANGE-IDEA] Total idea-preview messages found:', ideaMessages.length);
+      console.log('📋 [CHANGE-IDEA] Using most recent idea message:', ideaMessage?.id);
 
       if (ideaMessage && ideaMessage.ideaData?.ideas) {
         console.log('📋 [CHANGE-IDEA] Found previous ideas:', ideaMessage.ideaData.ideas.length);
+        console.log('📋 [CHANGE-IDEA] Idea message ID:', ideaMessage.id);
+        console.log('📋 [CHANGE-IDEA] Current selectedIdea state:', selectedIdea);
+
+        // Extract selected idea if one is selected - search across ALL idea-preview messages
+        let selectedIdeaObject: IdeaData | undefined = undefined;
+        if (selectedIdea) {
+          console.log('📋 [CHANGE-IDEA] Looking for selected idea across all idea-preview messages');
+
+          // Find the message that contains the selected idea
+          const selectedIdeaMessage = ideaMessages.find(msg => msg.id === selectedIdea.messageId);
+
+          if (selectedIdeaMessage && selectedIdeaMessage.ideaData?.ideas) {
+            selectedIdeaObject = selectedIdeaMessage.ideaData.ideas[selectedIdea.index];
+            console.log('✅ [CHANGE-IDEA] Found selected idea from message:', selectedIdea.messageId);
+            console.log('✅ [CHANGE-IDEA] Including selected idea:', selectedIdeaObject?.angle);
+          } else {
+            console.log('⚠️ [CHANGE-IDEA] Could not find message with selected idea');
+          }
+        } else {
+          console.log('⚠️ [CHANGE-IDEA] No idea selected, selectedIdea state is null/undefined');
+        }
 
         // Add loading message
         const loadingMessage: ChatMessage = {
@@ -2126,7 +2157,8 @@ function AppContent() {
             body: JSON.stringify({
               campaignId: selectedCampaignId,
               ideas: ideaMessage.ideaData.ideas,
-              request_prompt: messageText
+              request_prompt: messageText,
+              selected_idea: selectedIdeaObject
             })
           });
 
@@ -2539,6 +2571,10 @@ function AppContent() {
         // Questions are now handled as separate 'critique-questions' messages
 
         // Check if sequence is already complete based on loaded messages
+        // Sequence is complete if there's a critique message OR an idea-preview message
+        console.log('🔍 [LOAD-MESSAGES] Checking sequence completion status...');
+        console.log('🔍 [LOAD-MESSAGES] Total messages loaded:', chatMessages.length);
+
         const hasCritiqueMessage = chatMessages.some(msg =>
           msg.messageType === 'critique-preview' ||
           (msg.sender === 'bot' && (
@@ -2548,11 +2584,23 @@ function AppContent() {
           ))
         );
 
-        if (hasCritiqueMessage) {
-          console.log('🎯 [LOAD-MESSAGES] Sequence already complete - enabling follow-up mode');
+        const hasIdeaPreviewMessage = chatMessages.some(msg =>
+          msg.messageType === 'idea-preview' && msg.ideaData?.ideas
+        );
+
+        const ideaPreviewCount = chatMessages.filter(msg => msg.messageType === 'idea-preview').length;
+        const ideaPreviewWithDataCount = chatMessages.filter(msg => msg.messageType === 'idea-preview' && msg.ideaData?.ideas).length;
+
+        console.log('🔍 [LOAD-MESSAGES] hasCritiqueMessage:', hasCritiqueMessage);
+        console.log('🔍 [LOAD-MESSAGES] hasIdeaPreviewMessage:', hasIdeaPreviewMessage);
+        console.log('🔍 [LOAD-MESSAGES] idea-preview messages:', ideaPreviewCount);
+        console.log('🔍 [LOAD-MESSAGES] idea-preview with data:', ideaPreviewWithDataCount);
+
+        if (hasCritiqueMessage || hasIdeaPreviewMessage) {
+          console.log('✅ [LOAD-MESSAGES] Sequence already complete - enabling follow-up mode');
           setIsSequenceComplete(true);
         } else {
-          console.log('🎯 [LOAD-MESSAGES] Sequence not complete - normal mode');
+          console.log('⚠️ [LOAD-MESSAGES] Sequence not complete - normal mode');
           setIsSequenceComplete(false);
         }
       } else {

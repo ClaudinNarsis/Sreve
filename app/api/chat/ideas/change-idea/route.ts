@@ -153,6 +153,7 @@ export async function POST(request: NextRequest) {
       campaignId?: string;
       ideas?: unknown[];
       request_prompt?: string;
+      selected_idea?: { angle: string; description: string };
     };
     try {
       requestData = await request.json();
@@ -161,14 +162,16 @@ export async function POST(request: NextRequest) {
         hasCampaignId: !!requestData.campaignId,
         campaignId: requestData.campaignId,
         ideasCount: Array.isArray(requestData.ideas) ? requestData.ideas.length : 0,
-        requestPromptLength: requestData.request_prompt?.length || 0
+        requestPromptLength: requestData.request_prompt?.length || 0,
+        hasSelectedIdea: !!requestData.selected_idea,
+        selectedIdeaAngle: requestData.selected_idea?.angle
       });
     } catch (parseError) {
       console.error(`❌ [CHANGE-IDEA-API] [${requestId}] Failed to parse request body:`, parseError);
       throw parseError;
     }
 
-    const { campaignId, ideas = [], request_prompt = '' } = requestData;
+    const { campaignId, ideas = [], request_prompt = '', selected_idea } = requestData;
 
     // Step 3: Validate required fields
     console.log(`✔️ [CHANGE-IDEA-API] [${requestId}] Step 3: Validating required fields...`);
@@ -217,12 +220,15 @@ export async function POST(request: NextRequest) {
 
       const requestPayload = {
         ideas: ideas,
-        request_prompt: request_prompt
+        request_prompt: request_prompt,
+        ...(selected_idea && { selected_idea })
       };
 
       console.log(`📊 [CHANGE-IDEA-API] [${requestId}] Payload summary:`, {
         ideasCount: ideas.length,
-        requestPromptPreview: request_prompt.substring(0, 100)
+        requestPromptPreview: request_prompt.substring(0, 100),
+        hasSelectedIdea: !!selected_idea,
+        selectedIdeaAngle: selected_idea?.angle
       });
 
       console.log(`📤 [CHANGE-IDEA-API] [${requestId}] FULL REQUEST PAYLOAD:`, JSON.stringify(requestPayload, null, 2));
