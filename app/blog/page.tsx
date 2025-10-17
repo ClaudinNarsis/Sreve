@@ -145,6 +145,78 @@ export default async function BlogPage() {
       date: 'August 23, 2025',
       readTime: '5 min read',
       tags: ['AI Tools', 'Marketing Agencies', 'Performance Marketing']
+    },
+    {
+      slug: 'how-ai-is-transforming-content-marketing-2025',
+      title: 'How AI is Transforming Content Marketing in 2025',
+      description: 'Discover how AI tools are revolutionizing content marketing strategies, saving time and costs while improving quality. Learn the latest trends and best practices.',
+      date: 'January 17, 2025',
+      readTime: '8 min read',
+      tags: ['AI Tools', 'Content Marketing', 'Strategy']
+    },
+    {
+      slug: 'best-ai-tools-for-marketing-agencies',
+      title: 'Best AI Tools for Marketing Agencies in 2025: Complete Guide',
+      description: 'Discover the top AI tools helping marketing agencies scale efficiently, reduce costs, and deliver better results for clients. Expert-tested recommendations.',
+      date: 'January 17, 2025',
+      readTime: '10 min read',
+      tags: ['Agency Tools', 'AI Marketing', 'Productivity']
+    },
+    {
+      slug: 'social-media-content-calendar-with-ai',
+      title: 'Social Media Content Calendar with AI: Complete 2025 Guide',
+      description: 'Learn how to create and manage a social media content calendar using AI tools. Save 10+ hours weekly while posting consistently across all platforms.',
+      date: 'January 17, 2025',
+      readTime: '9 min read',
+      tags: ['Social Media', 'Content Planning', 'AI Tools']
+    },
+    {
+      slug: 'ai-caption-generator-vs-manual-writing',
+      title: 'AI Caption Generator vs Manual Writing: The 500-Post Experiment',
+      description: 'Real data from 500 social media posts comparing AI caption generators vs manual writing. See which approach wins for engagement, time, and cost.',
+      date: 'January 17, 2025',
+      readTime: '11 min read',
+      tags: ['AI Captions', 'Social Media', 'Case Study']
+    },
+    {
+      slug: 'how-to-create-viral-content-with-ai',
+      title: 'How to Create Viral Content with AI: Psychology & Strategy',
+      description: 'Master the psychology of viral content creation using AI tools. Learn the 7 psychological triggers and proven frameworks that generate millions of views.',
+      date: 'January 17, 2025',
+      readTime: '12 min read',
+      tags: ['Viral Content', 'Content Psychology', 'AI Strategy']
+    },
+    {
+      slug: 'instagram-caption-ideas-for-business',
+      title: 'Instagram Caption Ideas for Business: 127 Templates That Convert',
+      description: 'Get 127 proven Instagram caption templates organized by industry and goal. Stop staring at blank screens—use these formulas to engage and convert.',
+      date: 'January 17, 2025',
+      readTime: '15 min read',
+      tags: ['Instagram', 'Social Media', 'Templates']
+    },
+    {
+      slug: 'content-marketing-strategy-small-business',
+      title: 'Content Marketing Strategy for Small Business: 90-Day Launch Plan',
+      description: 'Complete content marketing framework for small businesses with limited budgets. From strategy to execution with real ROI examples and cost breakdowns.',
+      date: 'January 17, 2025',
+      readTime: '14 min read',
+      tags: ['Small Business', 'Content Strategy', 'Marketing']
+    },
+    {
+      slug: 'ai-vs-human-content-writers',
+      title: 'AI vs Human Content Writers: The $47,000 Comparison Study',
+      description: 'Comprehensive analysis of 1000+ articles comparing AI and human writers across quality, cost, speed, and SEO performance. Data-driven recommendations.',
+      date: 'January 17, 2025',
+      readTime: '16 min read',
+      tags: ['AI Writing', 'Content Creation', 'Research']
+    },
+    {
+      slug: 'save-money-content-creation-ai',
+      title: 'Save Money on Content Creation with AI: $77,616 Annual Savings Guide',
+      description: 'Complete cost breakdown showing how businesses save 90% on content creation using AI tools. Real case studies and implementation roadmap included.',
+      date: 'January 17, 2025',
+      readTime: '13 min read',
+      tags: ['Cost Savings', 'AI Tools', 'ROI']
     }
   ];
 
@@ -424,6 +496,87 @@ export default async function BlogPage() {
               "datePublished": "2025-08-23",
               "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["AI Tools", "Marketing Agencies", "Performance Marketing"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How AI is Transforming Content Marketing in 2025",
+              "description": "Discover how AI tools are revolutionizing content marketing strategies, saving time and costs while improving quality.",
+              "url": "https://sreve.online/blog/how-ai-is-transforming-content-marketing-2025",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI content marketing", "marketing AI trends", "content marketing automation"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Best AI Tools for Marketing Agencies in 2025: Complete Guide",
+              "description": "Top AI tools helping marketing agencies scale efficiently, reduce costs, and deliver better results for clients.",
+              "url": "https://sreve.online/blog/best-ai-tools-for-marketing-agencies",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI tools for marketing agencies", "marketing agency software", "agency AI tools"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Social Media Content Calendar with AI: Complete 2025 Guide",
+              "description": "Create and manage social media content calendars with AI. Save 10+ hours weekly while posting consistently.",
+              "url": "https://sreve.online/blog/social-media-content-calendar-with-ai",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["social media content calendar", "AI social media planning", "content calendar tool"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Caption Generator vs Manual Writing: The 500-Post Experiment",
+              "description": "Real data from 500 social media posts comparing AI caption generators vs manual writing for engagement and ROI.",
+              "url": "https://sreve.online/blog/ai-caption-generator-vs-manual-writing",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI caption generator", "caption writing", "AI vs manual captions"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How to Create Viral Content with AI: Psychology & Strategy",
+              "description": "Master the psychology of viral content creation using AI tools with 7 psychological triggers and proven frameworks.",
+              "url": "https://sreve.online/blog/how-to-create-viral-content-with-ai",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["create viral content", "viral marketing AI", "viral post strategy"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Instagram Caption Ideas for Business: 127 Templates That Convert",
+              "description": "Get 127 proven Instagram caption templates organized by industry and goal to engage and convert your audience.",
+              "url": "https://sreve.online/blog/instagram-caption-ideas-for-business",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["Instagram caption ideas", "business Instagram captions", "Instagram marketing"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Content Marketing Strategy for Small Business: 90-Day Launch Plan",
+              "description": "Complete content marketing framework for small businesses with limited budgets and real ROI examples.",
+              "url": "https://sreve.online/blog/content-marketing-strategy-small-business",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content marketing small business", "small business content strategy", "affordable content marketing"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI vs Human Content Writers: The $47,000 Comparison Study",
+              "description": "Comprehensive analysis of 1000+ articles comparing AI and human writers across quality, cost, speed, and SEO performance.",
+              "url": "https://sreve.online/blog/ai-vs-human-content-writers",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI vs human writers", "AI content writing", "content writer comparison"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Save Money on Content Creation with AI: $77,616 Annual Savings Guide",
+              "description": "Complete cost breakdown showing how businesses save 90% on content creation using AI tools with real case studies.",
+              "url": "https://sreve.online/blog/save-money-content-creation-ai",
+              "datePublished": "2025-01-17",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["save money content creation", "affordable AI content", "content creation costs"]
             }
           ]
         })
