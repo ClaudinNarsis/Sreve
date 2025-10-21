@@ -298,7 +298,7 @@ export default function HomePage() {
         <div className="container">
           <p className="hero-intro">AI Blog Generator & Viral Post Creator for marketers and founders. </p>
           <h1 className="hero-title">Boring AI writes meh copy. <span className="brand-name">Sreve</span> writes scroll-stoppers.</h1>
-          <p className="hero-subtitle"> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice.</p>
+          <p className="hero-subtitle"> Generate blog posts, viral social content, UGC scripts, hooks, ad copy, and fresh ideas — all in your brand's voice. Our <Link href="/tools/blog-generator" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>AI blog generator</Link> and <Link href="/tools/viral-post-generator" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>viral post creator</Link> help you create content that converts.</p>
           <SignedOut>
             <SignInButton mode="modal">
               <button className="signup-button">Sign In</button>
@@ -335,6 +335,9 @@ export default function HomePage() {
       <section className="features-section" id="features">
         <div className="container">
           <h2 className="features-title">Why Agencies Choose Sreve Over Generic AI</h2>
+          <p style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
+            Discover why <Link href="/blog/best-ai-tools-for-marketing-agencies" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>marketing agencies worldwide</Link> are switching from expensive alternatives like <Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>Jasper AI</Link> to Sreve. Compare our <Link href="/tools" style={{ color: 'var(--orange-primary)', textDecoration: 'underline' }}>complete AI toolkit</Link> and see the difference.
+          </p>
           <div className="features-grid">
             <article className="feature">
               <h3>Unhinged (In a Good Way)</h3>
