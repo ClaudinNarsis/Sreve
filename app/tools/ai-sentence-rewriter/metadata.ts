@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI Sentence Rewriter Tool - Rewrite Any Sentence Instantly | Sreve',
-  description: 'Transform your sentences with our advanced AI sentence rewriter. Improve clarity, change tone, and avoid repetition while preserving meaning. Free to use with instant results.',
+  title: 'Your Writing Sounds Robotic? This AI Rewrites It in 3 Seconds',
+  description: 'Stop struggling with awkward sentences. Our AI instantly rewrites them to sound natural, clear, and professional—no sign-up needed. 10,000 rewrites/month FREE.',
   keywords: [
     'AI sentence rewriter',
     'sentence rewriter tool',
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     'text enhancement'
   ],
   openGraph: {
-    title: 'AI Sentence Rewriter Tool - Rewrite Any Sentence Instantly',
-    description: 'Transform your sentences with our advanced AI sentence rewriter. Improve clarity, change tone, and avoid repetition while preserving meaning.',
+    title: 'Your Writing Sounds Robotic? This AI Rewrites It in 3 Seconds',
+    description: 'Stop struggling with awkward sentences. Our AI instantly rewrites them to sound natural and professional—10,000 rewrites/month FREE.',
     url: 'https://sreve.online/tools/ai-sentence-rewriter',
     siteName: 'Sreve',
     images: [
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Sentence Rewriter Tool - Rewrite Any Sentence Instantly',
-    description: 'Transform your sentences with our advanced AI sentence rewriter. Improve clarity, change tone, and avoid repetition.',
+    title: 'Your Writing Sounds Robotic? This AI Rewrites It in 3 Seconds',
+    description: 'Stop struggling with awkward sentences. Our AI instantly rewrites them—10,000 FREE rewrites/month.',
     images: ['/assets/twitter-sentence-rewriter.png'],
   },
   alternates: {
