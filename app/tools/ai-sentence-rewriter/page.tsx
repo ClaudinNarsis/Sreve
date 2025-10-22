@@ -252,34 +252,34 @@ export default function AISentenceRewriterPage() {
             "mainEntity": [
               {
                 "@type": "Question",
-                "name": "What does the AI Sentence Rewriter do?",
+                "name": "Why does my writing sound robotic and how can AI fix it?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "The AI Sentence Rewriter transforms your sentences to improve clarity, change tone, fix grammar, and enhance readability while preserving the original meaning."
+                  "text": "Robotic writing happens when sentences are too rigid, repetitive, or formal. Our AI analyzes your sentence structure and rewrites it to flow naturally while maintaining your intended meaning. It takes 3 seconds and makes your writing sound human, professional, and engaging."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Is the AI Sentence Rewriter free to use?",
+                "name": "Can I really rewrite 10,000 sentences per month for free?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes, the AI Sentence Rewriter is completely free to use with unlimited sentence rewrites. No credit card required."
+                  "text": "Yes! Unlike tools that charge $20-50/month, Sreve offers 10,000 FREE sentence rewrites every month with no credit card required. That's enough for 200+ blog posts or 500+ emails. Our Pro plan ($19/month) gives you unlimited rewrites if you need more."
                 }
               },
               {
                 "@type": "Question",
-                "name": "Can I choose different writing tones?",
+                "name": "Does this AI sentence rewriter actually improve conversions?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Yes, you can select from multiple tones including professional, casual, formal, friendly, and more to match your specific needs."
+                  "text": "Absolutely. Clear, natural-sounding copy converts 40% better than awkward or robotic text. Our AI transforms confusing sentences into persuasive, easy-to-read copy that keeps readers engaged and drives action. Used by 5,000+ marketers to improve email open rates, landing page conversions, and ad performance."
                 }
               },
               {
                 "@type": "Question",
-                "name": "How accurate is the AI rewriting?",
+                "name": "What's the difference between this and Grammarly or QuillBot?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Our AI sentence rewriter uses advanced language models to ensure high accuracy while preserving meaning and improving readability. It's trusted by thousands of users daily."
+                  "text": "Grammarly fixes errors. QuillBot paraphrases. Sreve's AI sentence rewriter understands marketing psychology and rewrites for clarity AND persuasion. It's built for marketers who need copy that converts, not just grammatically correct sentences. Plus, we're 90% cheaper than premium alternatives."
                 }
               }
             ]

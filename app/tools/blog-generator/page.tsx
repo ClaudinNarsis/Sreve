@@ -370,22 +370,41 @@ export default function BlogGeneratorPage() {
           </SignedOut>
         </section>
 
-        <nav style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <p style={{ marginBottom: '1rem' }}>
-            <strong>Related Tools:</strong>
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link href="/tools/ai-content-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              AI Content Generator
-            </Link>
-            <Link href="/tools/social-media-post-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              Social Media Generator
-            </Link>
-            <Link href="/tools/blog-idea-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              Blog Idea Generator
-            </Link>
+        <section style={{ background: 'var(--darkness-level-2)', padding: '3rem 2rem', borderRadius: '12px', marginBottom: '2rem' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-primary)' }}>Learn More About Blog Generation & Content Marketing</h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>📚 Blog Generator Guides</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/free-blog-generator-tools-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Compare Best Blog Generator Tools 2025</Link></li>
+                <li><Link href="/blog/ai-blog-generator-vs-manual-writing" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ AI vs Manual Writing: SEO Comparison</Link></li>
+                <li><Link href="/blog/blog-generator-for-small-businesses" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Blog Generators for Small Business</Link></li>
+                <li><Link href="/blog/how-to-use-ai-for-blog-content-creation" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Complete AI Blog Creation Guide</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>🛠️ Related AI Tools</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/tools/blog-idea-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Blog Idea Generator</Link></li>
+                <li><Link href="/tools/ai-content-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ AI Content Generator</Link></li>
+                <li><Link href="/tools/viral-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Viral Post Generator</Link></li>
+                <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ View All AI Tools</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>💡 Content Marketing Resources</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/best-ai-tools-content-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Best AI Content Marketing Tools</Link></li>
+                <li><Link href="/blog/cheaper-jasper-alternative-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Save 90% vs Jasper AI</Link></li>
+                <li><Link href="/blog/content-marketing-strategy-small-business" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Content Marketing for Small Business</Link></li>
+                <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ All Marketing Guides</Link></li>
+              </ul>
+            </div>
           </div>
-        </nav>
+        </section>
       </div>
     </>
   );
