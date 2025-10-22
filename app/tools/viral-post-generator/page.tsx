@@ -422,22 +422,41 @@ export default function ViralPostGeneratorPage() {
           </SignedOut>
         </section>
 
-        <nav style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <p style={{ marginBottom: '1rem' }}>
-            <strong>Related Tools:</strong>
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link href="/tools/social-media-post-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              Social Media Generator
-            </Link>
-            <Link href="/tools/ai-caption-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              AI Caption Generator
-            </Link>
-            <Link href="/tools/blog-generator" style={{ color: '#ff6600', textDecoration: 'underline' }}>
-              Blog Generator
-            </Link>
+        <section style={{ background: 'var(--darkness-level-2)', padding: '3rem 2rem', borderRadius: '12px', marginBottom: '2rem' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-primary)' }}>Master Viral Content Creation</h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>🔥 Viral Content Guides</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/viral-post-generator-guide" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Complete Viral Post Generator Guide</Link></li>
+                <li><Link href="/blog/create-viral-content-with-ai" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Psychology of Viral Content</Link></li>
+                <li><Link href="/blog/linkedin-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ LinkedIn Viral Post Strategies</Link></li>
+                <li><Link href="/blog/social-media-post-generator-tools-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Best Social Post Generator Tools</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>🛠️ Related AI Tools</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/tools/ai-caption-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ AI Caption Generator</Link></li>
+                <li><Link href="/tools/social-media-post-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Social Media Post Generator</Link></li>
+                <li><Link href="/tools/blog-generator" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Blog Generator</Link></li>
+                <li><Link href="/tools" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ View All AI Tools</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 style={{ color: 'var(--orange-primary)', marginBottom: '1rem', fontSize: '1.2rem' }}>📱 Social Media Marketing</h3>
+              <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2' }}>
+                <li><Link href="/blog/ai-tools-social-media-marketing-2025" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Best Social Media AI Tools 2025</Link></li>
+                <li><Link href="/blog/instagram-caption-ideas-for-business" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ Instagram Caption Ideas</Link></li>
+                <li><Link href="/blog/social-media-content-calendar-with-ai" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ AI Content Calendar Guide</Link></li>
+                <li><Link href="/blog" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>→ All Marketing Guides</Link></li>
+              </ul>
+            </div>
           </div>
-        </nav>
+        </section>
       </div>
     </>
   );
