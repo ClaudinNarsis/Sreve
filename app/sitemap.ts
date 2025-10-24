@@ -64,6 +64,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.8,
     },
+    // Phase 4 New Content Cluster - October 2025
+    {
+      url: `${baseUrl}/blog/viral-post-ideas-generator-2025`,
+      lastModified: new Date('2025-10-23'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-content-writer-for-business-2025`,
+      lastModified: new Date('2025-10-23'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/best-caption-generator-instagram-2025`,
+      lastModified: new Date('2025-10-23'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/content-creation-tools-comparison-2025`,
+      lastModified: new Date('2025-10-23'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/marketing-automation-ai-tools-2025`,
+      lastModified: new Date('2025-10-23'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     // Phase 2 Blog Generator Content Cluster
     {
       url: `${baseUrl}/blog/free-blog-generator-tools-2025`,

@@ -43,6 +43,46 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: 'viral-post-ideas-generator-2025',
+      title: 'Viral Post Ideas Generator: 500+ Trending Post Formats for 2025',
+      description: 'Generate viral post ideas instantly with our AI-powered tool. Discover 500+ trending post formats, creative content hooks, and proven viral templates that drive millions of engagements.',
+      date: 'October 23, 2025',
+      readTime: '14 min read',
+      tags: ['Viral Content', 'Post Ideas', 'Social Media']
+    },
+    {
+      slug: 'ai-content-writer-for-business-2025',
+      title: 'AI Content Writer for Business: Complete 2025 Buying Guide & ROI',
+      description: 'Discover the best AI content writer for business needs. Compare features, pricing, and ROI of top AI writing tools. See how businesses save $77K annually with smart content automation.',
+      date: 'October 23, 2025',
+      readTime: '16 min read',
+      tags: ['AI Writing', 'Business Tools', 'ROI Analysis']
+    },
+    {
+      slug: 'best-caption-generator-instagram-2025',
+      title: 'Best Caption Generator for Instagram 2025: Top 7 Tools Tested',
+      description: 'Find the best caption generator for Instagram in 2025. We tested 47 tools across real brand accounts. Compare features, pricing, and engagement results.',
+      date: 'October 23, 2025',
+      readTime: '13 min read',
+      tags: ['Instagram', 'Caption Tools', 'Social Media']
+    },
+    {
+      slug: 'content-creation-tools-comparison-2025',
+      title: 'Content Creation Tools Comparison 2025: The Ultimate Guide',
+      description: 'Complete comparison of the best content creation tools in 2025. Real testing data, ROI analysis, and honest reviews to help you choose the right AI writing tool.',
+      date: 'October 23, 2025',
+      readTime: '15 min read',
+      tags: ['Content Tools', 'Tool Comparison', 'AI Writing']
+    },
+    {
+      slug: 'marketing-automation-ai-tools-2025',
+      title: 'Marketing Automation AI Tools 2025: Complete Implementation Guide',
+      description: 'Master marketing automation with AI tools. Complete guide to automating content creation, social media, and campaigns. Real case studies showing 90% time savings.',
+      date: 'October 23, 2025',
+      readTime: '17 min read',
+      tags: ['Marketing Automation', 'AI Tools', 'Efficiency']
+    },
+    {
       slug: 'free-blog-generator-tools-2025',
       title: 'Free Blog Generator Tools 2025: Complete Comparison Guide',
       description: 'Compare the best free blog generator tools in 2025. Discover AI-powered blog generators, their features, pricing, and which one is right for your content strategy.',
@@ -382,6 +422,51 @@ export default async function BlogPage() {
           "blogPost": [
             {
               "@type": "BlogPosting",
+              "headline": "Viral Post Ideas Generator: 500+ Trending Post Formats for 2025",
+              "description": "Generate viral post ideas instantly with our AI-powered tool. Discover 500+ trending post formats, creative content hooks, and proven viral templates.",
+              "url": "https://sreve.online/blog/viral-post-ideas-generator-2025",
+              "datePublished": "2025-10-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["viral post ideas", "trending post formats", "creative content hooks"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Content Writer for Business: Complete 2025 Buying Guide & ROI",
+              "description": "Discover the best AI content writer for business needs. Compare features, pricing, and ROI of top AI writing tools.",
+              "url": "https://sreve.online/blog/ai-content-writer-for-business-2025",
+              "datePublished": "2025-10-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI content writer", "business content creation", "AI writing tools"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Best Caption Generator for Instagram 2025: Top 7 Tools Tested",
+              "description": "Find the best caption generator for Instagram in 2025. We tested 47 tools across real brand accounts.",
+              "url": "https://sreve.online/blog/best-caption-generator-instagram-2025",
+              "datePublished": "2025-10-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["caption generator Instagram", "Instagram AI captions", "best caption tool"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Content Creation Tools Comparison 2025: The Ultimate Guide",
+              "description": "Complete comparison of the best content creation tools in 2025. Real testing data, ROI analysis, and honest reviews.",
+              "url": "https://sreve.online/blog/content-creation-tools-comparison-2025",
+              "datePublished": "2025-10-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content creation tools", "AI writing tools comparison", "best content tools"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Marketing Automation AI Tools 2025: Complete Implementation Guide",
+              "description": "Master marketing automation with AI tools. Complete guide to automating content creation, social media, and campaigns.",
+              "url": "https://sreve.online/blog/marketing-automation-ai-tools-2025",
+              "datePublished": "2025-10-23",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["marketing automation AI", "automated marketing content", "AI marketing tools"]
+            },
+            {
+              "@type": "BlogPosting",
               "headline": "Free Blog Generator Tools 2025: Complete Comparison Guide",
               "description": "Compare the best free blog generator tools in 2025. Discover AI-powered blog generators, their features, pricing, and which one is right for your content strategy.",
               "url": "https://sreve.online/blog/free-blog-generator-tools-2025",
@@ -602,13 +687,58 @@ export default async function BlogPage() {
                 "position": 1,
                 "item": {
                   "@type": "Article",
+                  "name": "Viral Post Ideas Generator: 500+ Trending Post Formats for 2025",
+                  "url": "https://sreve.online/blog/viral-post-ideas-generator-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "item": {
+                  "@type": "Article",
+                  "name": "AI Content Writer for Business: Complete 2025 Buying Guide & ROI",
+                  "url": "https://sreve.online/blog/ai-content-writer-for-business-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "item": {
+                  "@type": "Article",
+                  "name": "Best Caption Generator for Instagram 2025: Top 7 Tools Tested",
+                  "url": "https://sreve.online/blog/best-caption-generator-instagram-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 4,
+                "item": {
+                  "@type": "Article",
+                  "name": "Content Creation Tools Comparison 2025: The Ultimate Guide",
+                  "url": "https://sreve.online/blog/content-creation-tools-comparison-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 5,
+                "item": {
+                  "@type": "Article",
+                  "name": "Marketing Automation AI Tools 2025: Complete Implementation Guide",
+                  "url": "https://sreve.online/blog/marketing-automation-ai-tools-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 6,
+                "item": {
+                  "@type": "Article",
                   "name": "Free Blog Generator Tools 2025: Complete Comparison Guide",
                   "url": "https://sreve.online/blog/free-blog-generator-tools-2025"
                 }
               },
               {
                 "@type": "ListItem",
-                "position": 2,
+                "position": 7,
                 "item": {
                   "@type": "Article",
                   "name": "AI Blog Generator vs Manual Writing: Which is Better for SEO?",
@@ -617,7 +747,7 @@ export default async function BlogPage() {
               },
               {
                 "@type": "ListItem",
-                "position": 3,
+                "position": 8,
                 "item": {
                   "@type": "Article",
                   "name": "Blog Generator for Small Businesses: Save Time & Money",
