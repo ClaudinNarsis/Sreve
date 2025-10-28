@@ -200,6 +200,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
+    // Phase 5 High-Intent Copywriting Keywords Cluster
+    {
+      url: `${baseUrl}/blog/best-ai-copywriting-tools-for-agencies-2025`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/affordable-copywriting-software-save-3000-per-year`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/free-trial-ai-copywriting-tools-2025`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/copywriting-tool-pricing-comparison-2025`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/content-creation-tools-for-performance-marketers`,
+      lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     // Existing blog posts
     {
       url: `${baseUrl}/blog/create-viral-posts-with-ai`,
