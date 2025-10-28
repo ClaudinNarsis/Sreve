@@ -257,6 +257,46 @@ export default async function BlogPage() {
       date: 'January 17, 2025',
       readTime: '13 min read',
       tags: ['Cost Savings', 'AI Tools', 'ROI']
+    },
+    {
+      slug: 'best-ai-copywriting-tools-for-agencies-2025',
+      title: 'Best AI Copywriting Tools for Marketing Agencies in 2025',
+      description: 'Compare the top AI copywriting tools for agencies managing multiple clients. Find affordable alternatives to Jasper AI that deliver better ROI and faster content creation.',
+      date: 'January 28, 2025',
+      readTime: '12 min read',
+      tags: ['AI Tools', 'Agency', 'Copywriting']
+    },
+    {
+      slug: 'affordable-copywriting-software-save-3000-per-year',
+      title: 'Affordable Copywriting Software: Save $3,000+ Per Year',
+      description: 'Discover how to cut copywriting software costs by 70-90% without sacrificing quality. Compare affordable alternatives to expensive tools like Jasper and find the best value for your budget.',
+      date: 'January 28, 2025',
+      readTime: '10 min read',
+      tags: ['Cost Savings', 'Tools', 'Budget']
+    },
+    {
+      slug: 'free-trial-ai-copywriting-tools-2025',
+      title: 'Free Trial AI Copywriting Tools Worth Testing in 2025',
+      description: 'Test drive the best AI copywriting tools with free trials. Compare features, quality, and pricing before committing. Find the perfect tool without risking your budget.',
+      date: 'January 28, 2025',
+      readTime: '11 min read',
+      tags: ['Free Trials', 'Reviews', 'Testing']
+    },
+    {
+      slug: 'copywriting-tool-pricing-comparison-2025',
+      title: 'Copywriting Tool Pricing Comparison 2025: What You Actually Need',
+      description: 'Compare real costs of top AI copywriting tools. Break down hidden fees, calculate actual cost-per-piece, and find what features you really need versus marketing hype.',
+      date: 'January 28, 2025',
+      readTime: '13 min read',
+      tags: ['Pricing', 'Comparison', 'Analysis']
+    },
+    {
+      slug: 'content-creation-tools-for-performance-marketers',
+      title: 'Content Creation Tools Every Performance Marketer Needs in 2025',
+      description: 'The essential content creation toolkit for performance marketers focused on ROI and conversions. Tools that drive results, not just content volume.',
+      date: 'January 28, 2025',
+      readTime: '14 min read',
+      tags: ['Performance', 'Tools', 'Stack']
     }
   ];
 
@@ -662,6 +702,51 @@ export default async function BlogPage() {
               "datePublished": "2025-01-17",
               "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["save money content creation", "affordable AI content", "content creation costs"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Best AI Copywriting Tools for Marketing Agencies in 2025",
+              "description": "Compare the top AI copywriting tools for agencies managing multiple clients. Find affordable alternatives to Jasper AI.",
+              "url": "https://sreve.online/blog/best-ai-copywriting-tools-for-agencies-2025",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI copywriting tools for agencies", "best AI copywriter", "Jasper alternative"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Affordable Copywriting Software: Save $3,000+ Per Year",
+              "description": "Cut copywriting software costs by 70-90% without sacrificing quality. Compare affordable alternatives to expensive tools.",
+              "url": "https://sreve.online/blog/affordable-copywriting-software-save-3000-per-year",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["affordable copywriting software", "cheap AI writing tools", "copywriting cost savings"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Free Trial AI Copywriting Tools Worth Testing in 2025",
+              "description": "Test drive the best AI copywriting tools with free trials. Compare features, quality, and pricing before committing.",
+              "url": "https://sreve.online/blog/free-trial-ai-copywriting-tools-2025",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["AI copywriter free trial", "free trial copywriting software", "test AI writing tools"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Copywriting Tool Pricing Comparison 2025: What You Actually Need",
+              "description": "Compare real costs of top AI copywriting tools. Break down hidden fees and calculate actual cost-per-piece.",
+              "url": "https://sreve.online/blog/copywriting-tool-pricing-comparison-2025",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["copywriting tool pricing", "AI copywriting cost comparison", "tool pricing analysis"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Content Creation Tools Every Performance Marketer Needs in 2025",
+              "description": "The essential content creation toolkit for performance marketers focused on ROI and conversions.",
+              "url": "https://sreve.online/blog/content-creation-tools-for-performance-marketers",
+              "datePublished": "2025-01-28",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content creation tools for marketers", "performance marketing tools", "content tools that convert"]
             }
           ]
         })
