@@ -59,6 +59,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/tools/content-marketing-ai`,
+      lastModified: new Date('2025-01-29'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
@@ -228,6 +234,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${baseUrl}/blog/content-creation-tools-for-performance-marketers`,
       lastModified: new Date('2025-01-28'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    // Phase 6 Content Marketing Guide Cluster - January 29, 2025
+    {
+      url: `${baseUrl}/blog/ultimate-content-marketing-guide-2025`,
+      lastModified: new Date('2025-01-29'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/content-marketing-tools-comparison`,
+      lastModified: new Date('2025-01-29'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/content-marketing-strategy-agencies`,
+      lastModified: new Date('2025-01-29'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/scale-content-marketing-budget`,
+      lastModified: new Date('2025-01-29'),
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
