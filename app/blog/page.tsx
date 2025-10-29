@@ -297,6 +297,38 @@ export default async function BlogPage() {
       date: 'January 28, 2025',
       readTime: '14 min read',
       tags: ['Performance', 'Tools', 'Stack']
+    },
+    {
+      slug: 'ultimate-content-marketing-guide-2025',
+      title: 'Ultimate Content Marketing Guide 2025: Strategy, Tools & ROI',
+      description: 'Complete content marketing guide for 2025. Learn proven strategies, AI tools, SEO tactics, and ROI measurement. Save 90% on costs vs Jasper with Sreve AI.',
+      date: 'January 29, 2025',
+      readTime: '12 min read',
+      tags: ['Content Marketing', 'Strategy', 'AI Tools']
+    },
+    {
+      slug: 'content-marketing-tools-comparison',
+      title: 'Best Content Marketing Tools 2025: Complete Comparison & Cost Analysis',
+      description: 'Compare the best content marketing tools for 2025. Detailed analysis of Sreve vs Jasper vs Copy.ai vs Writesonic with real pricing, features, and ROI data.',
+      date: 'January 29, 2025',
+      readTime: '10 min read',
+      tags: ['Tools', 'Content Marketing', 'AI']
+    },
+    {
+      slug: 'scale-content-marketing-budget',
+      title: 'How to Scale Content Marketing on a Budget: Save 90% Using AI',
+      description: 'Scale content marketing without breaking the bank. Real cost breakdowns show how to save $60,000+ yearly using AI tools. Budget allocation strategies that drive ROI.',
+      date: 'January 29, 2025',
+      readTime: '9 min read',
+      tags: ['Budget', 'Strategy', 'ROI']
+    },
+    {
+      slug: 'content-marketing-strategy-agencies',
+      title: 'AI Content Marketing Strategy for Agencies: Managing Multiple Clients at Scale',
+      description: 'Complete guide to scaling content marketing for agencies managing 5-20+ clients. Learn AI workflow automation, brand voice consistency, team collaboration, and cost optimization strategies.',
+      date: 'January 29, 2025',
+      readTime: '9 min read',
+      tags: ['Agencies', 'Strategy', 'AI']
     }
   ];
 
@@ -747,6 +779,42 @@ export default async function BlogPage() {
               "datePublished": "2025-01-28",
               "author": {"@type": "Organization", "name": "Sreve"},
               "keywords": ["content creation tools for marketers", "performance marketing tools", "content tools that convert"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Ultimate Content Marketing Guide 2025: Strategy, Tools & ROI",
+              "description": "Complete content marketing guide for 2025. Learn proven strategies, AI tools, SEO tactics, and ROI measurement.",
+              "url": "https://sreve.online/blog/ultimate-content-marketing-guide-2025",
+              "datePublished": "2025-01-29",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content marketing", "content marketing strategy", "AI content marketing", "content marketing ROI"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Best Content Marketing Tools 2025: Complete Comparison & Cost Analysis",
+              "description": "Compare the best content marketing tools for 2025. Detailed analysis of Sreve vs Jasper vs Copy.ai vs Writesonic with real pricing, features, and ROI data.",
+              "url": "https://sreve.online/blog/content-marketing-tools-comparison",
+              "datePublished": "2025-01-29",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content marketing tools", "AI content marketing tools", "content marketing software", "Jasper alternative"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How to Scale Content Marketing on a Budget: Save 90% Using AI",
+              "description": "Scale content marketing without breaking the bank. Real cost breakdowns show how to save $60,000+ yearly using AI tools.",
+              "url": "https://sreve.online/blog/scale-content-marketing-budget",
+              "datePublished": "2025-01-29",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["scale content marketing budget", "content marketing budget", "affordable content marketing", "content marketing ROI"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Content Marketing Strategy for Agencies: Managing Multiple Clients at Scale",
+              "description": "Complete guide to scaling content marketing for agencies managing 5-20+ clients. Learn AI workflow automation, brand voice consistency, team collaboration.",
+              "url": "https://sreve.online/blog/content-marketing-strategy-agencies",
+              "datePublished": "2025-01-29",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["content marketing strategy agencies", "agency content marketing", "multi-client content management", "AI content marketing for agencies"]
             }
           ]
         })
@@ -883,6 +951,42 @@ export default async function BlogPage() {
                   "name": "How to Create Viral Content with AI: Psychology & Strategy",
                   "url": "https://sreve.online/blog/create-viral-content-with-ai"
                 }
+              },
+              {
+                "@type": "ListItem",
+                "position": 9,
+                "item": {
+                  "@type": "Article",
+                  "name": "Ultimate Content Marketing Guide 2025: Strategy, Tools & ROI",
+                  "url": "https://sreve.online/blog/ultimate-content-marketing-guide-2025"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 10,
+                "item": {
+                  "@type": "Article",
+                  "name": "Best Content Marketing Tools 2025: Complete Comparison & Cost Analysis",
+                  "url": "https://sreve.online/blog/content-marketing-tools-comparison"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 11,
+                "item": {
+                  "@type": "Article",
+                  "name": "AI Content Marketing Strategy for Agencies: Managing Multiple Clients at Scale",
+                  "url": "https://sreve.online/blog/content-marketing-strategy-agencies"
+                }
+              },
+              {
+                "@type": "ListItem",
+                "position": 12,
+                "item": {
+                  "@type": "Article",
+                  "name": "How to Scale Content Marketing on a Budget: Save 90% Using AI",
+                  "url": "https://sreve.online/blog/scale-content-marketing-budget"
+                }
               }
             ]
           },
@@ -903,42 +1007,6 @@ export default async function BlogPage() {
               }
             ]
           }
-        })
-      }}
-    />
-
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "What topics does the Sreve blog cover?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "The Sreve blog covers AI marketing tools, cost comparisons with competitors like Jasper AI, social media marketing strategies, content marketing automation, and performance marketing tips for agencies and businesses."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How can I save money on AI writing tools?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Read our detailed comparison guides showing how Sreve saves 90% compared to Jasper AI, Copy.ai, and other expensive alternatives while delivering the same quality results for marketing content creation."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Are these blog articles helpful for marketing agencies?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, our blog specifically focuses on marketing agencies and performance marketers. We provide actionable insights, tool comparisons, and strategies that agencies use to scale their client work efficiently."
-              }
-            }
-          ]
         })
       }}
     />
