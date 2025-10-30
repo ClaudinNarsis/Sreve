@@ -70,6 +70,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily' as const,
       priority: 0.8,
     },
+    // Day 1 AI Chat Content Cluster - Creator Chat Revolution
+    {
+      url: `${baseUrl}/blog/ai-chat-is-dead-meet-creator-chat-revolution`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/why-your-ai-chatbot-sounds-boring`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/creators-need-ai-collaboration-not-chat`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/tools/ai-chat`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/learn/ai-chat-vs-creator-chat`,
+      lastModified: new Date('2025-01-30'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     // Phase 4 New Content Cluster - October 2025
     {
       url: `${baseUrl}/blog/viral-post-ideas-generator-2025`,

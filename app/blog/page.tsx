@@ -43,6 +43,30 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: 'ai-chat-is-dead-meet-creator-chat-revolution',
+      title: 'AI Chat is Dead. Meet the Creator Chat Revolution.',
+      description: 'Traditional AI chatbots are boring, robotic, and predictable. Discover why creators need a new kind of AI chat that collaborates, creates, and understands your voice.',
+      date: 'January 30, 2025',
+      readTime: '7 min read',
+      tags: ['AI Chat', 'Creator Tools', 'AI Revolution']
+    },
+    {
+      slug: 'why-your-ai-chatbot-sounds-boring',
+      title: 'Why Your AI Chatbot Sounds Boring (and How to Fix It)',
+      description: 'Your AI-generated content sounds robotic and generic. Learn the exact reasons why AI chatbots fail at creativity and how to make them sound human and engaging.',
+      date: 'January 30, 2025',
+      readTime: '8 min read',
+      tags: ['AI Chat', 'Content Strategy', 'Writing Tips']
+    },
+    {
+      slug: 'creators-need-ai-collaboration-not-chat',
+      title: 'Creators Don\'t Need AI Chat—They Need AI Collaboration',
+      description: 'Traditional AI chat is one-directional. Creators need true collaboration—AI that builds on ideas, understands context, and co-creates with you, not for you.',
+      date: 'January 30, 2025',
+      readTime: '8 min read',
+      tags: ['AI Collaboration', 'Creator Tools', 'Content Strategy']
+    },
+    {
       slug: 'viral-post-ideas-generator-2025',
       title: 'Viral Post Ideas Generator: 500+ Trending Post Formats for 2025',
       description: 'Generate viral post ideas instantly with our AI-powered tool. Discover 500+ trending post formats, creative content hooks, and proven viral templates that drive millions of engagements.',
@@ -492,6 +516,33 @@ export default async function BlogPage() {
             }
           },
           "blogPost": [
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Chat is Dead. Meet the Creator Chat Revolution.",
+              "description": "Traditional AI chatbots are boring, robotic, and predictable. Discover why creators need a new kind of AI chat that collaborates, creates, and understands your voice.",
+              "url": "https://sreve.online/blog/ai-chat-is-dead-meet-creator-chat-revolution",
+              "datePublished": "2025-01-30",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai chat", "creator chat", "ai chatbot", "ai collaboration"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Why Your AI Chatbot Sounds Boring (and How to Fix It)",
+              "description": "Your AI-generated content sounds robotic and generic. Learn the exact reasons why AI chatbots fail at creativity and how to make them sound human and engaging.",
+              "url": "https://sreve.online/blog/why-your-ai-chatbot-sounds-boring",
+              "datePublished": "2025-01-30",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai chatbot", "fix ai writing", "humanize ai content", "better ai writing"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "Creators Don't Need AI Chat—They Need AI Collaboration",
+              "description": "Traditional AI chat is one-directional. Creators need true collaboration—AI that builds on ideas, understands context, and co-creates with you, not for you.",
+              "url": "https://sreve.online/blog/creators-need-ai-collaboration-not-chat",
+              "datePublished": "2025-01-30",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai collaboration", "ai chat for creators", "collaborative ai tools", "ai creative partner"]
+            },
             {
               "@type": "BlogPosting",
               "headline": "Viral Post Ideas Generator: 500+ Trending Post Formats for 2025",
