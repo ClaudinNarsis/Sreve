@@ -88,6 +88,7 @@ export const metadata = {
 import './globals.css';
 import Script from 'next/script';
 import React from 'react';
+import CookieConsent from './components/CookieConsent';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -108,6 +109,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
               y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             })(window, document, "clarity", "script", "rjguvuzjgr");
+
+            // Initialize Clarity with consent mode - wait for user consent
+            if (typeof window !== 'undefined') {
+              var savedConsent = localStorage.getItem('sreve-cookie-consent');
+              if (savedConsent) {
+                var consent = JSON.parse(savedConsent);
+                if (consent.analytics) {
+                  window.clarity('consent');
+                } else {
+                  window.clarity('consent', false);
+                }
+              } else {
+                // Default to no consent until user provides it
+                window.clarity('consent', false);
+              }
+            }
           `}</Script>
           <Script async src="https://www.googletagmanager.com/gtag/js?id=AW-17102136063" strategy="afterInteractive" />
           <Script id="gtm-gtag" strategy="lazyOnload">{`
@@ -197,7 +214,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body>
           {children}
-          <Toaster 
+          <CookieConsent />
+          <Toaster
             position="top-right"
             toastOptions={{
               style: {
