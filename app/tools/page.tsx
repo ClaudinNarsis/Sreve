@@ -22,6 +22,18 @@ export default function ToolsPage() {
 
   const tools = [
     {
+      title: 'AI Story Generator',
+      description: 'Create emotionally resonant stories with authentic brand voice. Not templates—real storytelling that connects with readers and drives engagement.',
+      href: '/tools/ai-story-generator',
+      icon: '✨'
+    },
+    {
+      title: 'AI Chat for Creators',
+      description: 'Collaborate with AI that remembers your brand voice, builds on ideas, and co-creates with you. Not just chat—true creative partnership.',
+      href: '/tools/ai-chat',
+      icon: '💬'
+    },
+    {
       title: 'AI Caption Generator',
       description: 'Create engaging captions for Instagram, TikTok, LinkedIn, and more. Used by 500+ agencies worldwide for social media marketing.',
       href: '/tools/ai-caption-generator',

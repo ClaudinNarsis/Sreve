@@ -43,6 +43,30 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: 'the-problem-with-ai-story-generators-no-soul',
+      title: 'The Problem with AI Story Generators: No Soul',
+      description: 'Most AI story generators create hollow, template-driven narratives. Discover why storytelling needs emotion, not just algorithms, and how creators are fighting back.',
+      date: 'October 31, 2025',
+      readTime: '6 min read',
+      tags: ['AI Story Generator', 'Storytelling', 'Creative AI']
+    },
+    {
+      slug: 'how-we-built-story-generator-feels-human',
+      title: 'How We Built a Story Generator That Feels Human',
+      description: 'The behind-the-scenes story of building an AI story generator that captures emotion and authenticity. Learn how we trained AI to understand what makes stories resonate.',
+      date: 'October 31, 2025',
+      readTime: '7 min read',
+      tags: ['AI Development', 'Storytelling', 'Behind the Scenes']
+    },
+    {
+      slug: 'ai-can-write-stories-but-can-it-feel-them',
+      title: 'AI Can Write Stories. But Can It Feel Them?',
+      description: 'Exploring the gap between AI\'s technical ability to generate stories and the human capacity to feel them. What happens when storytelling meets emotion?',
+      date: 'October 31, 2025',
+      readTime: '6 min read',
+      tags: ['AI Philosophy', 'Storytelling', 'Emotion']
+    },
+    {
       slug: 'ai-chat-is-dead-meet-creator-chat-revolution',
       title: 'AI Chat is Dead. Meet the Creator Chat Revolution.',
       description: 'Traditional AI chatbots are boring, robotic, and predictable. Discover why creators need a new kind of AI chat that collaborates, creates, and understands your voice.',
@@ -516,6 +540,33 @@ export default async function BlogPage() {
             }
           },
           "blogPost": [
+            {
+              "@type": "BlogPosting",
+              "headline": "The Problem with AI Story Generators: No Soul",
+              "description": "Most AI story generators create hollow, template-driven narratives. Discover why storytelling needs emotion, not just algorithms, and how creators are fighting back.",
+              "url": "https://sreve.online/blog/the-problem-with-ai-story-generators-no-soul",
+              "datePublished": "2025-10-31",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai story generator", "ai storytelling", "story generator problems", "emotional storytelling"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "How We Built a Story Generator That Feels Human",
+              "description": "The behind-the-scenes story of building an AI story generator that captures emotion and authenticity. Learn how we trained AI to understand what makes stories resonate.",
+              "url": "https://sreve.online/blog/how-we-built-story-generator-feels-human",
+              "datePublished": "2025-10-31",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai story generator", "human ai storytelling", "emotional ai", "story generator development"]
+            },
+            {
+              "@type": "BlogPosting",
+              "headline": "AI Can Write Stories. But Can It Feel Them?",
+              "description": "Exploring the gap between AI's technical ability to generate stories and the human capacity to feel them. What happens when storytelling meets emotion?",
+              "url": "https://sreve.online/blog/ai-can-write-stories-but-can-it-feel-them",
+              "datePublished": "2025-10-31",
+              "author": {"@type": "Organization", "name": "Sreve"},
+              "keywords": ["ai storytelling", "ai emotions", "can ai feel", "emotional intelligence ai"]
+            },
             {
               "@type": "BlogPosting",
               "headline": "AI Chat is Dead. Meet the Creator Chat Revolution.",
