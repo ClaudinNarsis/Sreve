@@ -74,7 +74,7 @@ export default function ViralPostIdeasGenerator() {
               I spent six months testing different post ideas across Instagram, LinkedIn, Twitter, and TikTok. What I discovered changed everything about how I approach content creation. The posts that went viral weren't necessarily the most polished or perfectly written. They used specific creative content hooks that triggered emotional responses.
             </p>
             <p>
-              The best viral post ideas share three common elements: they tap into current trends, use proven formats, and include psychological triggers that compel people to engage. Our <Link href="/tools/viral-post-generator">viral post generator</Link> analyzes these elements to create post ideas optimized for maximum engagement.
+              The best viral post ideas share three common elements: they tap into current trends, use proven formats, and include psychological triggers that compel people to engage. Our <Link href="/tools/viral-post-generator">viral post generator</Link> analyzes these elements to create post ideas optimized for maximum engagement. If you're serious about scaling your content creation workflow, check out our guide on <Link href="/blog/marketing-automation-ai-tools-2025">marketing automation AI tools</Link> that can help you consistently generate and publish viral content.
             </p>
           </section>
 
@@ -176,7 +176,7 @@ export default function ViralPostIdeasGenerator() {
               <li><strong>CTA slide:</strong> Invitation to save/share + follow for more</li>
             </ul>
             <p>
-              Create perfectly formatted threads and carousels with our <Link href="/tools/social-media-post-generator">social media post generator</Link>.
+              Create perfectly formatted threads and carousels with our <Link href="/tools/social-media-post-generator">social media post generator</Link>. For more insights on creating engaging social content across platforms, explore our comprehensive <Link href="/blog/social-media-post-generator-tools-2025">social media post generator tools comparison</Link>.
             </p>
 
             <h3>7. Behind-the-Scenes Reality Format</h3>
@@ -287,7 +287,7 @@ export default function ViralPostIdeasGenerator() {
               <li><strong>Value bombs:</strong> "The content batching system that saves me 15 hours/week:"</li>
             </ul>
             <p>
-              Generate perfect Instagram captions with our <Link href="/tools/ai-caption-generator">AI caption generator</Link>.
+              Generate perfect Instagram captions with our <Link href="/tools/ai-caption-generator">AI caption generator</Link>. Not sure which caption tool to use? Read our detailed <Link href="/blog/best-caption-generator-instagram-2025">Instagram caption generator comparison</Link> to find the best option for your needs.
             </p>
 
             <h3>Twitter/X Viral Post Ideas</h3>
