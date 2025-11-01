@@ -17,6 +17,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/learn`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/tools/blog-generator`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
@@ -68,6 +74,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    // Day 2 AI Story Generator Content Cluster - October 31, 2025
+    {
+      url: `${baseUrl}/blog/the-problem-with-ai-story-generators-no-soul`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/how-we-built-story-generator-feels-human`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-can-write-stories-but-can-it-feel-them`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/tools/ai-story-generator`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/learn/how-ai-storytelling-evolved`,
+      lastModified: new Date('2025-10-31'),
+      changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
     // Day 1 AI Chat Content Cluster - Creator Chat Revolution
