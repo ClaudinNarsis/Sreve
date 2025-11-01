@@ -96,7 +96,7 @@ export default function BestCaptionGeneratorInstagram2025() {
               <li><strong>Strategic CTAs increase action:</strong> Posts with clear calls-to-action see 3.5x more link clicks and saves</li>
             </ul>
             <p>
-              So unless you've got unlimited time or you're some kind of copywriting savant who can crank out scroll-stopping captions while making breakfast, you need help. That's where <Link href="/tools/ai-caption-generator">AI caption generators</Link> come in—when they actually work.
+              So unless you've got unlimited time or you're some kind of copywriting savant who can crank out scroll-stopping captions while making breakfast, you need help. That's where <Link href="/tools/ai-caption-generator">AI caption generators</Link> come in—when they actually work. For businesses managing multiple social accounts, our <Link href="/blog/marketing-automation-ai-tools-2025">marketing automation guide</Link> shows how to build a complete content creation workflow.
             </p>
           </section>
 
@@ -408,7 +408,7 @@ export default function BestCaptionGeneratorInstagram2025() {
               <li><strong>Iconosquare or Sprout Social:</strong> Track engagement metrics and optimize based on data</li>
             </ul>
             <p>
-              For more tool comparisons, check out our guide on <Link href="/blog/content-creation-tools-comparison-2025">content creation tools</Link> and <Link href="/blog/marketing-automation-ai-tools-2025">marketing automation AI tools</Link>.
+              For more tool comparisons, check out our guide on <Link href="/blog/content-creation-tools-comparison-2025">content creation tools</Link> and <Link href="/blog/marketing-automation-ai-tools-2025">marketing automation AI tools</Link>. If you're creating content for Instagram stories and reels, our <Link href="/blog/instagram-caption-ideas-for-business">Instagram caption ideas guide</Link> provides proven formulas that drive engagement.
             </p>
           </section>
 
