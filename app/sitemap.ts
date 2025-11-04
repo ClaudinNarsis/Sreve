@@ -107,6 +107,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
+    // Day 3 AI Text Generator Content Cluster - November 2, 2025
+    {
+      url: `${baseUrl}/blog/ai-text-generator-gets-your-tone-right`,
+      lastModified: new Date('2025-11-02'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/ai-text-generators-sound-like-wikipedia`,
+      lastModified: new Date('2025-11-02'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/make-ai-write-like-human-not-grammar-bot`,
+      lastModified: new Date('2025-11-02'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/tools/ai-text-generator`,
+      lastModified: new Date('2025-11-02'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/learn/best-ai-text-generators-2025`,
+      lastModified: new Date('2025-11-02'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
     // Day 1 AI Chat Content Cluster - Creator Chat Revolution
     {
       url: `${baseUrl}/blog/ai-chat-is-dead-meet-creator-chat-revolution`,

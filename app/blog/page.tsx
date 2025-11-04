@@ -43,6 +43,30 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: 'ai-text-generator-gets-your-tone-right',
+      title: 'The AI Text Generator That Gets Your Tone Right',
+      description: 'Most AI text generators sound robotic and generic. Discover how Sreve Creator understands tone, emotion, and brand voice to create content that actually sounds like you.',
+      date: 'November 2, 2025',
+      readTime: '7 min read',
+      tags: ['AI Writing', 'Brand Voice', 'Content Creation']
+    },
+    {
+      slug: 'ai-text-generators-sound-like-wikipedia',
+      title: 'Why Most AI Text Generators Still Sound Like Wikipedia',
+      description: 'AI text generators promise human-like writing but deliver encyclopedic boredom. Discover why most AI writing sounds robotic and what actually fixes it.',
+      date: 'November 2, 2025',
+      readTime: '8 min read',
+      tags: ['AI Writing', 'Content Quality', 'Analysis']
+    },
+    {
+      slug: 'make-ai-write-like-human-not-grammar-bot',
+      title: 'How to Make AI Write Like a Human (Not a Grammar Bot)',
+      description: 'Step-by-step guide to transform robotic AI writing into natural, human-sounding content. Practical techniques that actually work for better AI text generation.',
+      date: 'November 2, 2025',
+      readTime: '9 min read',
+      tags: ['AI Writing', 'Tutorial', 'Content Strategy']
+    },
+    {
       slug: 'the-problem-with-ai-story-generators-no-soul',
       title: 'The Problem with AI Story Generators: No Soul',
       description: 'Most AI story generators create hollow, template-driven narratives. Discover why storytelling needs emotion, not just algorithms, and how creators are fighting back.',
