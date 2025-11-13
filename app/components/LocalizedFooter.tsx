@@ -24,11 +24,11 @@ export default function LocalizedFooter({ dict, lang }: LocalizedFooterProps) {
             <div>
               <h4 style={{ color: '#ff6600', marginBottom: '1rem' }}>{dict.footer.aiTools}</h4>
               <ul className="footer-nav" style={{ listStyle: 'none', padding: 0 }}>
+                <li><a href="/tools/content-calendar-generator" onClick={(e) => handleNavigation(e, '/tools/content-calendar-generator')}>Content Calendar Generator</a></li>
                 <li><a href="/tools/ai-caption-generator" onClick={(e) => handleNavigation(e, '/tools/ai-caption-generator')}>{dict.tools.captionGenerator}</a></li>
+                <li><a href="/tools/social-media-post-generator" onClick={(e) => handleNavigation(e, '/tools/social-media-post-generator')}>{dict.tools.socialPosts}</a></li>
                 <li><a href="/tools/ai-content-generator" onClick={(e) => handleNavigation(e, '/tools/ai-content-generator')}>{dict.tools.contentGenerator}</a></li>
                 <li><a href="/tools/blog-idea-generator" onClick={(e) => handleNavigation(e, '/tools/blog-idea-generator')}>{dict.tools.blogIdeas}</a></li>
-                <li><a href="/tools/social-media-post-generator" onClick={(e) => handleNavigation(e, '/tools/social-media-post-generator')}>{dict.tools.socialPosts}</a></li>
-                <li><a href="/tools/ai-sentence-rewriter" onClick={(e) => handleNavigation(e, '/tools/ai-sentence-rewriter')}>{dict.tools.sentenceRewriter}</a></li>
               </ul>
             </div>
             <div>

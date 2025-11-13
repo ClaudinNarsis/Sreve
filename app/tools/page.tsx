@@ -74,6 +74,12 @@ export default function ToolsPage() {
       description: 'Generate complete blog posts with SEO optimization, compelling headlines, and engaging content that ranks and converts.',
       href: '/tools/blog-generator',
       icon: '📝'
+    },
+    {
+      title: 'Content Calendar Generator',
+      description: 'Plan 30, 60, or 90 days of content in 10 minutes. AI-powered calendar with strategic content mix and platform optimization.',
+      href: '/tools/content-calendar-generator',
+      icon: '📅'
     }
   ];
 
