@@ -71,9 +71,40 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/tools/content-calendar-generator`,
+      lastModified: new Date('2025-01-16'),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    // Phase 1: Social Media Content Ideas Cluster - January 2025
+    {
+      url: `${baseUrl}/blog/177-social-media-content-ideas-2025`,
+      lastModified: new Date('2025-01-12'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/blog/social-media-content-ideas-when-stuck`,
+      lastModified: new Date('2025-01-13'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/never-run-out-social-media-content-ideas`,
+      lastModified: new Date('2025-01-14'),
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/blog/viral-social-media-content-ideas-free`,
+      lastModified: new Date('2025-01-15'),
+      changeFrequency: 'monthly' as const,
       priority: 0.8,
     },
     // Day 2 AI Story Generator Content Cluster - October 31, 2025
