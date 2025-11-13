@@ -43,6 +43,62 @@ export default async function BlogPage() {
   // Define dynamic blog posts
   const dynamicPosts = [
     {
+      slug: '177-social-media-content-ideas-2025',
+      title: '177 Social Media Content Ideas That Actually Work in 2025',
+      description: 'Never run out of social media content ideas again. 177 proven post ideas for Instagram, TikTok, LinkedIn, and more. Organized by category with real examples.',
+      date: 'January 12, 2025',
+      readTime: '18 min read',
+      tags: ['Social Media', 'Content Ideas', 'Marketing']
+    },
+    {
+      slug: 'social-media-content-ideas-when-stuck',
+      title: 'Social Media Content Ideas for When You\'re Stuck',
+      description: 'Out of content ideas? Get 50+ quick social media content ideas and proven strategies to overcome creative block in 2025.',
+      date: 'January 13, 2025',
+      readTime: '12 min read',
+      tags: ['Social Media', 'Content Ideas', 'Creative Block']
+    },
+    {
+      slug: 'never-run-out-social-media-content-ideas',
+      title: 'How to Never Run Out of Social Media Content Ideas Again',
+      description: 'Build a content system that generates unlimited social media ideas. 7 proven frameworks that eliminate creative block forever.',
+      date: 'January 14, 2025',
+      readTime: '14 min read',
+      tags: ['Social Media', 'Content Systems', 'Strategy']
+    },
+    {
+      slug: 'viral-social-media-content-ideas-free',
+      title: '10 Viral Social Media Content Ideas That Cost Zero Dollars',
+      description: 'Create viral content without spending money. 10 proven ideas that drove millions of views using only your smartphone and creativity.',
+      date: 'January 15, 2025',
+      readTime: '11 min read',
+      tags: ['Viral Content', 'Free Ideas', 'No Budget']
+    },
+    {
+      slug: 'ai-text-generator-gets-your-tone-right',
+      title: 'The AI Text Generator That Gets Your Tone Right',
+      description: 'Most AI text generators sound robotic and generic. Discover how Sreve Creator understands tone, emotion, and brand voice to create content that actually sounds like you.',
+      date: 'November 2, 2025',
+      readTime: '7 min read',
+      tags: ['AI Writing', 'Brand Voice', 'Content Creation']
+    },
+    {
+      slug: 'ai-text-generators-sound-like-wikipedia',
+      title: 'Why Most AI Text Generators Still Sound Like Wikipedia',
+      description: 'AI text generators promise human-like writing but deliver encyclopedic boredom. Discover why most AI writing sounds robotic and what actually fixes it.',
+      date: 'November 2, 2025',
+      readTime: '8 min read',
+      tags: ['AI Writing', 'Content Quality', 'Analysis']
+    },
+    {
+      slug: 'make-ai-write-like-human-not-grammar-bot',
+      title: 'How to Make AI Write Like a Human (Not a Grammar Bot)',
+      description: 'Step-by-step guide to transform robotic AI writing into natural, human-sounding content. Practical techniques that actually work for better AI text generation.',
+      date: 'November 2, 2025',
+      readTime: '9 min read',
+      tags: ['AI Writing', 'Tutorial', 'Content Strategy']
+    },
+    {
       slug: 'the-problem-with-ai-story-generators-no-soul',
       title: 'The Problem with AI Story Generators: No Soul',
       description: 'Most AI story generators create hollow, template-driven narratives. Discover why storytelling needs emotion, not just algorithms, and how creators are fighting back.',
